@@ -1,0 +1,292 @@
+:root {
+  --primary: #ffc107;
+  --primary-dark: #ffb300;
+
+  --text: #fff;
+  --muted: rgba(255, 255, 255, 0.72);
+  --muted2: rgba(255, 255, 255, 0.55);
+
+  --stroke: rgba(255, 255, 255, 0.14);
+  --glass: rgba(15, 15, 15, 0.58);
+  --glass2: rgba(15, 15, 15, 0.42);
+
+  --shadow: 0 30px 90px rgba(0, 0, 0, 0.55), 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.rb-auth {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  color: var(--text);
+}
+
+/* ===== Background ===== */
+.rb-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.rb-bgImg {
+  object-fit: cover;
+  transform: scale(1.03);
+  filter: saturate(1.05) contrast(1.03);
+}
+
+.rb-bgOverlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.25)),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.82));
+}
+
+.rb-bgVignette {
+  position: absolute;
+  inset: -200px;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      900px 650px at 75% 20%,
+      rgba(255, 193, 7, 0.14),
+      transparent 60%
+    ),
+    radial-gradient(
+      700px 520px at 20% 80%,
+      rgba(255, 193, 7, 0.1),
+      transparent 65%
+    ),
+    radial-gradient(
+      900px 700px at 50% 50%,
+      rgba(0, 0, 0, 0.2),
+      rgba(0, 0, 0, 0.88)
+    );
+  filter: blur(10px);
+}
+
+/* ===== Foreground layout ===== */
+.rb-wrap {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  padding: 44px 18px;
+  display: grid;
+  grid-template-columns: 1fr 460px;
+  gap: 36px;
+  align-items: center;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Hero text on the left */
+.rb-hero {
+  padding: 10px 6px;
+}
+
+.rb-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.rb-brandIcon {
+  color: var(--primary);
+  font-size: 22px;
+}
+
+.rb-brandText {
+  font-size: 14px;
+}
+
+.rb-heroTitle {
+  margin: 0 0 10px 0;
+  font-size: 44px;
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.rb-heroDesc {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 520px;
+  line-height: 1.55;
+}
+
+/* ===== Glass card ===== */
+.rb-card {
+  width: 100%;
+  border-radius: 26px;
+  background: linear-gradient(180deg, var(--glass), var(--glass2));
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 34px 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* subtle inner glow */
+.rb-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      420px 260px at 30% 10%,
+      rgba(255, 193, 7, 0.14),
+      transparent 55%
+    ),
+    radial-gradient(
+      420px 260px at 100% 0%,
+      rgba(255, 255, 255, 0.06),
+      transparent 55%
+    );
+  opacity: 0.9;
+}
+
+/* keep page content above ::before */
+.rb-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== Your existing page classes (login/register) look nicer ===== */
+.rb-loginHeader {
+  margin-bottom: 22px;
+  text-align: left;
+}
+
+.rb-loginHeader h2 {
+  margin: 0 0 10px 0;
+  font-size: 38px;
+  font-weight: 900;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+}
+
+.rb-loginHeader p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.rb-formGroup {
+  margin-top: 16px;
+}
+
+.rb-formGroup label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 700;
+  padding-left: 4px;
+}
+
+.rb-formControl {
+  width: 100%;
+  padding: 16px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--text);
+  outline: none;
+  transition: 0.2s ease;
+}
+
+.rb-formControl::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.rb-formControl:focus {
+  border-color: rgba(255, 193, 7, 0.55);
+  box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.14);
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.rb-btn {
+  margin-top: 18px;
+  width: 100%;
+  border: none;
+  border-radius: 18px;
+  padding: 16px 18px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.rb-btnPrimary {
+  background: var(--primary);
+  color: #111;
+  box-shadow: 0 18px 36px rgba(255, 193, 7, 0.18);
+}
+
+.rb-btnPrimary:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 22px 44px rgba(255, 193, 7, 0.22);
+}
+
+.rb-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.rb-alertDanger {
+  margin-top: 14px;
+  background: rgba(255, 193, 7, 0.92);
+  color: #111;
+  border: 1px solid rgba(255, 160, 0, 0.8);
+  border-radius: 16px;
+  padding: 12px 14px;
+  font-weight: 800;
+}
+
+.rb-loginFooter {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.rb-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.rb-link:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 980px) {
+  .rb-wrap {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 28px 14px;
+  }
+
+  .rb-heroTitle {
+    font-size: 34px;
+  }
+
+  .rb-card {
+    padding: 28px 18px;
+  }
+}

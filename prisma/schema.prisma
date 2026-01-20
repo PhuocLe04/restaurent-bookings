@@ -1,0 +1,251 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int            @id(map: "PK__users__3213E83F9A13B670") @default(autoincrement())
+  full_name     String         @db.NVarChar(100)
+  email         String         @unique(map: "UQ__users__AB6E616456B1D98D") @db.NVarChar(100)
+  phone         String         @unique(map: "UQ__users__B43B145F828E46EC") @db.NVarChar(15)
+  password_hash String         @db.NVarChar(Max)
+  role          String         @default("customer", map: "DF__users__role__3D5E1FD2") @db.NVarChar(10)
+  member_point  Decimal        @default(0, map: "DF__users__member_po__3E52440B") @db.Decimal(18, 0)
+  membership_id Int            @default(1, map: "DF__users__membershi__3F466844")
+  created_at    DateTime?      @default(now(), map: "DF__users__created_a__403A8C7D")
+  audit_logs    audit_logs[]
+  blogs         blogs[]
+  orders        orders[]
+  payments      payments[]
+  reservations  reservations[]
+  staff         staff?
+  membership    membership     @relation(fields: [membership_id], references: [id], onUpdate: NoAction, map: "FK_users_membership")
+
+  @@map("users")
+}
+
+model audit_logs {
+  id          Int       @id(map: "PK__audit_lo__3213E83F43FE5D46") @default(autoincrement())
+  entity      String?   @db.NVarChar(50)
+  entity_id   Int?
+  action      String?   @db.NVarChar(20)
+  description String?   @db.NVarChar(255)
+  created_at  DateTime? @default(now(), map: "DF__audit_log__creat__71D1E811")
+  user_id     Int
+  users       User      @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_audit_logs_users")
+}
+
+model blogs {
+  id                Int       @id(map: "PK__blogs__3213E83F8BF78F74") @default(autoincrement())
+  title             String    @db.NVarChar(200)
+  slug              String    @unique(map: "UQ__blogs__32DD1E4CC5814670") @db.NVarChar(200)
+  short_description String?   @db.NVarChar(500)
+  content           String    @db.NVarChar(Max)
+  thumbnail_url     String?   @db.NVarChar(255)
+  author_id         Int
+  status            String    @default("DRAFT", map: "DF__blogs__status__75A278F5") @db.NVarChar(20)
+  published_at      DateTime?
+  created_at        DateTime? @default(now(), map: "DF__blogs__created_a__76969D2E")
+  updated_at        DateTime?
+  users             User      @relation(fields: [author_id], references: [id], onUpdate: NoAction, map: "FK_blog_author")
+
+  @@index([published_at], map: "IDX_blog_published_at")
+  @@index([status], map: "IDX_blog_status")
+}
+
+model categories {
+  id         Int          @id(map: "PK__categori__3213E83FB71CDD8A") @default(autoincrement())
+  name       String       @db.NVarChar(100)
+  is_active  Boolean?     @default(true, map: "DF__categorie__is_ac__5AEE82B9")
+  menu_items menu_items[]
+}
+
+model combo_menu_items {
+  combo_id     Int
+  menu_item_id Int
+  quantity     Int        @default(1, map: "DF__combo_men__quant__282DF8C2")
+  unit_price   Decimal    @db.Decimal(12, 2)
+  combos       combos     @relation(fields: [combo_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_cmi_combo")
+  menu_items   menu_items @relation(fields: [menu_item_id], references: [id], onUpdate: NoAction, map: "FK_cmi_menu")
+
+  @@id([combo_id, menu_item_id], map: "PK__combo_me__518409BE0C9A4610")
+}
+
+model combo_services {
+  combo_id   Int
+  service_id Int
+  quantity   Int      @default(1, map: "DF__combo_ser__quant__2EDAF651")
+  unit_price Decimal  @db.Decimal(12, 2)
+  combos     combos   @relation(fields: [combo_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_cs_combo")
+  services   services @relation(fields: [service_id], references: [id], onUpdate: NoAction, map: "FK_cs_service")
+
+  @@id([combo_id, service_id], map: "PK__combo_se__FB1791294A313508")
+}
+
+model combos {
+  id                 Int                @id(map: "PK__combos__3213E83FCAAC6BE0") @default(autoincrement())
+  title              String             @db.NVarChar(150)
+  description        String?            @db.NVarChar(255)
+  total_origin_price Decimal            @default(0, map: "DF__combos__total_or__2180FB33") @db.Decimal(12, 2)
+  sale_price         Decimal            @db.Decimal(12, 2)
+  discount_percent   Decimal?           @db.Decimal(5, 2)
+  is_active          Boolean            @default(true, map: "DF__combos__is_activ__245D67DE")
+  created_at         DateTime           @default(now(), map: "DF__combos__created___25518C17")
+  combo_menu_items   combo_menu_items[]
+  combo_services     combo_services[]
+}
+
+model membership {
+  id               Int       @id(map: "PK__membersh__3213E83F7CA99E9C") @default(autoincrement())
+  code             String    @unique(map: "UQ__membersh__357D4CF93C6D8F19") @db.NVarChar(20)
+  name             String    @db.NVarChar(50)
+  min_point        Decimal   @db.Decimal(18, 0)
+  discount_percent Int
+  created_at       DateTime? @default(now(), map: "DF__membershi__creat__38996AB5")
+  users            User[]
+}
+
+model menu_items {
+  id               Int                @id(map: "PK__menu_ite__3213E83F026B603D") @default(autoincrement())
+  category_id      Int
+  name             String             @db.NVarChar(150)
+  price            Decimal            @db.Decimal(12, 2)
+  is_available     Boolean?           @default(true, map: "DF__menu_item__is_av__5DCAEF64")
+  combo_menu_items combo_menu_items[]
+  categories       categories         @relation(fields: [category_id], references: [id], onUpdate: NoAction, map: "FK_menu_category")
+  order_items      order_items[]
+}
+
+model order_items {
+  id           Int        @id(map: "PK__order_it__3213E83F078D721F") @default(autoincrement())
+  order_id     Int
+  menu_item_id Int
+  quantity     Int
+  menu_items   menu_items @relation(fields: [menu_item_id], references: [id], onUpdate: NoAction, map: "FK_order_items_menu")
+  orders       orders     @relation(fields: [order_id], references: [id], onUpdate: NoAction, map: "FK_order_items_order")
+}
+
+model orders {
+  id             Int           @id(map: "PK__orders__3213E83FB7898F02") @default(autoincrement())
+  reservation_id Int
+  user_id        Int
+  status         String        @default("OPEN", map: "DF__orders__status__619B8048") @db.NVarChar(20)
+  created_at     DateTime?     @default(now(), map: "DF__orders__created___628FA481")
+  order_items    order_items[]
+  reservations   reservations  @relation(fields: [reservation_id], references: [id], onUpdate: NoAction, map: "FK_orders_reservation")
+  users          User          @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_orders_user")
+}
+
+model payments {
+  id                     Int          @id(map: "PK__payments__3213E83F3C7B73DE") @default(autoincrement())
+  reservation_id         Int
+  user_id                Int
+  amount                 Decimal      @db.Decimal(12, 2)
+  payment_method         String       @db.NVarChar(20)
+  status                 String       @db.NVarChar(20)
+  order_id               String       @unique(map: "UQ__payments__465962284DD6A371") @db.NVarChar(50)
+  request_id             String       @db.NVarChar(50)
+  partner_transaction_id String?      @db.NVarChar(100)
+  gateway_response       String?      @db.NVarChar(Max)
+  created_at             DateTime?    @default(now(), map: "DF__payments__create__52593CB8")
+  paid_at                DateTime?
+  reservations           reservations @relation(fields: [reservation_id], references: [id], onUpdate: NoAction, map: "FK_payments_reservations")
+  users                  User         @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_payments_users")
+}
+
+model reservation_services {
+  reservation_id Int
+  service_id     Int
+  quantity       Int          @default(1, map: "DF__reservati__quant__1AD3FDA4")
+  unit_price     Decimal      @db.Decimal(12, 2)
+  reservations   reservations @relation(fields: [reservation_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "FK_rs_reservation")
+  services       services     @relation(fields: [service_id], references: [id], onUpdate: NoAction, map: "FK_rs_service")
+
+  @@id([reservation_id, service_id], map: "PK__reservat__D2D897A38F3EA0C6")
+}
+
+model reservation_tables {
+  reservation_id    Int
+  table_id          Int
+  reservations      reservations      @relation(fields: [reservation_id], references: [id], onUpdate: NoAction, map: "FK_rt_reservation")
+  restaurant_tables restaurant_tables @relation(fields: [table_id], references: [id], onUpdate: NoAction, map: "FK_rt_table")
+
+  @@id([reservation_id, table_id], map: "PK__reservat__6A19A4DBBB834B6E")
+}
+
+model reservations {
+  id                   Int                    @id(map: "PK__reservat__3213E83F33939030") @default(autoincrement())
+  user_id              Int
+  reservation_time     DateTime
+  number_of_guests     Int
+  status               String                 @default("PENDING", map: "DF__reservati__statu__47DBAE45") @db.NVarChar(20)
+  created_at           DateTime?              @default(now(), map: "DF__reservati__creat__48CFD27E")
+  orders               orders[]
+  payments             payments[]
+  reservation_services reservation_services[]
+  reservation_tables   reservation_tables[]
+  users                User                   @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_reservations_users")
+}
+
+model restaurant_tables {
+  id                 Int                  @id(map: "PK__restaura__3213E83F63BAEC8E") @default(autoincrement())
+  table_name         String               @db.NVarChar(20)
+  capacity           Int
+  is_active          Boolean?             @default(true, map: "DF__restauran__is_ac__44FF419A")
+  table_type_id      Int
+  reservation_tables reservation_tables[]
+  table_types        table_types          @relation(fields: [table_type_id], references: [id], onUpdate: NoAction, map: "FK_restaurant_tables_table_types")
+}
+
+model services {
+  id                   Int                    @id(map: "PK__services__3213E83FEF05FA48") @default(autoincrement())
+  name                 String                 @db.NVarChar(100)
+  description          String?                @db.NVarChar(255)
+  price                Decimal                @db.Decimal(12, 2)
+  is_active            Boolean                @default(true, map: "DF__services__is_act__17036CC0")
+  created_at           DateTime               @default(now(), map: "DF__services__create__17F790F9")
+  combo_services       combo_services[]
+  reservation_services reservation_services[]
+}
+
+model shifts {
+  id         Int      @id(map: "PK__shifts__3213E83F193CB1EA") @default(autoincrement())
+  staff_id   Int
+  start_time DateTime
+  end_time   DateTime
+  staff      staff    @relation(fields: [staff_id], references: [id], onUpdate: NoAction, map: "FK_shift_staff")
+
+  @@index([staff_id, start_time], map: "IDX_shifts_staff_time")
+}
+
+model staff {
+  id        Int      @id(map: "PK__staff__3213E83F1C9D1101") @default(autoincrement())
+  full_name String   @db.NVarChar(100)
+  role      String   @db.NVarChar(50)
+  phone     String?  @db.NVarChar(15)
+  is_active Boolean? @default(true, map: "DF__staff__is_active__6C190EBB")
+  user_id   Int      @unique(map: "UQ__staff__B9BE370E324240FE")
+  shifts    shifts[]
+  users     User     @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_staff_users")
+}
+
+model sysdiagrams {
+  name         String @db.NVarChar(128)
+  principal_id Int
+  diagram_id   Int    @id(map: "PK__sysdiagr__C2B05B617923587D") @default(autoincrement())
+  version      Int?
+  definition   Bytes?
+
+  @@unique([principal_id, name], map: "UK_principal_name")
+}
+
+model table_types {
+  id                Int                 @id(map: "PK__table_ty__3213E83FFE2F76F9") @default(autoincrement())
+  name              String              @db.NVarChar(50)
+  description       String?             @db.NVarChar(255)
+  restaurant_tables restaurant_tables[]
+}
