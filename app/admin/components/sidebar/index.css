@@ -1,0 +1,86 @@
+/*  sidebar styles */
+/* --------------------------------------------------------------
+# Admin Sidebar
+-------------------------------------------------------------- */
+
+.admin-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: var(--admin-sidebar-width);
+  background: linear-gradient(180deg, #14120f, #0f0e0b);
+  border-right: 1px solid var(--admin-border);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.25s ease;
+}
+
+.admin-sidebar.collapsed {
+  width: var(--admin-sidebar-collapsed);
+}
+
+/* Logo */
+.admin-sidebar .sidebar-logo {
+  height: var(--admin-topbar-height);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--admin-heading);
+  border-bottom: 1px solid var(--admin-border);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Menu */
+.admin-sidebar nav {
+  flex: 1;
+  padding: 16px 8px;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  margin: 4px 0;
+  border-radius: 8px;
+  color: var(--admin-text);
+  text-decoration: none;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.sidebar-item:hover {
+  background: var(--admin-accent-subtle);
+  color: var(--admin-heading);
+}
+
+.sidebar-item.active {
+  background: var(--admin-accent-subtle);
+  color: var(--admin-accent);
+  box-shadow: inset 2px 0 0 var(--admin-accent);
+}
+
+.sidebar-item span {
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Collapsed */
+.admin-sidebar.collapsed .sidebar-item span {
+  display: none;
+}
+
+/* Footer */
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--admin-border);
+  font-size: 13px;
+  color: var(--admin-text-muted);
+  text-align: center;
+}

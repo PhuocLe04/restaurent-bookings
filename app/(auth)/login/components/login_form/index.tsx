@@ -4,6 +4,11 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
+import {
+  useWebAuthStore,
+  getDefaultTokenExpiry,
+} from '@/app/(web)/lib/auth-store'
+
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
@@ -15,18 +20,44 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
+
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       })
+
       const data = await res.json().catch(() => ({}))
+
       if (!res.ok) {
         setError(data.message || 'Login failed')
         return
       }
+
+      // ✅ 1) setAuth để Header đổi Login -> Profile ngay
+      const token: string | undefined = data.token
+      const tokenExpireAt: string =
+        data.tokenExpireAt ?? getDefaultTokenExpiry()
+      const userId: string | undefined = data.user?.id
+        ? String(data.user.id)
+        : undefined
+
+      if (token) {
+        useWebAuthStore.getState().setAuth(token, tokenExpireAt, userId)
+      }
+
+      if (data.user) {
+        useWebAuthStore.getState().setProfile({
+          id: String(data.user.id),
+          full_name: data.user.full_name ?? null,
+          email: data.user.email ?? null,
+          phone: data.user.phone ?? null,
+        })
+      }
+
       router.push('/')
+      router.refresh() // ✅ đảm bảo server components/middleware sync nếu có
     } catch {
       setError('Something went wrong')
     } finally {

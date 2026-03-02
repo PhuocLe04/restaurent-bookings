@@ -1,0 +1,350 @@
+/* ======================
+   RESERVATIONS UI (desktop)
+   ====================== */
+
+.rsv-page {
+  display: grid;
+  gap: 14px;
+}
+
+.rsv-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.rsv-h1 {
+  margin: 0;
+  font-size: 20px;
+  color: #fff;
+  font-weight: 850;
+}
+
+.rsv-muted {
+  margin-top: 6px;
+  color: var(--admin-text-muted);
+  font-size: 13px;
+}
+
+.rsv-muted-sm {
+  color: var(--admin-text-muted);
+  font-size: 12px;
+}
+
+.rsv-strong {
+  font-weight: 800;
+  color: #fff;
+}
+
+.rsv-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rsv-card {
+  border: 1px solid var(--admin-border);
+  border-radius: 16px;
+  background: rgba(26, 24, 20, 0.75);
+  backdrop-filter: blur(10px);
+  padding: 14px;
+}
+
+.rsv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--admin-text);
+  cursor: pointer;
+  text-decoration: none;
+  transition: 0.18s ease;
+  font-weight: 650;
+  font-size: 13px;
+}
+
+.rsv-btn:hover {
+  border-color: rgba(205, 164, 94, 0.35);
+  background: rgba(205, 164, 94, 0.08);
+  color: #fff;
+}
+
+.rsv-primary {
+  border-color: rgba(205, 164, 94, 0.35);
+  background: rgba(205, 164, 94, 0.12);
+  color: #fff;
+}
+
+.rsv-danger {
+  border-color: rgba(255, 77, 77, 0.35);
+  background: rgba(255, 77, 77, 0.12);
+  color: #fff;
+}
+
+.rsv-alert {
+  border: 1px solid rgba(255, 77, 77, 0.35);
+  background: rgba(255, 77, 77, 0.12);
+  color: #fff;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 13px;
+}
+
+/* filters */
+.rsv-filters {
+  display: grid;
+  grid-template-columns: 220px 220px 1fr;
+  gap: 12px;
+  align-items: end;
+}
+
+.rsv-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.rsv-page-indicator {
+  color: var(--admin-text);
+  font-size: 13px;
+}
+
+/* table */
+.rsv-table-wrap {
+  overflow: auto;
+}
+
+.rsv-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 980px;
+}
+
+.rsv-table th,
+.rsv-table td {
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--admin-border);
+  text-align: left;
+  vertical-align: top;
+  font-size: 13px;
+  color: var(--admin-text);
+}
+
+.rsv-table th {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 800;
+}
+
+.rsv-td-muted {
+  padding: 18px 10px;
+  color: var(--admin-text-muted);
+  text-align: center;
+}
+
+.rsv-cell {
+  display: grid;
+  gap: 4px;
+}
+
+.rsv-actions-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* badges */
+.rsv-badge {
+  display: inline-flex;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 999px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 800;
+  font-size: 11px;
+}
+
+.rsv-badge-PENDING {
+  border-color: rgba(205, 164, 94, 0.35);
+  background: rgba(205, 164, 94, 0.12);
+}
+
+.rsv-badge-CONFIRMED {
+  border-color: rgba(0, 200, 140, 0.35);
+  background: rgba(0, 200, 140, 0.12);
+}
+
+.rsv-badge-CANCELLED {
+  border-color: rgba(255, 77, 77, 0.35);
+  background: rgba(255, 77, 77, 0.12);
+}
+
+.rsv-badge-COMPLETED {
+  border-color: rgba(120, 170, 255, 0.35);
+  background: rgba(120, 170, 255, 0.12);
+}
+
+/* form */
+.rsv-form {
+  display: grid;
+  gap: 14px;
+}
+
+.rsv-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rsv-span-2 {
+  grid-column: span 2;
+}
+
+.rsv-field {
+  display: grid;
+  gap: 6px;
+}
+
+.rsv-field label {
+  font-size: 12px;
+  color: var(--admin-text-muted);
+  font-weight: 700;
+}
+
+.rsv-field input,
+.rsv-field select {
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 0 12px;
+  outline: none;
+}
+
+.rsv-field input:focus,
+.rsv-field select:focus {
+  border-color: rgba(205, 164, 94, 0.35);
+  box-shadow: 0 0 0 3px rgba(205, 164, 94, 0.12);
+}
+
+.rsv-services {
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.rsv-services-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.rsv-title {
+  font-weight: 850;
+  color: #fff;
+}
+
+.rsv-sub {
+  color: var(--admin-text-muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.rsv-empty {
+  color: var(--admin-text-muted);
+  padding: 12px 0 2px;
+  font-size: 13px;
+}
+
+.rsv-services-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.rsv-service-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.3fr 120px;
+  gap: 10px;
+}
+
+.rsv-service-row input {
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 0 12px;
+}
+
+.rsv-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* modal */
+.rsv-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 999;
+}
+
+.rsv-modal {
+  width: 860px;
+  max-width: calc(100vw - 40px);
+  border-radius: 18px;
+  border: 1px solid var(--admin-border);
+  background: rgba(26, 24, 20, 0.96);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  padding: 14px;
+}
+
+.rsv-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--admin-border);
+  margin-bottom: 12px;
+}
+
+.rsv-modal-title {
+  font-weight: 900;
+  color: #fff;
+  font-size: 15px;
+}
+
+.rsv-divider {
+  height: 1px;
+  background: var(--admin-border);
+  margin: 12px 0;
+}
+
+.rsv-sum {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+.rsv-sum-item {
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}

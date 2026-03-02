@@ -2,28 +2,21 @@ export {}
 
 declare global {
   interface Window {
-    imagesLoaded?: (element: Element | string, callback?: () => void) => void
-
     Isotope?: new (
-      element: Element,
+      el: Element,
       options?: {
         itemSelector?: string
         layoutMode?: string
         filter?: string
         sortBy?: string
+        getSortData?: Record<string, any>
       },
-    ) => {
-      arrange: (options?: { filter?: string }) => void
-    }
+    ) => { arrange: (opts?: { filter?: string }) => void }
+
+    imagesLoaded?: (el: Element, cb: () => void) => void
 
     Swiper?: new (el: Element | string, options?: any) => any
-
-    GLightbox?: (options?: any) => any
-
-    AOS?: {
-      init: (options?: any) => void
-      refresh?: () => void
-      refreshHard?: () => void
-    }
+    GLightbox?: (opts?: any) => any
+    AOS?: { init: (opts?: any) => void; refresh?: () => void }
   }
 }

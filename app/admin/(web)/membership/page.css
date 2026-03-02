@@ -1,0 +1,320 @@
+/* ======================
+   MEMBERSHIP MANAGEMENT UI (desktop)
+   ====================== */
+
+.member-page {
+  display: grid;
+  gap: 14px;
+}
+
+.member-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.member-h1 {
+  margin: 0;
+  font-size: 20px;
+  color: #fff;
+  font-weight: 850;
+}
+
+.member-muted {
+  margin-top: 6px;
+  color: var(--admin-text-muted);
+  font-size: 13px;
+}
+
+.member-muted-sm {
+  color: var(--admin-text-muted);
+  font-size: 12px;
+}
+
+.member-strong {
+  font-weight: 800;
+  color: #fff;
+}
+
+.member-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.member-card {
+  border: 1px solid var(--admin-border);
+  border-radius: 16px;
+  background: rgba(26, 24, 20, 0.75);
+  backdrop-filter: blur(10px);
+  padding: 14px;
+  overflow: hidden;
+}
+
+.member-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--admin-text);
+  cursor: pointer;
+  text-decoration: none;
+  transition: 0.18s ease;
+  font-weight: 650;
+  font-size: 13px;
+}
+
+.member-btn:hover {
+  border-color: rgba(205, 164, 94, 0.35);
+  background: rgba(205, 164, 94, 0.08);
+  color: #fff;
+}
+
+.member-primary {
+  border-color: rgba(205, 164, 94, 0.35);
+  background: rgba(205, 164, 94, 0.12);
+  color: #fff;
+}
+
+.member-danger {
+  border-color: rgba(255, 77, 77, 0.35);
+  background: rgba(255, 77, 77, 0.12);
+  color: #fff;
+}
+
+.member-alert {
+  border: 1px solid rgba(255, 77, 77, 0.35);
+  background: rgba(255, 77, 77, 0.12);
+  color: #fff;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 13px;
+}
+
+/* ======================
+   Filters (Membership)
+   - Membership thường chỉ cần Search + Pagination
+   ====================== */
+.member-filters {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 14px;
+}
+
+.member-field {
+  display: grid;
+  gap: 6px;
+}
+
+.member-field label {
+  font-size: 12px;
+  color: var(--admin-text-muted);
+  font-weight: 700;
+}
+
+.member-field input,
+.member-field select {
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 0 12px;
+  outline: none;
+  width: 100%;
+}
+
+.member-field input:focus,
+.member-field select:focus {
+  border-color: rgba(205, 164, 94, 0.35);
+  box-shadow: 0 0 0 3px rgba(205, 164, 94, 0.12);
+}
+
+.member-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.member-page-indicator {
+  color: var(--admin-text);
+  font-size: 13px;
+}
+
+/* ======================
+   Table
+   ====================== */
+.member-table-wrap {
+  overflow: auto;
+}
+
+.member-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 860px; /* membership ít cột hơn user */
+}
+
+.member-table th,
+.member-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--admin-border);
+  text-align: left;
+  vertical-align: middle;
+  font-size: 13px;
+  color: var(--admin-text);
+}
+
+.member-table th {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 800;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.member-table tbody tr:hover td {
+  background: rgba(205, 164, 94, 0.06);
+}
+
+.member-td-muted {
+  padding: 18px 10px;
+  color: var(--admin-text-muted);
+  text-align: center;
+}
+
+.member-cell {
+  display: grid;
+  gap: 4px;
+}
+
+.member-actions-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* ======================
+   Badges (Membership)
+   ====================== */
+.member-badge {
+  display: inline-flex;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 999px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 900;
+  font-size: 11px;
+}
+
+.member-badge-default {
+  border-color: rgba(205, 164, 94, 0.35);
+  background: rgba(205, 164, 94, 0.12);
+}
+
+.member-badge-discount {
+  border-color: rgba(76, 175, 80, 0.35);
+  background: rgba(76, 175, 80, 0.12);
+}
+
+/* ======================
+   Card footer
+   ====================== */
+.member-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border-top: 1px solid var(--admin-border);
+  margin-top: 14px;
+}
+
+.member-meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--admin-text-muted);
+  font-size: 13px;
+}
+
+.member-meta-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.2);
+  display: inline-block;
+}
+
+/* ======================
+   Form (create/detail)
+   ====================== */
+.member-form {
+  display: grid;
+  gap: 16px;
+}
+
+.member-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.member-form-field {
+  display: grid;
+  gap: 6px;
+}
+
+.member-form-field label {
+  font-size: 12px;
+  color: var(--admin-text-muted);
+  font-weight: 700;
+}
+
+.member-form-field input,
+.member-form-field select {
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 0 12px;
+  outline: none;
+  width: 100%;
+}
+
+.member-form-field input:focus,
+.member-form-field select:focus {
+  border-color: rgba(205, 164, 94, 0.35);
+  box-shadow: 0 0 0 3px rgba(205, 164, 94, 0.12);
+}
+
+.member-form-field input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.member-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid var(--admin-border);
+}
+
+/* Fix dropdown options */
+.member-field select option,
+.member-form-field select option {
+  background-color: #1e1b16;
+  color: #fff;
+  padding: 10px;
+}

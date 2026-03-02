@@ -1,0 +1,427 @@
+/* ======================
+   USER MANAGEMENT UI (desktop)
+   ====================== */
+
+.user-page {
+  display: grid;
+  gap: 14px;
+}
+
+.user-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.user-h1 {
+  margin: 0;
+  font-size: 20px;
+  color: #fff;
+  font-weight: 850;
+}
+
+.user-muted {
+  margin-top: 6px;
+  color: var(--admin-text-muted);
+  font-size: 13px;
+}
+
+.user-muted-sm {
+  color: var(--admin-text-muted);
+  font-size: 12px;
+}
+
+.user-strong {
+  font-weight: 800;
+  color: #fff;
+}
+
+.user-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-card {
+  border: 1px solid var(--admin-border);
+  border-radius: 16px;
+  background: rgba(26, 24, 20, 0.75);
+  backdrop-filter: blur(10px);
+  padding: 14px;
+  overflow: hidden;
+}
+
+.user-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--admin-text);
+  cursor: pointer;
+  text-decoration: none;
+  transition: 0.18s ease;
+  font-weight: 650;
+  font-size: 13px;
+}
+
+.user-btn:hover {
+  border-color: rgba(205, 164, 94, 0.35);
+  background: rgba(205, 164, 94, 0.08);
+  color: #fff;
+}
+
+.user-primary {
+  border-color: rgba(205, 164, 94, 0.35);
+  background: rgba(205, 164, 94, 0.12);
+  color: #fff;
+}
+
+.user-danger {
+  border-color: rgba(255, 77, 77, 0.35);
+  background: rgba(255, 77, 77, 0.12);
+  color: #fff;
+}
+
+.user-alert {
+  border: 1px solid rgba(255, 77, 77, 0.35);
+  background: rgba(255, 77, 77, 0.12);
+  color: #fff;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 13px;
+}
+
+/* filters */
+.user-filters {
+  display: grid;
+  grid-template-columns: 220px 220px 1fr;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 14px;
+}
+
+.user-field {
+  display: grid;
+  gap: 6px;
+}
+
+.user-field label {
+  font-size: 12px;
+  color: var(--admin-text-muted);
+  font-weight: 700;
+}
+
+.user-field input,
+.user-field select {
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 0 12px;
+  outline: none;
+  width: 100%;
+}
+
+.user-field input:focus,
+.user-field select:focus {
+  border-color: rgba(205, 164, 94, 0.35);
+  box-shadow: 0 0 0 3px rgba(205, 164, 94, 0.12);
+}
+
+.user-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.user-page-indicator {
+  color: var(--admin-text);
+  font-size: 13px;
+}
+
+/* table */
+.user-table-wrap {
+  overflow: auto;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 980px;
+}
+
+.user-table th,
+.user-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--admin-border);
+  text-align: left;
+  vertical-align: middle;
+  font-size: 13px;
+  color: var(--admin-text);
+}
+
+.user-table th {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 800;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.user-table tbody tr:hover td {
+  background: rgba(205, 164, 94, 0.06);
+}
+
+.user-td-muted {
+  padding: 18px 10px;
+  color: var(--admin-text-muted);
+  text-align: center;
+}
+
+.user-cell {
+  display: grid;
+  gap: 4px;
+}
+
+.user-actions-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* badges */
+.user-badge {
+  display: inline-flex;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 999px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 800;
+  font-size: 11px;
+}
+
+.user-badge-customer {
+  border-color: rgba(33, 150, 243, 0.35);
+  background: rgba(33, 150, 243, 0.12);
+}
+
+.user-badge-admin {
+  border-color: rgba(205, 164, 94, 0.35);
+  background: rgba(205, 164, 94, 0.12);
+}
+
+/* card footer */
+.user-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border-top: 1px solid var(--admin-border);
+  margin-top: 14px;
+}
+
+.user-meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--admin-text-muted);
+  font-size: 13px;
+}
+
+.user-meta-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.2);
+  display: inline-block;
+}
+
+/* modal */
+.user-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 999;
+}
+
+.user-modal {
+  width: 520px;
+  max-width: calc(100vw - 40px);
+  border-radius: 18px;
+  border: 1px solid var(--admin-border);
+  background: rgba(26, 24, 20, 0.96);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  padding: 0;
+}
+
+.user-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.user-modal-title {
+  font-weight: 900;
+  color: #fff;
+  font-size: 15px;
+}
+
+.user-modal-body {
+  padding: 18px;
+}
+
+.user-divider {
+  height: 1px;
+  background: var(--admin-border);
+  margin: 14px 0;
+}
+
+/* form */
+.user-form {
+  display: grid;
+  gap: 16px;
+}
+
+.user-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.user-form-field {
+  display: grid;
+  gap: 6px;
+}
+
+.user-form-field label {
+  font-size: 12px;
+  color: var(--admin-text-muted);
+  font-weight: 700;
+}
+
+.user-form-field input,
+.user-form-field select {
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 0 12px;
+  outline: none;
+  width: 100%;
+}
+
+.user-form-field input:focus,
+.user-form-field select:focus {
+  border-color: rgba(205, 164, 94, 0.35);
+  box-shadow: 0 0 0 3px rgba(205, 164, 94, 0.12);
+}
+
+.user-form-field input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.user-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+/* Fix dropdown options */
+.user-field select option,
+.user-form-field select option {
+  background-color: #1a1814;
+  color: #fff;
+  padding: 8px 12px;
+}
+
+/* Style cho disabled input */
+.user-input-disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Thêm style cho dropdown khi focus */
+.user-field select:focus,
+.user-form-field select:focus {
+  border-color: rgba(205, 164, 94, 0.35);
+  box-shadow: 0 0 0 3px rgba(205, 164, 94, 0.12);
+  outline: none;
+}
+
+/* Style cho dropdown khi hover */
+.user-field select:hover,
+.user-form-field select:hover {
+  border-color: rgba(205, 164, 94, 0.25);
+}
+
+/* Đảm bảo dropdown có màu nền tối */
+.user-field select,
+.user-form-field select {
+  background-color: rgba(26, 24, 20, 0.95);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Style cho options trong dropdown */
+.user-field select option,
+.user-form-field select option {
+  background-color: #1e1b16;
+  color: #fff;
+  padding: 10px;
+}
+
+/* Hover effect cho options (chỉ hỗ trợ trên Firefox) */
+.user-field select option:hover,
+.user-form-field select option:hover {
+  background-color: rgba(205, 164, 94, 0.2);
+}
+
+/* Style cho selected option */
+.user-field select option:checked,
+.user-form-field select option:checked {
+  background-color: rgba(205, 164, 94, 0.3);
+  color: #fff;
+}
+
+/* Thêm style cho container của modal nếu cần */
+.user-modal-body {
+  padding: 18px;
+}
+
+/* Style cho form actions */
+.user-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid var(--admin-border);
+}
+
+.member-form-field input[type='number']::-webkit-inner-spin-button,
+.member-form-field input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.member-form-field input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
