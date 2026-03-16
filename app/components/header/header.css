@@ -79,7 +79,7 @@
 }
 
 .scrolled .header .branding {
-  border-color: color-mix(in srgb, var(--accent-color), transparent 80%);
+  border-color: color-mix(in srgb, rgb(205, 164, 94), transparent 80%);
 }
 
 /* ===== Topbar ===== */
@@ -103,7 +103,7 @@
 
 .header .topbar .contact-info i {
   font-style: normal;
-  color: var(--accent-color);
+  color: rgb(205, 164, 94);
 }
 
 .header .topbar .contact-info i a,
@@ -125,7 +125,7 @@
 }
 
 .header .topbar .contact-info i a:hover {
-  color: var(--accent-color);
+  color: rgb(205, 164, 94);
   text-decoration: underline;
 }
 
@@ -135,7 +135,7 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  color: var(--accent-color);
+  color: rgb(205, 164, 94);
 }
 
 .header .topbar .languages ul a {
@@ -143,7 +143,7 @@
 }
 
 .header .topbar .languages ul a:hover {
-  color: var(--accent-color);
+  color: rgb(205, 164, 94);
 }
 
 .header .topbar .languages ul li + li {
@@ -169,7 +169,7 @@
 
 .header.solid .branding {
   border-bottom: 1px solid
-    color-mix(in srgb, var(--accent-color), transparent 82%);
+    color-mix(in srgb, rgb(205, 164, 94), transparent 82%);
 }
 
 /* ===== Logo ===== */
@@ -390,12 +390,12 @@
     justify-content: center;
     border-radius: 50%;
     transition: 0.3s;
-    background-color: color-mix(in srgb, var(--accent-color), transparent 90%);
+    background-color: color-mix(in srgb, rgb(205, 164, 94), transparent 90%);
   }
 
   .navmenu a i:hover,
   .navmenu a:focus i:hover {
-    background-color: var(--accent-color);
+    background-color: rgb(205, 164, 94);
     color: var(--contrast-color);
   }
 
@@ -407,7 +407,7 @@
 
   .navmenu .active i,
   .navmenu .active:focus i {
-    background-color: var(--accent-color);
+    background-color: rgb(205, 164, 94);
     color: var(--contrast-color);
     transform: rotate(180deg);
   }
@@ -464,7 +464,7 @@
 .header .btn-book-a-table,
 .header .btn-book-a-table:focus {
   color: var(--default-color);
-  border: 2px solid var(--accent-color);
+  border: 2px solid rgb(205, 164, 94);
   text-transform: uppercase;
   font-size: 14px;
   padding: 6px 24px;
@@ -478,7 +478,7 @@
 .header .btn-book-a-table:hover,
 .header .btn-book-a-table:focus:hover {
   color: var(--default-color);
-  background: var(--accent-color);
+  background: rgb(205, 164, 94);
 }
 
 .header .btn-book-a-table::after {
@@ -523,7 +523,7 @@
 .rb-profileDropdown {
   position: absolute;
   right: 0;
-  top: calc(100% + 10px);
+  top: calc(100% + 6px);
   min-width: 240px;
   border-radius: 16px;
   padding: 12px 8px;
@@ -824,4 +824,154 @@
 
 .header.solid::after {
   opacity: 1;
+}
+/* ================= HOVER EFFECTS - MATCH PROFILE ================= */
+
+/* Desktop nav button */
+.rb-navlink {
+  position: relative;
+  border-radius: 999px;
+  transition:
+    color 0.22s ease,
+    background-color 0.22s ease,
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.rb-navlink::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(205, 164, 94, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  pointer-events: none;
+}
+
+.rb-navlink:hover {
+  color: #cda45e;
+  background: rgba(205, 164, 94, 0.08);
+  transform: translateY(-1px);
+}
+
+.rb-navlink:hover::before {
+  opacity: 1;
+}
+
+.rb-navlink.active {
+  color: #cda45e;
+}
+
+.rb-navlink span,
+.rb-navlink i {
+  position: relative;
+  z-index: 1;
+}
+
+/* Nếu nút Dịch vụ là dropdown */
+.rb-navlink-dropdown:hover,
+.rb-navlink-dropdown.active,
+.rb-navlink-dropdown.open {
+  color: #cda45e;
+  background: rgba(205, 164, 94, 0.08);
+}
+
+.rb-navlink-caret-wrap {
+  transition:
+    background-color 0.22s ease,
+    border-color 0.22s ease,
+    transform 0.22s ease;
+}
+
+.rb-navlink-dropdown:hover .rb-navlink-caret-wrap,
+.rb-navlink-dropdown.active .rb-navlink-caret-wrap,
+.rb-navlink-dropdown.open .rb-navlink-caret-wrap {
+  background: rgba(205, 164, 94, 0.08);
+  border-color: rgba(205, 164, 94, 0.2);
+}
+
+.rb-nav-caret {
+  color: #cda45e;
+}
+
+/* Indicator dùng cùng tone */
+.nav-indicator {
+  background: #cda45e;
+  box-shadow: 0 0 8px rgba(205, 164, 94, 0.25);
+}
+
+/* Các link desktop thường nếu còn dùng */
+.navmenu a,
+.navmenu a:focus {
+  transition:
+    color 0.22s ease,
+    background-color 0.22s ease,
+    transform 0.22s ease;
+  border-radius: 999px;
+}
+
+.navmenu a:hover,
+.navmenu a:focus:hover {
+  color: #cda45e;
+  background: rgba(205, 164, 94, 0.08);
+  transform: translateY(-1px);
+}
+
+/* Profile item giữ đúng style profile */
+.rb-profileDropdownItem:hover {
+  color: #cda45e;
+  background: rgba(205, 164, 94, 0.08);
+}
+
+.rb-profileDropdownItem:hover i {
+  color: #cda45e;
+}
+
+/* Dịch vụ nếu đang reuse profile dropdown */
+.rb-servicesProfileItem:hover,
+.rb-servicesProfileItem.active {
+  color: #cda45e;
+  background: rgba(205, 164, 94, 0.08);
+}
+
+.rb-servicesProfileItem:hover i,
+.rb-servicesProfileItem.active i {
+  color: #cda45e;
+}
+
+/* Mobile menu */
+.mobile-menu-list a:hover,
+.mobile-menu-list button:hover,
+.rb-mobilelink:hover {
+  color: #cda45e;
+  background: rgba(205, 164, 94, 0.08);
+  transform: translateX(5px);
+}
+
+.rb-mobilelink.active {
+  color: #cda45e;
+  background: rgba(205, 164, 94, 0.08);
+}
+
+/* Mobile submenu */
+.mobile-submenu a:hover,
+.rb-mobile-sublink:hover {
+  color: #cda45e;
+  background: rgba(205, 164, 94, 0.08);
+  transform: translateX(4px);
+}
+
+/* Mobile toggle */
+.mobile-nav-toggle:hover {
+  color: #cda45e;
+  background: rgba(205, 164, 94, 0.08);
+}
+
+/* Nút đặt bàn nếu muốn đồng bộ profile hơn */
+.header .btn-book-a-table:hover,
+.header .btn-book-a-table:focus:hover {
+  background: rgb(205, 164, 94);
+  color: var(--default-color);
+  box-shadow: 0 10px 24px rgba(205, 164, 94, 0.18);
 }

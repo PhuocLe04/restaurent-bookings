@@ -1,12 +1,7 @@
 'use client'
 
-import {
-  ReactElement,
-  JSXElementConstructor,
-  ReactNode,
-  ReactPortal,
-} from 'react'
 import type { Combo, ComboDetail } from '../index'
+import '@/app/(web)/reservations/page.css'
 
 export default function ReservationCombo(props: {
   combos: Combo[]
@@ -18,182 +13,143 @@ export default function ReservationCombo(props: {
   const { combos, comboId, setComboId, comboDetail, onApplyCombo } = props
 
   return (
-    <div className="mt-4 rounded-lg border p-4">
-      <div className="text-sm font-medium">Combo (gồm món + dịch vụ)</div>
-      <div className="mt-2 grid gap-3 md:grid-cols-2">
+    <section className="reservation-block">
+      <div className="reservation-block__header">
         <div>
-          <select
-            className="w-full rounded-md border px-3 py-2 text-sm"
-            value={comboId}
-            onChange={(e) => setComboId(e.target.value)}
-          >
-            <option value="">-- Chọn combo --</option>
-            {combos.map((c) => (
-              <option key={c.id} value={String(c.id)}>
-                {c.title} (Giá {c.sale_price.toLocaleString('vi-VN')}₫)
-              </option>
-            ))}
-          </select>
+          <h3 className="reservation-block__title">Combo ưu đãi</h3>
+          <p className="reservation-block__subtitle">
+            Chọn combo gồm món ăn và dịch vụ để tiết kiệm hơn.
+          </p>
+        </div>
 
-          {comboDetail && (
-            <div className="mt-2 rounded-md border p-2 text-xs">
-              <div className="font-medium">{comboDetail.title}</div>
-              {comboDetail.description && (
-                <div className="text-muted-foreground">
-                  {comboDetail.description}
+        {comboDetail && (
+          <div className="reservation-block__count">
+            {comboDetail.sale_price.toLocaleString('vi-VN')}₫
+          </div>
+        )}
+      </div>
+
+      <div className="reservation-combo-panel">
+        <label className="reservation-field__label">Chọn combo</label>
+
+        <select
+          className="reservation-control"
+          value={comboId}
+          onChange={(e) => setComboId(e.target.value)}
+        >
+          <option value="">-- Chọn combo --</option>
+          {combos.map((c) => (
+            <option key={c.id} value={String(c.id)}>
+              {c.title} - {c.sale_price.toLocaleString('vi-VN')}₫
+            </option>
+          ))}
+        </select>
+
+        {!comboDetail && (
+          <div className="reservation-empty reservation-empty--combo">
+            Hãy chọn một combo để xem chi tiết.
+          </div>
+        )}
+
+        {comboDetail && (
+          <div className="reservation-combo-card">
+            <div className="reservation-combo-card__top">
+              <div>
+                <h4 className="reservation-combo-card__title">
+                  {comboDetail.title}
+                </h4>
+
+                {comboDetail.description && (
+                  <p className="reservation-combo-card__desc">
+                    {comboDetail.description}
+                  </p>
+                )}
+              </div>
+
+              <div className="reservation-combo-pricing">
+                <div className="reservation-combo-pricing__sale">
+                  {comboDetail.sale_price.toLocaleString('vi-VN')}₫
                 </div>
-              )}
 
-              <div className="mt-2">
-                <div className="font-medium">Bao gồm:</div>
-                <ul className="list-disc pl-5">
-                  {comboDetail.combo_menu_items?.map(
-                    (x: {
-                      menu_item_id: any
-                      menu_items: {
-                        name:
-                          | string
-                          | number
-                          | bigint
-                          | boolean
-                          | ReactElement<
-                              unknown,
-                              string | JSXElementConstructor<any>
-                            >
-                          | Iterable<ReactNode>
-                          | ReactPortal
-                          | Promise<
-                              | string
-                              | number
-                              | bigint
-                              | boolean
-                              | ReactPortal
-                              | ReactElement<
-                                  unknown,
-                                  string | JSXElementConstructor<any>
-                                >
-                              | Iterable<ReactNode>
-                              | null
-                              | undefined
-                            >
-                          | null
-                          | undefined
-                      }
-                      quantity:
-                        | string
-                        | number
-                        | bigint
-                        | boolean
-                        | ReactElement<
-                            unknown,
-                            string | JSXElementConstructor<any>
-                          >
-                        | Iterable<ReactNode>
-                        | ReactPortal
-                        | Promise<
-                            | string
-                            | number
-                            | bigint
-                            | boolean
-                            | ReactPortal
-                            | ReactElement<
-                                unknown,
-                                string | JSXElementConstructor<any>
-                              >
-                            | Iterable<ReactNode>
-                            | null
-                            | undefined
-                          >
-                        | null
-                        | undefined
-                    }) => (
-                      <li key={`m-${x.menu_item_id}`}>
-                        {x.menu_items?.name} × {x.quantity}
-                      </li>
-                    ),
-                  )}
-                  {comboDetail.combo_services?.map(
-                    (x: {
-                      service_id: any
-                      services: {
-                        name:
-                          | string
-                          | number
-                          | bigint
-                          | boolean
-                          | ReactElement<
-                              unknown,
-                              string | JSXElementConstructor<any>
-                            >
-                          | Iterable<ReactNode>
-                          | ReactPortal
-                          | Promise<
-                              | string
-                              | number
-                              | bigint
-                              | boolean
-                              | ReactPortal
-                              | ReactElement<
-                                  unknown,
-                                  string | JSXElementConstructor<any>
-                                >
-                              | Iterable<ReactNode>
-                              | null
-                              | undefined
-                            >
-                          | null
-                          | undefined
-                      }
-                      quantity:
-                        | string
-                        | number
-                        | bigint
-                        | boolean
-                        | ReactElement<
-                            unknown,
-                            string | JSXElementConstructor<any>
-                          >
-                        | Iterable<ReactNode>
-                        | ReactPortal
-                        | Promise<
-                            | string
-                            | number
-                            | bigint
-                            | boolean
-                            | ReactPortal
-                            | ReactElement<
-                                unknown,
-                                string | JSXElementConstructor<any>
-                              >
-                            | Iterable<ReactNode>
-                            | null
-                            | undefined
-                          >
-                        | null
-                        | undefined
-                    }) => (
-                      <li key={`s-${x.service_id}`}>
-                        {x.services?.name} × {x.quantity}
-                      </li>
-                    ),
-                  )}
-                </ul>
+                {comboDetail.total_origin_price > comboDetail.sale_price && (
+                  <div className="reservation-combo-pricing__origin">
+                    {comboDetail.total_origin_price.toLocaleString('vi-VN')}₫
+                  </div>
+                )}
               </div>
             </div>
-          )}
-        </div>
 
-        <div className="flex items-start justify-end">
-          <button
-            type="button"
-            className="rounded-md bg-slate-900 px-3 py-2 text-sm text-white disabled:opacity-60"
-            onClick={onApplyCombo}
-            disabled={!comboDetail}
-          >
-            Áp dụng combo
-          </button>
-        </div>
+            <div className="reservation-combo-sections">
+              <div className="reservation-combo-group">
+                <div className="reservation-combo-group__label">
+                  Món ăn bao gồm
+                </div>
+
+                {comboDetail.combo_menu_items?.length ? (
+                  <div className="reservation-combo-list">
+                    {comboDetail.combo_menu_items.map((x) => (
+                      <div
+                        key={`m-${x.menu_item_id}`}
+                        className="reservation-combo-item"
+                      >
+                        <span className="reservation-combo-item__name">
+                          {x.menu_items?.name}
+                        </span>
+                        <span className="reservation-combo-item__qty">
+                          × {x.quantity}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="reservation-combo-empty">
+                    Không có món trong combo này.
+                  </div>
+                )}
+              </div>
+
+              <div className="reservation-combo-group">
+                <div className="reservation-combo-group__label">
+                  Dịch vụ bao gồm
+                </div>
+
+                {comboDetail.combo_services?.length ? (
+                  <div className="reservation-combo-list">
+                    {comboDetail.combo_services.map((x) => (
+                      <div
+                        key={`s-${x.service_id}`}
+                        className="reservation-combo-item"
+                      >
+                        <span className="reservation-combo-item__name">
+                          {x.services?.name}
+                        </span>
+                        <span className="reservation-combo-item__qty">
+                          × {x.quantity}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="reservation-combo-empty">
+                    Không có dịch vụ trong combo này.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="reservation-combo-card__actions">
+              <button
+                type="button"
+                className="reservation-submit reservation-submit--combo"
+                onClick={onApplyCombo}
+                disabled={!comboDetail}
+              >
+                Áp dụng combo
+              </button>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </section>
   )
 }

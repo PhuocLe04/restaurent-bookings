@@ -107,7 +107,6 @@
 }
 
 .about-section {
-  padding: 100px 0;
   background-color: var(--dark-bg);
   color: var(--light-text);
   position: relative;

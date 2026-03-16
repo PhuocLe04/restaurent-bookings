@@ -28,8 +28,9 @@ import {
   Briefcase,
   Database,
   Bell,
+  UserCheck,
 } from 'lucide-react'
-
+import './index.css'
 interface SidebarProps {
   collapsed: boolean
 }
@@ -68,7 +69,12 @@ const navSections: { label: string; items: NavItem[] }[] = [
         icon: CalendarCheck,
       },
       {
-        href: '/admin/orders',
+        href: '/admin/checkin',
+        label: 'Check-in',
+        icon: UserCheck,
+      },
+      {
+        href: '/admin/order',
         label: 'Đơn hàng',
         icon: ShoppingBag,
       },
@@ -78,7 +84,7 @@ const navSections: { label: string; items: NavItem[] }[] = [
         icon: Package,
       },
       {
-        href: '/admin/payments',
+        href: '/admin/payment',
         label: 'Thanh toán',
         icon: CreditCard,
       },
@@ -108,7 +114,7 @@ const navSections: { label: string; items: NavItem[] }[] = [
         icon: Package,
       },
       {
-        href: '/admin/services',
+        href: '/admin/reservation-services',
         label: 'Dịch vụ',
         icon: Gift,
       },
@@ -123,17 +129,17 @@ const navSections: { label: string; items: NavItem[] }[] = [
     label: 'Quản lý bàn',
     items: [
       {
-        href: '/admin/restaurant-tables',
+        href: '/admin/restaurant-table',
         label: 'Bàn ăn',
         icon: Table,
       },
       {
-        href: '/admin/table-types',
+        href: '/admin/table-type',
         label: 'Loại bàn',
         icon: Grid,
       },
       {
-        href: '/admin/reservation-tables',
+        href: '/admin/reservation-table',
         label: 'Bàn đã đặt',
         icon: CalendarCheck,
       },
@@ -177,35 +183,15 @@ const navSections: { label: string; items: NavItem[] }[] = [
         label: 'Bài viết',
         icon: FileText,
       },
-      {
-        href: '/admin/gallery',
-        label: 'Thư viện ảnh',
-        icon: Images,
-      },
-    ],
-  },
-  {
-    label: 'Giao tiếp',
-    items: [
-      {
-        href: '/admin/messages',
-        label: 'Tin nhắn',
-        icon: MessageSquare,
-      },
     ],
   },
   {
     label: 'Hệ thống',
     items: [
       {
-        href: '/admin/audit-logs',
+        href: '/admin/audit-log',
         label: 'Lịch sử hoạt động',
         icon: Database,
-      },
-      {
-        href: '/admin/settings',
-        label: 'Cài đặt',
-        icon: Settings,
       },
     ],
   },

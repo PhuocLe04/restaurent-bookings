@@ -1,0 +1,241 @@
+/* ======================
+   ANALYTICS MANAGEMENT UI
+   Minimalist version without icons
+   ====================== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Analytics Page Container */
+.analytics-page {
+  display: grid;
+  gap: 20px;
+  animation: fadeIn 0.4s ease-out;
+  padding: 20px 0;
+}
+
+/* Header Section */
+.analytics-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  animation: slideIn 0.5s ease-out;
+  margin-bottom: 8px;
+}
+
+.analytics-h1 {
+  margin: 0;
+  font-size: 20px;
+  color: #fff;
+  font-weight: 850;
+  position: relative;
+  display: inline-block;
+}
+
+.analytics-h1::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background: rgba(205, 164, 94, 0.5);
+  border-radius: 2px;
+  animation: scaleIn 0.6s ease-out 0.2s both;
+}
+
+.analytics-muted {
+  margin-top: 6px;
+  color: var(--admin-text-muted);
+  font-size: 13px;
+}
+
+.analytics-strong {
+  font-weight: 800;
+  color: #fff;
+}
+
+/* Grid Layout */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  animation: scaleIn 0.4s ease-out;
+}
+
+/* Cards */
+.analytics-card {
+  display: block;
+  text-decoration: none;
+  background: rgba(26, 24, 20, 0.75);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--admin-border);
+  border-radius: 20px;
+  padding: 20px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeIn 0.3s ease-out;
+  animation-fill-mode: both;
+}
+
+.analytics-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(205, 164, 94, 0.3);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  background: rgba(26, 24, 20, 0.85);
+}
+
+/* Card Header */
+.analytics-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.analytics-card-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(205, 164, 94, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgba(205, 164, 94, 0.1);
+  padding: 4px 12px;
+  border-radius: 30px;
+  border: 1px solid rgba(205, 164, 94, 0.2);
+}
+
+.analytics-card-arrow {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 20px;
+  font-weight: 600;
+  transition:
+    transform 0.2s ease,
+    color 0.2s ease;
+}
+
+.analytics-card:hover .analytics-card-arrow {
+  color: rgba(205, 164, 94, 0.9);
+  transform: translateX(5px);
+}
+
+/* Card Title */
+.analytics-card-title {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.4;
+}
+
+/* Card Description */
+.analytics-card-desc {
+  margin: 0 0 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.6);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 62px; /* 3 lines * 1.6 * 13px ≈ 62px */
+}
+
+/* Card Footer */
+.analytics-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 8px;
+}
+
+.analytics-card-link {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(205, 164, 94, 0.9);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: gap 0.2s ease;
+}
+
+.analytics-card:hover .analytics-card-link {
+  gap: 10px;
+}
+
+.analytics-card-link span {
+  font-size: 16px;
+  transition: transform 0.2s ease;
+}
+
+.analytics-card:hover .analytics-card-link span {
+  transform: translateX(4px);
+}
+
+/* Staggered animation for cards */
+.analytics-card:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.analytics-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.analytics-card:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.analytics-card:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-page {
+    padding: 10px 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .analytics-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .analytics-card-desc {
+    min-height: auto;
+  }
+}

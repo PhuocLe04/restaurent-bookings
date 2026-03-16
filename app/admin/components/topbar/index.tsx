@@ -25,12 +25,14 @@ const pageNames: Record<string, string> = {
   '/admin/reservations': 'Reservations',
   '/admin/orders': 'Orders',
   '/admin/menu': 'Menu Items',
-  '/admin/customers': 'Customers',
-  '/admin/staff': 'Chefs & Staff',
-  '/admin/gallery': 'Gallery',
-  '/admin/messages': 'Messages',
-  '/admin/analytics': 'Analytics',
-  '/admin/settings': 'Settings',
+
+  '/admin/restaurant-table': 'Bàn ăn',
+  '/admin/table-type': 'Loại bàn',
+  '/admin/reservation-table': 'Bàn đã đặt',
+  '/admin/staff': 'Nhân viên',
+  '/admin/shifts': 'Ca làm việc',
+  '/admin/user': 'Người dùng',
+  '/admin/membership': 'Hạng thành viên',
 }
 
 // match nested route: /admin/orders/123 -> Orders

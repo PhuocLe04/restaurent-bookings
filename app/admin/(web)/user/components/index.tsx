@@ -165,6 +165,12 @@ const UserList = forwardRef<UserListRef>(function UserList(_props, ref) {
     return role
   }
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '—'
+    const date = new Date(dateString)
+    return date.toLocaleDateString('vi-VN')
+  }
+
   return (
     <div className="user-page">
       {/* Bộ lọc */}
@@ -251,12 +257,12 @@ const UserList = forwardRef<UserListRef>(function UserList(_props, ref) {
           <table className="user-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Người dùng</th>
+                <th style={{ width: 100 }}>ID</th>
+                <th style={{ width: 150 }}>Người dùng</th>
                 <th>Email</th>
                 <th>Số điện thoại</th>
-                <th>Vai trò</th>
-                <th>Hạng thành viên</th>
+                <th style={{ width: 150 }}>Vai trò</th>
+                <th style={{ width: 150 }}>Hạng thành viên</th>
                 <th>Điểm</th>
                 <th>Ngày tạo</th>
                 <th style={{ width: 200 }}>Thao tác</th>
@@ -265,7 +271,10 @@ const UserList = forwardRef<UserListRef>(function UserList(_props, ref) {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="user-td-muted">
+                  <td
+                    colSpan={9}
+                    className="user-td-muted user-loading-shimmer"
+                  >
                     Đang tải danh sách người dùng...
                   </td>
                 </tr>
@@ -278,10 +287,14 @@ const UserList = forwardRef<UserListRef>(function UserList(_props, ref) {
               ) : (
                 users.map((u) => (
                   <tr key={u.id}>
-                    <td>#{u.id}</td>
                     <td>
-                      <div className="user-cell">
-                        <div className="user-strong">{u.full_name}</div>
+                      <div className="user-id-badge">#{u.id}</div>
+                    </td>
+                    <td>
+                      <div className="user-info-combined">
+                        <div className="user-name-details">
+                          <span className="user-fullname">{u.full_name}</span>
+                        </div>
                       </div>
                     </td>
                     <td>{u.email}</td>
@@ -291,12 +304,22 @@ const UserList = forwardRef<UserListRef>(function UserList(_props, ref) {
                         {roleLabel(u.role)}
                       </span>
                     </td>
-                    <td>{membershipNameOf(u)}</td>
-                    <td>{Number(u.member_point ?? 0).toLocaleString()}</td>
+                    <td>
+                      {membershipNameOf(u) !== '—' ? (
+                        <span className="user-badge user-badge-membership">
+                          {membershipNameOf(u)}
+                        </span>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td>
+                      <span className="user-points">
+                        {Number(u.member_point ?? 0).toLocaleString()}
+                      </span>
+                    </td>
                     <td className="user-muted-sm">
-                      {u.created_at
-                        ? new Date(u.created_at).toLocaleDateString()
-                        : '—'}
+                      {formatDate(u.created_at)}
                     </td>
                     <td>
                       <div className="user-actions-row">
@@ -306,6 +329,12 @@ const UserList = forwardRef<UserListRef>(function UserList(_props, ref) {
                         <button
                           className="user-btn user-danger"
                           onClick={() => handleDelete(u.id)}
+                          disabled={u.role === 'admin'}
+                          title={
+                            u.role === 'admin'
+                              ? 'Không thể xóa quản trị viên'
+                              : ''
+                          }
                         >
                           Xóa
                         </button>

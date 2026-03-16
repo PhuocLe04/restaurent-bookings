@@ -1,62 +1,36 @@
-'use client'
+// app/admin/layout.tsx  (SERVER - KHÔNG "use client")
+import type { ReactNode } from 'react'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { prisma } from '@/lib/prisma'
+import AdminShell from './AdminShell' // client wrapper
 
-import { type ReactNode, useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { usePathname } from 'next/navigation'
+export const dynamic = 'force-dynamic'
 
-import AdminSidebar from './components/sidebar'
-import AdminTopbar from './components/topbar'
-import './global.css'
-
-interface AdminLayoutProps {
-  children: ReactNode
+async function parseUserIdFromCookies(): Promise<number | null> {
+  const c = cookies()
+  const raw =
+    (await c).get('web_user_id')?.value ?? (await c).get('user_id')?.value
+  if (!raw) return null
+  const n = Number(raw)
+  return Number.isFinite(n) && n > 0 ? n : null
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
-  const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
+export default async function AdminLayout({
+  children,
+}: {
+  children: ReactNode
+}) {
+  const userId = await parseUserIdFromCookies()
+  if (!userId) redirect('/login')
 
-  // Desktop only - no mobile state
-  useEffect(() => {
-    // Load collapsed state from localStorage if needed
-    const saved = localStorage.getItem('admin-sidebar-collapsed')
-    if (saved) {
-      setCollapsed(saved === 'true')
-    }
-  }, [])
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true },
+  })
 
-  const handleToggle = () => {
-    const newState = !collapsed
-    setCollapsed(newState)
-    localStorage.setItem('admin-sidebar-collapsed', String(newState))
-  }
+  if (!user) redirect('/login')
+  if (user.role !== 'admin') redirect('/')
 
-  return (
-    <div className="admin-root">
-      {/* Sidebar - fixed */}
-      <AdminSidebar
-        collapsed={collapsed}
-      />
-
-      {/* Topbar - fixed */}
-      <AdminTopbar collapsed={collapsed} onToggle={handleToggle} />
-
-      {/* Main Content - scrollable */}
-      <main className={`admin-content ${collapsed ? 'sidebar-collapsed' : ''}`}>
-        <div className="admin-page">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={pathname}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-            >
-              {children}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </main>
-    </div>
-  )
+  return <AdminShell>{children}</AdminShell>
 }

@@ -1,266 +1,249 @@
-// ContactSection.tsx
 'use client'
 
-import { useState } from 'react'
+import { motion } from 'framer-motion'
 import {
   FaMapMarkerAlt,
   FaPhone,
   FaEnvelope,
-  FaPaperPlane,
-  FaCheckCircle,
-  FaSpinner,
-  FaClock,
   FaFacebookF,
   FaInstagram,
-  FaTwitter,
+  FaRegEnvelope,
+  FaRegMap,
+  FaTiktok,
 } from 'react-icons/fa'
 import './index.css'
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.15,
+    },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 90,
+      damping: 14,
+    },
+  },
+}
+
+const socialItems = [
+  {
+    icon: FaFacebookF,
+    name: 'Facebook',
+    label: 'Fanpage chính thức',
+    handle: '@restaurantly.vn',
+    href: 'https://facebook.com',
+    color: '#1877f2',
+    accentClass: 'facebook',
+  },
+  {
+    icon: FaInstagram,
+    name: 'Instagram',
+    label: 'Hình ảnh & không gian',
+    handle: '@restaurantly.vn',
+    href: 'https://instagram.com',
+    color: '#e4405f',
+    accentClass: 'instagram',
+  },
+  {
+    icon: FaTiktok,
+    name: 'TikTok',
+    label: 'Video trải nghiệm',
+    handle: '@restaurantly.vn',
+    href: 'https://tiktok.com',
+    color: '#ffffff',
+    accentClass: 'tiktok',
+  },
+]
+
 export default function ContactSection() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: '',
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState<
-    'idle' | 'success' | 'error'
-  >('idle')
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-      setSubmitStatus('success')
-      setFormData({ name: '', email: '', subject: '', message: '' })
-      setTimeout(() => setSubmitStatus('idle'), 3000)
-    } catch {
-      setSubmitStatus('error')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
   return (
     <section id="contact" className="contact-section">
-      {/* Background Decoration */}
       <div className="contact-bg">
-        <div className="bg-circle circle-1"></div>
-        <div className="bg-circle circle-2"></div>
-        <div className="bg-pattern"></div>
+        <motion.div
+          className="bg-circle circle-1"
+          animate={{
+            scale: [1, 1.12, 1],
+            rotate: [0, 45, 0],
+            opacity: [0.22, 0.34, 0.22],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: 'linear',
+          }}
+        />
+        <motion.div
+          className="bg-circle circle-2"
+          animate={{
+            scale: [1.1, 1, 1.1],
+            rotate: [45, 0, 45],
+            opacity: [0.16, 0.28, 0.16],
+          }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            ease: 'linear',
+          }}
+        />
+        <div className="bg-pattern" />
       </div>
 
       <div className="container">
-        {/* Section Header */}
-        <div className="section-header">
-          <span className="section-subtitle">LIÊN HỆ</span>
-          <h2 className="section-title">
-            <span className="title-highlight">Gửi</span> Tin Nhắn Cho Chúng Tôi
-          </h2>
-          <div className="title-decoration">
-            <span className="decoration-line"></span>
-            <span className="decoration-dot"></span>
-            <span className="decoration-line"></span>
+        <motion.div
+          className="section-header"
+          initial={{ opacity: 0, y: 36 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.25 }}
+          transition={{ duration: 0.7 }}
+        >
+          <div className="subtitle-wrapper">
+            <span className="section-subtitle">
+              <FaRegEnvelope className="subtitle-icon" />
+              <span className="subtitle-text">LIÊN HỆ VỚI CHÚNG TÔI</span>
+            </span>
           </div>
-          <p className="section-description">
-            Chúng tôi luôn sẵn sàng lắng nghe và phục vụ bạn. Hãy để lại tin
-            nhắn, đội ngũ của chúng tôi sẽ phản hồi trong vòng 24 giờ.
-          </p>
-        </div>
 
-        <div className="contact-wrapper">
-          {/* Left Column - Info Cards */}
-          <div className="info-column">
-            {/* Location Card */}
-            <div className="info-card">
+          <h2 className="section-title">
+            Kết nối với <span className="title-highlight">Restaurantly</span>
+          </h2>
+
+          <div className="title-decoration">
+            <span className="decoration-line" />
+            <span className="decoration-dot" />
+            <span className="decoration-line" />
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="contact-wrapper"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+        >
+          <motion.div className="info-column" variants={containerVariants}>
+            <motion.div
+              className="info-card glass-effect"
+              variants={itemVariants}
+              whileHover={{ y: -6 }}
+            >
               <div className="card-icon-wrapper">
-                <FaMapMarkerAlt className="card-icon" />
+                <FaRegMap className="card-icon" />
               </div>
-              <h3>Địa Chỉ</h3>
-              <p>
+              <h3>Địa chỉ</h3>
+              <p className="address-text">
                 8C Đường Tống Hữu Định
                 <br />
-                Thành Phố Thủ Đức, Hồ Chí Minh
+                Phường Thảo Điền, TP. Thủ Đức
               </p>
-              <a href="#" className="card-link">
-                Xem bản đồ →
-              </a>
-            </div>
+              <motion.a
+                href="https://maps.google.com"
+                target="_blank"
+                rel="noreferrer"
+                className="card-link"
+                whileHover={{ x: 4 }}
+              >
+                Xem chỉ đường <FaMapMarkerAlt className="link-icon" />
+              </motion.a>
+            </motion.div>
 
-            {/* Contact Card */}
-            <div className="info-card">
+            <motion.div
+              className="info-card glass-effect"
+              variants={itemVariants}
+              whileHover={{ y: -6 }}
+            >
               <div className="card-icon-wrapper">
                 <FaPhone className="card-icon" />
               </div>
-              <h3>Liên Hệ</h3>
+              <h3>Liên hệ</h3>
+
               <div className="contact-links">
-                <a href="tel:+84358777123">+84 358 777 123</a>
-                <a href="mailto:contact@restaurantly.com">
-                  contact@restaurantly.com
-                </a>
-              </div>
-              <p className="card-note">Hỗ trợ 24/7</p>
-            </div>
+                <motion.a href="tel:+84336428471" whileHover={{ x: 4 }}>
+                  <FaPhone className="contact-icon" />
+                  <span>+84 336 428 471</span>
+                </motion.a>
 
-            {/* Hours Card */}
-            <div className="info-card hours-card">
-              <div className="card-icon-wrapper">
-                <FaClock className="card-icon" />
+                <motion.a
+                  href="mailto:Lehuuphuoc0804z@gmail.com"
+                  whileHover={{ x: 4 }}
+                >
+                  <FaEnvelope className="contact-icon" />
+                  <span>Lehuuphuoc0804z@gmail.com</span>
+                </motion.a>
               </div>
-              <h3>Giờ Mở Cửa</h3>
-              <div className="hours-display">
-                <div className="hours-item">
-                  <span className="days">Thứ 2 - Thứ 5</span>
-                  <span className="time">11:00 - 22:00</span>
-                </div>
-                <div className="hours-item">
-                  <span className="days">Thứ 6 - Thứ 7</span>
-                  <span className="time">11:00 - 23:00</span>
-                </div>
-                <div className="hours-item highlight">
-                  <span className="days">Chủ Nhật</span>
-                  <span className="time">12:00 - 21:00</span>
-                </div>
-              </div>
-            </div>
+            </motion.div>
 
-            {/* Social Card */}
-            <div className="info-card social-card">
-              <h3>Kết Nối Với Chúng Tôi</h3>
+            <motion.div
+              className="info-card glass-effect social-card"
+              variants={itemVariants}
+              whileHover={{ y: -6 }}
+            >
+              <h3>Kết nối với chúng tôi</h3>
+
               <div className="social-grid">
-                <a href="#" className="social-item">
-                  <FaFacebookF />
-                  <span>Facebook</span>
-                </a>
-                <a href="#" className="social-item">
-                  <FaInstagram />
-                  <span>Instagram</span>
-                </a>
-                <a href="#" className="social-item">
-                  <FaTwitter />
-                  <span>Twitter</span>
-                </a>
-              </div>
-            </div>
-          </div>
+                {socialItems.map((social, index) => (
+                  <motion.a
+                    key={social.name}
+                    href={social.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`social-item ${social.accentClass}`}
+                    whileHover={{
+                      y: -6,
+                      borderColor: social.color,
+                    }}
+                    whileTap={{ scale: 0.97 }}
+                    initial={{ opacity: 0, y: 12 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.08 }}
+                  >
+                    <div className="social-icon-wrap">
+                      <social.icon />
+                    </div>
 
-          {/* Right Column - Map & Form */}
-          <div className="form-column">
-            {/* Map Container */}
-            <div className="map-container">
-              <div className="map-overlay"></div>
+                    <div className="social-content">
+                      <strong>{social.name}</strong>
+                      <span>{social.label}</span>
+                      <small>{social.handle}</small>
+                    </div>
+                  </motion.a>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+
+          <motion.div className="form-column" variants={itemVariants}>
+            <motion.div
+              className="map-container glass-effect"
+              whileHover={{ y: -4 }}
+            >
+              <div className="map-overlay" />
               <iframe
                 title="Bản đồ Restaurantly"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d82741.09728026556!2d106.7040192762702!3d10.801620366265471!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317527098834fe7d%3A0x814d72a39c8b60a!2zVHLGsOG7nW5nIMSQ4bqhaSBo4buNYyBRdeG7kWMgdOG6vyBTw6BpIEfDsm4gU0lV!5e0!3m2!1svi!2s!4v1745606221035!5m2!1svi!2s"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3918.9005748413216!2d106.73379257485797!3d10.817150758386768!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317527098834fe7d%3A0x814d72a39c8b60a!2zVHLGsOG7nW5nIMSQ4bqhaSBo4buNYyBRdeG7kWMgdOG6vyBTw6BpIEfDsm4gU0lV!5e0!3m2!1svi!2s!4v1745606221035!5m2!1svi!2s"
                 loading="lazy"
                 allowFullScreen
               />
               <div className="map-badge">
                 <FaMapMarkerAlt />
-                <span>Restaurantly - Nhà hàng của bạn</span>
+                <span>Nhà hàng Restaurantly</span>
               </div>
-            </div>
-
-            {/* Contact Form */}
-            <div className="form-card">
-              <div className="form-header">
-                <h3>Gửi Tin Nhắn</h3>
-                <p>Chúng tôi sẽ phản hồi trong vòng 24 giờ</p>
-              </div>
-
-              <form onSubmit={handleSubmit} className="contact-form">
-                <div className="form-row">
-                  <div className="form-group">
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      placeholder="Họ và tên"
-                      required
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="Email"
-                      required
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <input
-                    type="text"
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleChange}
-                    placeholder="Tiêu đề"
-                    required
-                    disabled={isSubmitting}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <textarea
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    rows={5}
-                    placeholder="Nội dung tin nhắn"
-                    required
-                    disabled={isSubmitting}
-                  />
-                </div>
-
-                {submitStatus === 'success' && (
-                  <div className="form-message success">
-                    <FaCheckCircle />
-                    <span>Gửi tin nhắn thành công! Cảm ơn bạn đã liên hệ.</span>
-                  </div>
-                )}
-
-                {submitStatus === 'error' && (
-                  <div className="form-message error">
-                    <span>Có lỗi xảy ra. Vui lòng thử lại sau.</span>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  className="submit-btn"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <FaSpinner className="spinner" />
-                      <span>Đang gửi...</span>
-                    </>
-                  ) : (
-                    <>
-                      <FaPaperPlane />
-                      <span>Gửi Tin Nhắn</span>
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   )

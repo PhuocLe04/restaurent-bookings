@@ -1,22 +1,56 @@
-// Footer.tsx
 'use client'
+
 import { useState } from 'react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
+import 'animate.css'
 import {
-  FaTwitter,
   FaFacebookF,
   FaInstagram,
-  FaLinkedinIn,
+  FaTiktok,
   FaEnvelope,
   FaPhone,
   FaMapMarkerAlt,
-  FaClock,
   FaUtensils,
   FaChevronRight,
   FaPaperPlane,
   FaHeart,
 } from 'react-icons/fa'
 import './footer.css'
+
+const containerVariants = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.08,
+    },
+  },
+}
+
+const colVariants = {
+  hidden: { opacity: 0, y: 22 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.55,
+      ease: [0.22, 1, 0.36, 1] as const,
+    },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: [0.22, 1, 0.36, 1] as const,
+    },
+  },
+}
 
 export default function Footer() {
   const [email, setEmail] = useState('')
@@ -26,6 +60,7 @@ export default function Footer() {
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email) return
+
     setLoading(true)
     await new Promise((resolve) => setTimeout(resolve, 1000))
     setLoading(false)
@@ -49,106 +84,160 @@ export default function Footer() {
 
       <div className="footer-main">
         <div className="container">
-          <div className="footer-grid">
+          <motion.div
+            className="footer-grid"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.2 }}
+          >
             {/* Column 1: Brand & Info */}
-            <div className="footer-col brand-col">
-              <Link href="/" className="footer-logo">
-                <FaUtensils className="logo-icon" />
-                <div className="logo-text">
-                  <span className="logo-name">Restaurantly</span>
-                  <span className="logo-slogan">Tinh hoa ẩm thực</span>
-                </div>
-              </Link>
+            <motion.div
+              className="footer-col brand-col animate__animated animate__fadeInUp"
+              variants={colVariants}
+            >
+              <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
+                <Link href="/" className="footer-logo">
+                  <motion.span
+                    whileHover={{ rotate: -6, scale: 1.06 }}
+                    transition={{ duration: 0.22 }}
+                  >
+                    <FaUtensils className="logo-icon" />
+                  </motion.span>
 
-              <p className="brand-desc">
+                  <div className="logo-text">
+                    <span className="logo-name">Restaurantly</span>
+                    <span className="logo-slogan">Tinh hoa ẩm thực</span>
+                  </div>
+                </Link>
+              </motion.div>
+
+              <motion.p className="brand-desc" variants={itemVariants}>
                 Trải nghiệm ẩm thực đẳng cấp với những món ăn tinh tế, không
                 gian sang trọng và dịch vụ chuyên nghiệp.
-              </p>
+              </motion.p>
 
-              <div className="info-list">
-                <div className="info-item">
+              <motion.div className="info-list" variants={containerVariants}>
+                <motion.div className="info-item" variants={itemVariants}>
                   <FaMapMarkerAlt className="info-icon" />
                   <span>
                     8C Đường Tống Hữu Định, Thành Phố Thủ Đức, Hồ Chí Minh
                   </span>
-                </div>
-                <div className="info-item">
+                </motion.div>
+
+                <motion.div className="info-item" variants={itemVariants}>
                   <FaPhone className="info-icon" />
-                  <a href="tel:+84358777123">+84 358 777 123</a>
-                </div>
-                <div className="info-item">
+                  <a href="tel:+84358777123">+84 336 428 471</a>
+                </motion.div>
+
+                <motion.div className="info-item" variants={itemVariants}>
                   <FaEnvelope className="info-icon" />
                   <a href="mailto:contact@restaurantly.com">
-                    contact@restaurantly.com
+                    Lehuuphuoc0804z@gmail.com
                   </a>
-                </div>
-              </div>
-            </div>
+                </motion.div>
+              </motion.div>
+            </motion.div>
 
             {/* Column 2: Quick Links */}
-            <div className="footer-col">
+            <motion.div
+              className="footer-col animate__animated animate__fadeInUp"
+              variants={colVariants}
+            >
               <h4 className="footer-title">Liên Kết Nhanh</h4>
-              <ul className="footer-links">
-                <li>
+
+              <motion.ul
+                className="footer-links"
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true }}
+              >
+                <motion.li variants={itemVariants}>
                   <Link href="/">
                     <FaChevronRight /> Trang Chủ
                   </Link>
-                </li>
-                <li>
+                </motion.li>
+                <motion.li variants={itemVariants}>
                   <Link href="/#about">
                     <FaChevronRight /> Giới Thiệu
                   </Link>
-                </li>
-                <li>
+                </motion.li>
+                <motion.li variants={itemVariants}>
                   <Link href="/menu">
                     <FaChevronRight /> Thực Đơn
                   </Link>
-                </li>
-                <li>
-                  <Link href="/reservation">
+                </motion.li>
+                <motion.li variants={itemVariants}>
+                  <Link href="/reservations">
                     <FaChevronRight /> Đặt Bàn
                   </Link>
-                </li>
-                <li>
+                </motion.li>
+                <motion.li variants={itemVariants}>
                   <Link href="/contact">
                     <FaChevronRight /> Liên Hệ
                   </Link>
-                </li>
-              </ul>
-            </div>
+                </motion.li>
+              </motion.ul>
+            </motion.div>
 
             {/* Column 3: Opening Hours */}
-            <div className="footer-col">
+            <motion.div
+              className="footer-col animate__animated animate__fadeInUp"
+              variants={colVariants}
+            >
               <h4 className="footer-title">Giờ Mở Cửa</h4>
-              <ul className="hours-list">
-                <li>
-                  <span>Thứ 2 - Thứ 5:</span>
-                  <span className="hours-time">11:00 - 22:00</span>
-                </li>
-                <li>
-                  <span>Thứ 6 - Thứ 7:</span>
-                  <span className="hours-time">11:00 - 23:00</span>
-                </li>
-                <li className="sunday">
-                  <span>Chủ Nhật:</span>
-                  <span className="hours-time">12:00 - 21:00</span>
-                </li>
-              </ul>
-              <div className="chef-note">
+
+              <motion.ul
+                className="hours-list"
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true }}
+              >
+                <motion.li
+                  className="hours-card"
+                  variants={itemVariants}
+                  whileHover={{ scale: 1.03 }}
+                >
+                  <span className="hours-day">Thứ 2 - Chủ Nhật</span>
+
+                  <motion.span
+                    className="hours-time"
+                    whileHover={{ scale: 1.06 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    07:30 - 23:30
+                  </motion.span>
+                </motion.li>
+              </motion.ul>
+              <motion.div
+                className="chef-note"
+                variants={itemVariants}
+                whileHover={{ y: -2 }}
+                transition={{ duration: 0.2 }}
+              >
                 <FaHeart className="chef-icon" />
                 <span>Đầu bếp sẵn sàng phục vụ bạn</span>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
             {/* Column 4: Newsletter */}
-            <div className="footer-col">
+            <motion.div
+              className="footer-col animate__animated animate__fadeInUp"
+              variants={colVariants}
+            >
               <h4 className="footer-title">Nhận Tin Khuyến Mãi</h4>
               <p className="newsletter-desc">
                 Đăng ký để nhận ưu đãi đặc biệt và sự kiện mới nhất
               </p>
 
               <form onSubmit={handleSubscribe} className="newsletter-form">
-                <div className="form-group">
+                <motion.div
+                  className="form-group"
+                  whileFocus={{ scale: 1.01 }}
+                  transition={{ duration: 0.2 }}
+                >
                   <input
                     type="email"
                     value={email}
@@ -157,45 +246,90 @@ export default function Footer() {
                     required
                     disabled={loading}
                   />
-                  <button type="submit" disabled={loading}>
+                  <motion.button
+                    type="submit"
+                    disabled={loading}
+                    whileHover={!loading ? { y: -2, scale: 1.03 } : undefined}
+                    whileTap={!loading ? { scale: 0.96 } : undefined}
+                    transition={{ duration: 0.18 }}
+                  >
                     {loading ? (
                       <span className="spinner"></span>
                     ) : (
                       <FaPaperPlane />
                     )}
-                  </button>
-                </div>
+                  </motion.button>
+                </motion.div>
+
                 {subscribed && (
-                  <div className="success-popup">
+                  <motion.div
+                    className="success-popup"
+                    initial={{ opacity: 0, y: -10, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                  >
                     Đăng ký thành công! Cảm ơn bạn.
-                  </div>
+                  </motion.div>
                 )}
               </form>
 
               <div className="social-section">
                 <h5>Theo dõi chúng tôi</h5>
-                <div className="social-links">
-                  <a href="#" aria-label="Facebook">
+                <motion.div
+                  className="social-links"
+                  variants={containerVariants}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={{ once: true }}
+                >
+                  <motion.a
+                    href="#"
+                    aria-label="Facebook"
+                    variants={itemVariants}
+                    whileHover={{ y: -5, scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                  >
                     <FaFacebookF />
-                  </a>
-                  <a href="#" aria-label="Instagram">
+                  </motion.a>
+
+                  <motion.a
+                    href="#"
+                    aria-label="Instagram"
+                    variants={itemVariants}
+                    whileHover={{ y: -5, scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                  >
                     <FaInstagram />
-                  </a>
-                  <a href="#" aria-label="Twitter">
-                    <FaTwitter />
-                  </a>
-                  <a href="#" aria-label="LinkedIn">
-                    <FaLinkedinIn />
-                  </a>
-                </div>
+                  </motion.a>
+
+                  <motion.a
+                    href="#"
+                    aria-label="Tiktok"
+                    variants={itemVariants}
+                    whileHover={{ y: -5, scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <FaTiktok />
+                  </motion.a>
+                </motion.div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
 
       {/* Footer Bottom */}
-      <div className="footer-bottom">
+      <motion.div
+        className="footer-bottom"
+        initial={{ opacity: 0, y: 14 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.45, ease: 'easeOut' }}
+      >
         <div className="container">
           <div className="copyright">
             © {new Date().getFullYear()} <strong>Restaurantly</strong>. Đã đăng
@@ -209,7 +343,7 @@ export default function Footer() {
             <Link href="/cookies">Cookies</Link>
           </div>
         </div>
-      </div>
+      </motion.div>
     </footer>
   )
 }

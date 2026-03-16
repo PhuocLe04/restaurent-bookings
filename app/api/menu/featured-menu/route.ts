@@ -1,13 +1,19 @@
+// app/api/menu/featured-menu/route.ts
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
+function parseCategoryId(raw: string | null): number | null {
+  if (!raw) return null
+  const n = Number(raw)
+  return Number.isFinite(n) && n > 0 ? n : null
+}
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
-    const categoryIdRaw = searchParams.get('categoryId')
-    const categoryId = categoryIdRaw ? Number(categoryIdRaw) : null
+    const categoryId = parseCategoryId(searchParams.get('categoryId'))
 
     // ===== helper: fallback ids theo thứ tự (trong category nếu có) =====
     const getFallbackIds = async (excludeIds: number[]) => {
@@ -17,15 +23,14 @@ export async function GET(req: Request) {
           ...(excludeIds.length ? { id: { notIn: excludeIds } } : {}),
         },
         select: { id: true },
-        // ✅ chọn thứ tự bạn muốn:
-        // orderBy: { created_at: 'desc' }, // nếu có created_at
-        orderBy: { id: 'desc' }, // nếu không có created_at thì dùng id
+        // nếu không có created_at thì dùng id
+        orderBy: { id: 'desc' },
         take: Math.max(0, 4 - excludeIds.length),
       })
       return fallback.map((x) => x.id)
     }
 
-    // ===== 1) Top theo bán chạy =====
+    // ===== 1) Top theo bán chạy (order CLOSED) =====
     const topAgg = await prisma.order_items.groupBy({
       by: ['menu_item_id'],
       where: {
@@ -43,8 +48,8 @@ export async function GET(req: Request) {
 
     let ids = topAgg.map((x) => x.menu_item_id)
 
-    // ===== 2) Nếu category không có top => fallback 4 sản phẩm theo thứ tự =====
-    if (categoryId && ids.length === 0) {
+    // ✅ 2) Nếu không có top (ALL hoặc category) => fallback 4 sản phẩm theo thứ tự
+    if (ids.length === 0) {
       ids = await getFallbackIds([])
     }
 
@@ -89,10 +94,15 @@ export async function GET(req: Request) {
       .filter(Boolean)
 
     return NextResponse.json({ items })
-  } catch (e) {
+  } catch (e: any) {
     console.error(e)
+    const msg = e?.message ?? String(e)
+
     return NextResponse.json(
-      { message: 'Failed to load top4 menu' },
+      {
+        message: 'Không thể tải danh sách món nổi bật.',
+        error: msg,
+      },
       { status: 500 },
     )
   }

@@ -41,7 +41,7 @@ export default function UserPage() {
             className="user-btn"
             onClick={() => listRef.current?.refresh()}
           >
-            Refresh
+            Làm mới
           </button>
         </div>
       </div>

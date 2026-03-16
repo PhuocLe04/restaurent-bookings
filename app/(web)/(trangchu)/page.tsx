@@ -13,12 +13,12 @@ export default function Page() {
     <main className="main">
       <HeroSection />
       <AboutSection />
-      <WhyUsSection />
+      {/* <WhyUsSection /> */}
       <MenuSection />
       <EventsSection />
       {/* <TestimonialsSection /> */}
       {/* <GallerySection /> */}
-      <ChefsSection />
+      {/* <ChefsSection /> */}
       <ContactSection />
     </main>
   )

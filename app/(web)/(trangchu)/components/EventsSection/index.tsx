@@ -137,11 +137,11 @@ export default function EventsSection() {
   const current = combos[activeIndex]
 
   return (
-    <section id="events" className="events-section">
+    <section id="services" className="events-section">
       {/* Background with overlay */}
       <div className="events-background">
         <img
-          src="/img/events-bg.jpg"
+          src="/img/gallery/gallery-8.jpg"
           alt="Events background"
           className="bg-image"
         />
@@ -167,7 +167,7 @@ export default function EventsSection() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1, ease: EASE_OUT_EXPO }}
           >
-            Save More With Our Combos
+            Tiết kiệm hơn với các gói sản phẩm của chúng tôi
           </motion.h2>
 
           <motion.div
@@ -288,13 +288,14 @@ export default function EventsSection() {
                         </p>
                       )}
 
-                      <motion.button
+                      <motion.a
+                        href="/reservations"
                         className="book-now-btn"
                         whileHover={{ scale: 1.04 }}
                         whileTap={{ scale: 0.96 }}
                       >
-                        Choose this combo <i className="bi bi-arrow-right"></i>
-                      </motion.button>
+                        Chọn combo này <i className="bi bi-arrow-right"></i>
+                      </motion.a>
                     </div>
                   </div>
                 </motion.div>

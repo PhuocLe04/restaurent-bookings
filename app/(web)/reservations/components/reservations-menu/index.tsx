@@ -1,6 +1,7 @@
 'use client'
 
 import type { Category, MenuItem } from '../index'
+import '@/app/(web)/reservations/page.css'
 
 export default function ReservationMenu(props: {
   preorderFood: boolean
@@ -34,98 +35,119 @@ export default function ReservationMenu(props: {
   if (!preorderFood) return null
 
   return (
-    <div className="mt-4 rounded-lg border p-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="text-sm font-medium">Chọn món</div>
-
-        <div className="ml-auto flex flex-wrap items-center gap-2">
-          <select
-            className="rounded-md border px-3 py-2 text-sm"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-          >
-            <option value="all">Tất cả danh mục</option>
-            {categories.map((c) => (
-              <option key={c.id} value={String(c.id)}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-
-          <input
-            className="rounded-md border px-3 py-2 text-sm"
-            placeholder="Tìm món..."
-            value={menuQuery}
-            onChange={(e) => setMenuQuery(e.target.value)}
-          />
-
-          <button
-            type="button"
-            className="rounded-md border px-3 py-2 text-sm disabled:opacity-60"
-            onClick={onClearItems}
-            disabled={!itemsCount}
-          >
-            Xoá món
-          </button>
+    <section className="reservation-block">
+      <div className="reservation-block__header">
+        <div>
+          <h3 className="reservation-block__title">Chọn món trước</h3>
+          <p className="reservation-block__subtitle">
+            Chọn món yêu thích để nhà hàng chuẩn bị sẵn cho bạn.
+          </p>
         </div>
+
+        <div className="reservation-block__count">{itemsCount} món đã chọn</div>
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
-        {filteredMenu.map((m) => {
-          const qty = selectedItems[m.id] ?? 0
-          return (
-            <div key={m.id} className="rounded-md border p-3">
-              <div className="flex items-start gap-3">
-                {m.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={m.image}
-                    alt={m.name}
-                    className="h-14 w-14 rounded object-cover"
-                  />
-                ) : (
-                  <div className="h-14 w-14 rounded bg-gray-100" />
-                )}
+      <div className="reservation-menu-toolbar">
+        <select
+          className="reservation-control"
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+        >
+          <option value="all">Tất cả danh mục</option>
+          {categories.map((c) => (
+            <option key={c.id} value={String(c.id)}>
+              {c.name}
+            </option>
+          ))}
+        </select>
 
-                <div className="min-w-0 flex-1">
-                  <div className="truncate font-medium">{m.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {m.category?.name ?? '—'}
-                  </div>
-                  <div className="mt-1 text-sm">
-                    {m.price.toLocaleString('vi-VN')}₫
-                  </div>
+        <input
+          className="reservation-control"
+          placeholder="Tìm món ăn..."
+          value={menuQuery}
+          onChange={(e) => setMenuQuery(e.target.value)}
+        />
+
+        <button
+          type="button"
+          className="reservation-outline-btn"
+          onClick={onClearItems}
+          disabled={!itemsCount}
+        >
+          Xóa món
+        </button>
+      </div>
+
+      <div className="reservation-menu-scroll">
+        <div className="reservation-menu-grid">
+          {filteredMenu.map((m) => {
+            const qty = selectedItems[m.id] ?? 0
+
+            return (
+              <div key={m.id} className="reservation-menu-card">
+                <div className="reservation-menu-card__media">
+                  {m.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={m.image}
+                      alt={m.name}
+                      className="reservation-menu-card__image"
+                    />
+                  ) : (
+                    <div className="reservation-menu-card__placeholder">
+                      Không có ảnh
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="h-8 w-8 rounded-md border text-sm disabled:opacity-50"
-                    onClick={() => (qty > 0 ? onDecItem(m.id) : null)}
-                    disabled={qty <= 0}
-                  >
-                    -
-                  </button>
-                  <div className="w-6 text-center text-sm">{qty}</div>
-                  <button
-                    type="button"
-                    className="h-8 w-8 rounded-md border text-sm"
-                    onClick={() => onIncItem(m.id)}
-                  >
-                    +
-                  </button>
+                <div className="reservation-menu-card__body">
+                  <div className="reservation-menu-card__top">
+                    <div className="reservation-menu-card__info">
+                      <h4 className="reservation-menu-card__name">{m.name}</h4>
+                      <div className="reservation-menu-card__category">
+                        {m.category?.name ?? 'Chưa phân loại'}
+                      </div>
+                    </div>
+
+                    <div className="reservation-menu-card__price">
+                      {m.price.toLocaleString('vi-VN')}₫
+                    </div>
+                  </div>
+
+                  <div className="reservation-menu-card__bottom">
+                    <div className="reservation-qty">
+                      <button
+                        type="button"
+                        className="reservation-qty__btn"
+                        onClick={() => (qty > 0 ? onDecItem(m.id) : null)}
+                        disabled={qty <= 0}
+                      >
+                        −
+                      </button>
+
+                      <div className="reservation-qty__value">{qty}</div>
+
+                      <button
+                        type="button"
+                        className="reservation-qty__btn"
+                        onClick={() => onIncItem(m.id)}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })}
 
-        {!filteredMenu.length && (
-          <div className="text-sm text-muted-foreground">
-            Không có món phù hợp.
-          </div>
-        )}
+          {!filteredMenu.length && (
+            <div className="reservation-empty">
+              Không có món phù hợp với bộ lọc hiện tại.
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </section>
   )
 }

@@ -23,8 +23,6 @@ export async function GET() {
 
   if (!user) return NextResponse.json({ profile: null }, { status: 200 })
 
-  // ✅ Staff: nếu có bảng staff trỏ user_id
-  // ⚠️ SỬA "staff" / "user_id" theo schema thực tế của bạn
   const staff = await prisma.staff.findFirst({
     where: { user_id: userId },
     select: { id: true },

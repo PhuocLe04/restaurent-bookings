@@ -1,0 +1,378 @@
+/* components/ui/LiquidGlassMessage.css */
+.liquid-glass-message {
+  position: fixed;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.18),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  min-width: 280px;
+  max-width: 500px;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  z-index: 20000;
+  pointer-events: auto;
+  isolation: isolate;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Position variants */
+.liquid-glass-message.position-top {
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.liquid-glass-message.position-bottom {
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.liquid-glass-message.position-top-left {
+  top: 20px;
+  left: 20px;
+}
+
+.liquid-glass-message.position-top-right {
+  top: 20px;
+  right: 20px;
+}
+
+.liquid-glass-message.position-bottom-left {
+  bottom: 20px;
+  left: 20px;
+}
+
+.liquid-glass-message.position-bottom-right {
+  bottom: 20px;
+  right: 20px;
+}
+
+/* Glass intensity variants */
+.liquid-glass-message.glass-light {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.liquid-glass-message.glass-medium {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.liquid-glass-message.glass-heavy {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Type variants */
+.liquid-glass-message.info {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 122, 255, 0.2),
+    rgba(0, 122, 255, 0.1)
+  );
+  border-color: rgba(0, 122, 255, 0.3);
+  color: #fff;
+}
+
+.liquid-glass-message.success {
+  background: linear-gradient(
+    135deg,
+    rgba(52, 199, 89, 0.2),
+    rgba(52, 199, 89, 0.1)
+  );
+  border-color: rgba(52, 199, 89, 0.3);
+  color: #fff;
+}
+
+.liquid-glass-message.warning {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 149, 0, 0.2),
+    rgba(255, 149, 0, 0.1)
+  );
+  border-color: rgba(255, 149, 0, 0.3);
+  color: #fff;
+}
+
+.liquid-glass-message.error {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 59, 48, 0.2),
+    rgba(255, 59, 48, 0.1)
+  );
+  border-color: rgba(255, 59, 48, 0.3);
+  color: #fff;
+}
+
+/* Glow effect */
+.liquid-glow {
+  position: absolute;
+  inset: -30%;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 255, 255, 0.06) 35%,
+    transparent 70%
+  );
+  filter: blur(24px);
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Bubble effects */
+.liquid-bubbles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bubble {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  bottom: 0;
+  left: 50%;
+  filter: blur(1px);
+}
+
+/* Content */
+.liquid-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  position: relative;
+  z-index: 2;
+}
+
+.liquid-icon-wrapper {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.liquid-icon {
+  width: 20px;
+  height: 20px;
+  color: white;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12));
+}
+
+.liquid-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.liquid-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+}
+
+.liquid-message {
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.92);
+  word-wrap: break-word;
+}
+
+.liquid-close {
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: all 0.2s ease;
+  padding: 0;
+  position: relative;
+  z-index: 3;
+}
+
+.liquid-close:hover {
+  background: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+.liquid-close:active {
+  transform: scale(0.95);
+}
+
+.liquid-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Wave effects */
+.liquid-wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  overflow: hidden;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.5),
+    transparent
+  );
+  animation: wave 2s linear infinite;
+}
+
+.wave2 {
+  animation: wave 2s linear infinite reverse;
+  opacity: 0.3;
+  animation-delay: -1s;
+}
+
+@keyframes wave {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .liquid-glass-message {
+    min-width: auto;
+    width: calc(100% - 40px);
+    max-width: none;
+  }
+
+  .liquid-glass-message.position-top,
+  .liquid-glass-message.position-bottom {
+    left: 20px;
+    right: 20px;
+    width: auto;
+    transform: none;
+  }
+
+  .liquid-glass-message.position-top-left,
+  .liquid-glass-message.position-top-right,
+  .liquid-glass-message.position-bottom-left,
+  .liquid-glass-message.position-bottom-right {
+    left: 20px;
+    right: 20px;
+    width: auto;
+  }
+
+  .liquid-glass-message.position-top-right,
+  .liquid-glass-message.position-top-left,
+  .liquid-glass-message.position-top {
+    top: 20px;
+  }
+
+  .liquid-glass-message.position-bottom-right,
+  .liquid-glass-message.position-bottom-left,
+  .liquid-glass-message.position-bottom {
+    bottom: 20px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .wave,
+  .bubble {
+    animation: none;
+  }
+
+  .liquid-close:hover {
+    transform: none;
+  }
+}
+.animate__animated {
+  --animate-duration: 0.85s;
+}
+.liquid-title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.liquid-inline-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.24);
+  border-top-color: rgba(255, 255, 255, 0.96);
+  animation: liquidSpin 0.8s linear infinite;
+  flex-shrink: 0;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.18);
+}
+
+.liquid-dots {
+  display: inline-flex;
+  margin-left: 4px;
+}
+
+.liquid-dots span {
+  opacity: 0.28;
+  animation: liquidBlink 1.2s infinite;
+}
+
+.liquid-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.liquid-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes liquidSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes liquidBlink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.28;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-1px);
+  }
+}

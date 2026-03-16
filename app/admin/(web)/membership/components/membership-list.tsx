@@ -124,12 +124,12 @@ const MembershipList = forwardRef<MembershipListRef>(
         {/* Filters */}
         <div className="member-filters">
           <div className="member-field">
-            <label>Tìm kiếm (tên / code)</label>
+            <label>Tìm kiếm</label>
             <form onSubmit={handleSearch}>
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="VD: DEFAULT, GOLD, VIP..."
+                placeholder="Vd: basic, gold,..."
               />
             </form>
           </div>
@@ -172,7 +172,7 @@ const MembershipList = forwardRef<MembershipListRef>(
                 <tr>
                   <th style={{ width: 90 }}>ID</th>
                   <th style={{ width: 150 }}>Code</th>
-                  <th>Tên hạng</th>
+                  <th style={{ width: 150 }}>Tên hạng</th>
                   <th style={{ width: 160 }}>Điểm tối thiểu</th>
                   <th style={{ width: 140 }}>Giảm giá</th>
                   <th style={{ width: 150 }}>Số user</th>
@@ -184,7 +184,10 @@ const MembershipList = forwardRef<MembershipListRef>(
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="member-td-muted">
+                    <td
+                      colSpan={8}
+                      className="member-td-muted member-loading-shimmer"
+                    >
                       Đang tải danh sách...
                     </td>
                   </tr>
@@ -213,9 +216,6 @@ const MembershipList = forwardRef<MembershipListRef>(
                         <td>
                           <div className="member-cell">
                             <div className="member-strong">{m.name}</div>
-                            <div className="member-muted-sm">
-                              Hạng thành viên
-                            </div>
                           </div>
                         </td>
                         <td>{fmtMinPoint(m.min_point)}</td>

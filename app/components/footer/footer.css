@@ -8,6 +8,7 @@
   color: var(--default-color);
   position: relative;
   font-size: 15px;
+  overflow: hidden;
 }
 
 /* Wave Decoration */
@@ -19,6 +20,7 @@
   overflow: hidden;
   line-height: 0;
   transform: rotate(180deg);
+  pointer-events: none;
 }
 
 .footer-wave svg {
@@ -26,10 +28,22 @@
   display: block;
   width: calc(100% + 1.3px);
   height: 80px;
+  animation: footerWaveFloat 8s ease-in-out infinite;
+  will-change: transform;
 }
 
 .footer-wave path {
   fill: color-mix(in srgb, var(--background-color), #000 5%);
+}
+
+@keyframes footerWaveFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
 }
 
 .container {
@@ -62,12 +76,22 @@
   align-items: center;
   gap: 15px;
   text-decoration: none;
+  transition: transform 0.25s ease;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.footer-logo:hover {
+  transform: translateY(-2px);
 }
 
 .logo-icon {
   font-size: 42px;
-  color: var(--accent-color);
+  color: rgb(205, 164, 94) !important;
   animation: pulse 3s infinite;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 @keyframes pulse {
@@ -95,12 +119,12 @@
 }
 
 .footer-logo:hover .logo-name {
-  color: var(--accent-color);
+  color: rgb(205, 164, 94) !important;
 }
 
 .logo-slogan {
   font-size: 13px;
-  color: color-mix(in srgb, var(--accent-color), transparent 30%);
+  color: color-mix(in srgb, rgb(205, 164, 94), transparent 30%) !important;
   font-weight: 500;
   letter-spacing: 1px;
 }
@@ -109,6 +133,7 @@
   color: color-mix(in srgb, var(--default-color), transparent 30%);
   line-height: 1.8;
   margin-bottom: 10px;
+  transition: color 0.3s ease;
 }
 
 /* Info List */
@@ -125,10 +150,12 @@
 }
 
 .info-icon {
-  color: var(--accent-color);
+  color: rgb(205, 164, 94) !important;
   font-size: 16px;
   margin-top: 3px;
   min-width: 20px;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .info-item span,
@@ -136,11 +163,14 @@
   color: color-mix(in srgb, var(--default-color), transparent 15%);
   text-decoration: none;
   line-height: 1.6;
-  transition: color 0.3s ease;
+  transition:
+    color 0.3s ease,
+    transform 0.3s ease,
+    opacity 0.3s ease;
 }
 
 .info-item a:hover {
-  color: var(--accent-color);
+  color: rgb(205, 164, 94) !important;
 }
 
 /* Footer Titles */
@@ -162,9 +192,9 @@
   height: 3px;
   background: linear-gradient(
     90deg,
-    var(--accent-color),
-    color-mix(in srgb, var(--accent-color), transparent 60%)
-  );
+    rgb(205, 164, 94),
+    color-mix(in srgb, rgb(205, 164, 94), transparent 60%)
+  ) !important;
   border-radius: 3px;
 }
 
@@ -185,17 +215,22 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.3s ease;
+  transition:
+    color 0.3s ease,
+    transform 0.3s ease;
+  will-change: transform, color;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .footer-links a svg {
   font-size: 12px;
-  color: var(--accent-color);
+  color: rgb(205, 164, 94);
   transition: transform 0.3s ease;
 }
 
 .footer-links a:hover {
-  color: var(--accent-color);
+  color: rgb(205, 164, 94);
   transform: translateX(5px);
 }
 
@@ -212,11 +247,13 @@
 
 .hours-list li {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column; /* đổi từ ngang sang dọc */
+  align-items: flex-start; /* canh trái */
+  gap: 8px; /* khoảng cách giữa ngày và giờ */
   padding: 12px 0;
   border-bottom: 1px dashed
     color-mix(in srgb, var(--default-color), transparent 85%);
+  transition: transform 0.25s ease;
 }
 
 .hours-list li:last-child {
@@ -224,25 +261,37 @@
 }
 
 .hours-list li.sunday {
-  background: color-mix(in srgb, var(--accent-color), transparent 92%);
+  background: color-mix(in srgb, rgb(205, 164, 94), transparent 92%);
   padding: 12px 15px;
   border-radius: 10px;
   margin: 5px -15px -5px;
 }
 
-.hours-list span {
+.hours-day {
   color: color-mix(in srgb, var(--default-color), transparent 20%);
+  font-weight: 600;
+  display: block;
 }
 
 .hours-time {
   font-weight: 700;
-  color: var(--accent-color) !important;
-  background: color-mix(in srgb, var(--accent-color), transparent 90%);
+  color: rgb(205, 164, 94) !important;
+  background: color-mix(in srgb, rgb(205, 164, 94), transparent 90%);
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 14px;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
+.hours-time:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px color-mix(in srgb, rgb(205, 164, 94), transparent 80%);
+}
 .chef-note {
   display: flex;
   align-items: center;
@@ -250,16 +299,29 @@
   padding: 12px 15px;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--accent-color), transparent 90%),
+    color-mix(in srgb, rgb(205, 164, 94), transparent 90%),
     transparent
   );
   border-radius: 12px;
   margin-top: 15px;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.chef-note:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px color-mix(in srgb, rgb(205, 164, 94), transparent 88%);
 }
 
 .chef-icon {
-  color: var(--accent-color);
+  color: rgb(205, 164, 94);
   animation: heartbeat 1.5s ease infinite;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 @keyframes heartbeat {
@@ -276,6 +338,7 @@
   font-size: 14px;
   font-style: italic;
   color: color-mix(in srgb, var(--default-color), transparent 20%);
+  transition: color 0.3s ease;
 }
 
 /* Newsletter */
@@ -283,10 +346,12 @@
   color: color-mix(in srgb, var(--default-color), transparent 30%);
   line-height: 1.7;
   margin-bottom: 20px;
+  transition: color 0.3s ease;
 }
 
 .newsletter-form {
   margin-bottom: 25px;
+  position: relative;
 }
 
 .form-group {
@@ -303,14 +368,28 @@
   border-radius: 12px;
   color: var(--default-color);
   font-size: 14px;
-  transition: all 0.3s ease;
+  transition:
+    all 0.3s ease,
+    transform 0.25s ease;
+  will-change: transform, box-shadow, border-color;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.form-group input::placeholder {
+  transition: opacity 0.25s ease;
+}
+
+.form-group input:focus::placeholder {
+  opacity: 0.65;
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: var(--accent-color);
+  border-color: rgb(205, 164, 94);
   background: color-mix(in srgb, var(--background-color), #000 25%);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-color), transparent 85%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, rgb(205, 164, 94), transparent 85%);
+  transform: translateY(-1px);
 }
 
 .form-group input:disabled {
@@ -323,8 +402,8 @@
   height: 50px;
   background: linear-gradient(
     135deg,
-    var(--accent-color),
-    color-mix(in srgb, var(--accent-color), #000 15%)
+    rgb(205, 164, 94),
+    color-mix(in srgb, rgb(205, 164, 94), #000 15%)
   );
   color: white;
   border: none;
@@ -334,9 +413,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition:
+    all 0.3s ease,
+    transform 0.25s ease;
   position: relative;
   overflow: hidden;
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .form-group button::before {
@@ -361,8 +445,7 @@
 
 .form-group button:hover:not(:disabled) {
   transform: scale(1.05);
-  box-shadow: 0 8px 20px
-    color-mix(in srgb, var(--accent-color), transparent 60%);
+  box-shadow: 0 8px 20px color-mix(in srgb, rgb(205, 164, 94), transparent 60%);
 }
 
 .form-group button:disabled {
@@ -377,6 +460,8 @@
   border-radius: 50%;
   border-top-color: white;
   animation: spin 0.8s linear infinite;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 @keyframes spin {
@@ -397,6 +482,7 @@
   font-weight: 500;
   animation: slideDown 0.3s ease;
   box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+  z-index: 5;
 }
 
 @keyframes slideDown {
@@ -439,20 +525,22 @@
   background: color-mix(in srgb, var(--background-color), #000 20%);
   color: color-mix(in srgb, var(--default-color), transparent 15%);
   font-size: 18px;
-  transition: all 0.3s ease;
+  transition:
+    all 0.3s ease,
+    transform 0.25s ease;
   border: 1px solid color-mix(in srgb, var(--default-color), transparent 85%);
   position: relative;
   overflow: hidden;
+  will-change: transform, color;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .social-links a::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--accent-color);
+  inset: 0;
+  background: rgb(205, 164, 94);
   transform: scale(0);
   transition: transform 0.3s ease;
   border-radius: 50%;
@@ -466,6 +554,8 @@
 .social-links a svg {
   position: relative;
   z-index: 1;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .social-links a:hover {
@@ -480,6 +570,9 @@
   background: color-mix(in srgb, var(--background-color), #000 25%);
   border-top: 1px solid
     color-mix(in srgb, var(--default-color), transparent 90%);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .footer-bottom .container {
@@ -493,10 +586,11 @@
 .copyright {
   color: color-mix(in srgb, var(--default-color), transparent 30%);
   font-size: 14px;
+  transition: color 0.3s ease;
 }
 
 .copyright strong {
-  color: var(--accent-color);
+  color: rgb(205, 164, 94);
   font-weight: 700;
 }
 
@@ -510,7 +604,9 @@
   color: color-mix(in srgb, var(--default-color), transparent 30%);
   text-decoration: none;
   font-size: 14px;
-  transition: color 0.3s ease;
+  transition:
+    color 0.3s ease,
+    transform 0.3s ease;
   position: relative;
 }
 
@@ -521,12 +617,12 @@
   left: 0;
   width: 0;
   height: 1px;
-  background: var(--accent-color);
+  background: rgb(205, 164, 94);
   transition: width 0.3s ease;
 }
 
 .legal-links a:hover {
-  color: var(--accent-color);
+  color: rgb(205, 164, 94);
 }
 
 .legal-links a:hover::after {
@@ -638,7 +734,7 @@
   }
 }
 
-/* Animation for fadeIn */
+/* Animation for reveal */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -653,17 +749,46 @@
 .footer-col {
   animation: fadeIn 0.6s ease forwards;
   opacity: 0;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
-.footer-col:nth-child(1) {
+.footer-grid > .footer-col:nth-child(1) {
   animation-delay: 0.1s;
 }
-.footer-col:nth-child(2) {
+
+.footer-grid > .footer-col:nth-child(2) {
   animation-delay: 0.2s;
 }
-.footer-col:nth-child(3) {
+
+.footer-grid > .footer-col:nth-child(3) {
   animation-delay: 0.3s;
 }
-.footer-col:nth-child(4) {
+
+.footer-grid > .footer-col:nth-child(4) {
   animation-delay: 0.4s;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .footer-wave svg,
+  .logo-icon,
+  .chef-icon,
+  .spinner,
+  .footer-col {
+    animation: none !important;
+  }
+
+  .footer-logo,
+  .footer-links a,
+  .hours-time,
+  .chef-note,
+  .form-group input,
+  .form-group button,
+  .social-links a,
+  .footer-bottom {
+    transition: none !important;
+    transform: none !important;
+  }
 }

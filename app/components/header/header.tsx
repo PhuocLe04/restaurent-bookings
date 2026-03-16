@@ -1,8 +1,9 @@
 'use client'
 
+import 'animate.css'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 import {
@@ -13,11 +14,9 @@ import {
 } from '../../(web)/lib/auth-store'
 import './header.css'
 
-// ===== Easing Configurations =====
 const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1]
 const EASE_IN_OUT_CUBIC: [number, number, number, number] = [0.65, 0, 0.35, 1]
 
-// Spring configurations
 const SPRING_GENTLE = {
   type: 'spring',
   stiffness: 120,
@@ -25,38 +24,63 @@ const SPRING_GENTLE = {
   mass: 0.8,
 } as const
 
-// Animation variants
+const SPRING_SOFT = {
+  type: 'spring',
+  stiffness: 180,
+  damping: 18,
+  mass: 0.7,
+} as const
+
 const overlayVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1 },
   exit: { opacity: 0 },
 }
 
+const navListVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.05, delayChildren: 0.05 },
+  },
+}
+
 const navItemVariants = {
-  hidden: { opacity: 0, y: -10 },
-  visible: { opacity: 1, y: 0 },
+  hidden: { opacity: 0, y: -12 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.45,
+      ease: EASE_OUT_EXPO,
+    },
+  },
 }
 
 const mobileMenuItemVariants = {
-  hidden: { opacity: 0, x: 50 },
+  hidden: { opacity: 0, x: 40 },
   visible: (i: number) => ({
     opacity: 1,
     x: 0,
     transition: {
-      delay: i * 0.03,
+      delay: i * 0.04,
       type: 'spring' as const,
-      stiffness: 300,
-      damping: 25,
+      stiffness: 280,
+      damping: 24,
     },
   }),
-  exit: { opacity: 0, x: 50, transition: { duration: 0.2 } },
+  exit: {
+    opacity: 0,
+    x: 24,
+    transition: { duration: 0.2 },
+  },
 }
 
 const dropdownVariants = {
   hidden: {
     opacity: 0,
     y: -10,
-    scale: 0.95,
+    scale: 0.96,
     transition: { duration: 0.15 },
   },
   visible: {
@@ -67,8 +91,14 @@ const dropdownVariants = {
       type: 'spring' as const,
       stiffness: 500,
       damping: 30,
-      mass: 0.5,
+      mass: 0.55,
     },
+  },
+  exit: {
+    opacity: 0,
+    y: -8,
+    scale: 0.97,
+    transition: { duration: 0.16 },
   },
 }
 
@@ -78,11 +108,50 @@ function getHashFromHref(href: string) {
   return href.slice(idx + 1) || null
 }
 
-function scrollToId(id: string, offsetPx: number) {
+function scrollToId(id: string, getOffset: () => number) {
   const el = document.getElementById(id)
   if (!el) return
-  const top = el.getBoundingClientRect().top + window.scrollY - offsetPx
-  window.scrollTo({ top, behavior: 'smooth' })
+
+  const doScroll = () => {
+    const offset = getOffset()
+    const top = el.getBoundingClientRect().top + window.scrollY - offset
+    window.scrollTo({ top, behavior: 'smooth' })
+  }
+
+  requestAnimationFrame(() => {
+    doScroll()
+  })
+
+  window.setTimeout(() => {
+    const offset = getOffset()
+    const currentTop = el.getBoundingClientRect().top
+    const desiredTop = offset
+
+    if (Math.abs(currentTop - desiredTop) > 6) {
+      const top = el.getBoundingClientRect().top + window.scrollY - offset
+      window.scrollTo({ top, behavior: 'smooth' })
+    }
+  }, 520)
+}
+
+type BaseNavItem = {
+  label: string
+  id: string
+}
+
+type SimpleNavItem = BaseNavItem & {
+  href: string
+  icon?: string
+}
+
+type DropdownNavItem = BaseNavItem & {
+  children: SimpleNavItem[]
+}
+
+type NavItem = SimpleNavItem | DropdownNavItem
+
+function isDropdownItem(item: NavItem): item is DropdownNavItem {
+  return 'children' in item
 }
 
 interface HeaderClientProps {
@@ -95,12 +164,10 @@ export default function HeaderClient({
   const pathname = usePathname()
   const router = useRouter()
 
-  // Auth state
   const isHydrated = useWebAuthHydrated()
   const isLoggedIn = useWebIsAuthenticated()
   const profile = useWebUser()
 
-  // ✅ quyền
   const canSeeAdmin = profile?.role === 'admin'
   const canSeeStaff = profile?.is_staff === true
 
@@ -108,125 +175,143 @@ export default function HeaderClient({
     useWebAuthStore.getState().hydrateFromStorage()
   }, [])
 
-  // UI state
   const [mobileOpen, setMobileOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const [servicesOpen, setServicesOpen] = useState(false)
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(false)
   const [isHomeHero, setIsHomeHero] = useState(false)
   const [isSolid, setIsSolid] = useState(initialIsSolid)
   const [isScrolling, setIsScrolling] = useState(false)
-
-  // ✅ active theo section (scroll-spy)
   const [activeSection, setActiveSection] = useState<string>('home')
 
-  // Refs
+  const headerOffsetRef = useRef(88)
+  const getHeaderOffset = useCallback(() => headerOffsetRef.current, [])
+
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
+  const servicesMenuRef = useRef<HTMLLIElement | null>(null)
   const headerRef = useRef<HTMLElement | null>(null)
   const rafRef = useRef<number | null>(null)
   const lastScrollY = useRef(0)
   const ticking = useRef(false)
+  const isNavigatingRef = useRef(false)
 
-  const closeMobileMenu = () => {
+  const closeMobileMenu = useCallback(() => {
     setMobileOpen(false)
     setProfileOpen(false)
-  }
+    setMobileServicesOpen(false)
+  }, [])
 
   const isHome = pathname === '/'
-  const isBlogsActive = useMemo(
-    () => pathname?.startsWith('/blogs'),
-    [pathname],
-  )
 
-  // Navigation items data
-  const navItems = useMemo(
+  const navItems = useMemo<NavItem[]>(
     () => [
-      { href: '/#hero', label: 'Home', id: 'home' },
-      { href: '/#about', label: 'About', id: 'about' },
-      { href: '/#menu', label: 'Menu', id: 'menu' },
-      { href: '/blogs', label: 'Blogs', id: 'blogs' },
-      { href: '/#events', label: 'Events', id: 'events' },
-      { href: '/#chefs', label: 'Chefs', id: 'chefs' },
-      { href: '/#gallery', label: 'Gallery', id: 'gallery' },
-      { href: '/#contact', label: 'Contact', id: 'contact' },
+      { href: '/#hero', label: 'Trang chủ', id: 'home' },
+      { href: '/#about', label: 'Giới thiệu', id: 'about' },
+      { href: '/#menu', label: 'Thực đơn', id: 'menu' },
+      {
+        label: 'Dịch vụ',
+        id: 'services-root',
+        children: [
+          {
+            href: '/#services',
+            label: 'Dịch vụ nổi bật',
+            id: 'services',
+            icon: 'bi-stars',
+          },
+          {
+            href: '/services',
+            label: 'Xem tất cả dịch vụ',
+            id: 'all-services',
+            icon: 'bi-grid',
+          },
+        ],
+      },
+      { href: '/#contact', label: 'Liên hệ', id: 'contact' },
+      { href: '/blogs', label: 'Bài viết', id: 'blogs' },
     ],
     [],
   )
 
-  // ✅ Desktop profile dropdown items (gộp Admin/Staff)
   const desktopProfileItems = useMemo(() => {
     return [
-      { href: '/profile', icon: 'bi-person', label: 'My Profile' },
+      { href: '/profile', icon: 'bi-person', label: 'Hồ sơ của tôi' },
       {
         href: '/reservation-history',
         icon: 'bi-calendar-check',
-        label: 'Reservation History',
+        label: 'Lịch sử đặt bàn',
       },
       ...(canSeeStaff
-        ? [{ href: '/staff', icon: 'bi-people', label: 'Staff' }]
+        ? [{ href: '/admin/shifts', icon: 'bi-people', label: 'Nhân viên' }]
         : []),
       ...(canSeeAdmin
-        ? [{ href: '/admin/dashboard', icon: 'bi-shield-lock', label: 'Admin' }]
+        ? [
+            {
+              href: '/admin/dashboard',
+              icon: 'bi-shield-lock',
+              label: 'Quản trị',
+            },
+          ]
         : []),
     ]
   }, [canSeeAdmin, canSeeStaff])
 
-  // ✅ Mobile profile submenu items (gộp Admin/Staff)
   const mobileProfileItems = useMemo(() => {
     return [
-      { href: '/user/profile', label: 'Profile', icon: 'bi-person' },
+      { href: '/user/profile', label: 'Hồ sơ', icon: 'bi-person' },
       {
         href: '/table/history',
-        label: 'Reservation History',
+        label: 'Lịch sử đặt bàn',
         icon: 'bi-calendar-check',
       },
       ...(canSeeStaff
-        ? [{ href: '/staff', label: 'Staff', icon: 'bi-people' }]
+        ? [{ href: '/staff', label: 'Nhân viên', icon: 'bi-people' }]
         : []),
       ...(canSeeAdmin
-        ? [{ href: '/admin', label: 'Admin', icon: 'bi-shield-lock' }]
+        ? [{ href: '/admin', label: 'Quản trị', icon: 'bi-shield-lock' }]
         : []),
     ]
   }, [canSeeAdmin, canSeeStaff])
 
-  // ✅ Header height (offset)
-  const getHeaderOffset = () => {
-    const h = headerRef.current?.getBoundingClientRect().height ?? 80
-    return Math.round(h + 8)
-  }
+  const handleNavClick = useCallback(
+    async (href: string) => {
+      const hash = getHashFromHref(href)
 
-  // ✅ Click nav: smooth scroll theo section + update active
-  const handleNavClick = async (href: string) => {
-    const hash = getHashFromHref(href)
-
-    // Route /blogs: đi route luôn
-    if (!hash) {
-      router.push(href)
+      isNavigatingRef.current = true
       closeMobileMenu()
-      return
-    }
+      setProfileMenuOpen(false)
+      setServicesOpen(false)
 
-    // Nếu đang không ở Home -> push về Home có hash, rồi scroll sau
-    if (!isHome) {
-      router.push(`/${'#' + hash}`)
-      closeMobileMenu()
+      if (!hash) {
+        router.push(href)
+        isNavigatingRef.current = false
+        return
+      }
 
-      window.setTimeout(() => {
-        scrollToId(hash, getHeaderOffset())
-        setActiveSection(hash === 'hero' ? 'home' : hash)
-      }, 120)
-      return
-    }
+      if (!isHome) {
+        router.push(`/#${hash}`)
 
-    // Đang ở home: scroll luôn
-    closeMobileMenu()
-    scrollToId(hash, getHeaderOffset())
-    setActiveSection(hash === 'hero' ? 'home' : hash)
-  }
+        setTimeout(() => {
+          scrollToId(hash, getHeaderOffset)
+          setActiveSection(hash === 'hero' ? 'home' : hash)
+          isNavigatingRef.current = false
+        }, 320)
 
-  // ✅ LOGOUT handler: call API -> clear store -> refresh -> push login
+        return
+      }
+
+      scrollToId(hash, getHeaderOffset)
+      setActiveSection(hash === 'hero' ? 'home' : hash)
+
+      setTimeout(() => {
+        isNavigatingRef.current = false
+      }, 520)
+    },
+    [closeMobileMenu, getHeaderOffset, isHome, router],
+  )
+
   const handleLogout = async () => {
     try {
-      // 1) gọi logout (ưu tiên POST; fallback GET)
       let res = await fetch('/api/auth/logout', {
         method: 'POST',
         cache: 'no-store',
@@ -241,30 +326,26 @@ export default function HeaderClient({
         }).catch(() => null)
       }
 
-      // 2) clear Zustand store (đúng với store bạn hiện có)
       const st: any = useWebAuthStore.getState()
       if (typeof st.clearAuth === 'function') st.clearAuth()
 
-      // 3) đóng UI
       setProfileMenuOpen(false)
+      setServicesOpen(false)
       closeMobileMenu()
 
-      // 4) refresh để server components + header state cập nhật
       router.refresh()
-
-      // 5) điều hướng
       router.push('/login')
     } catch {
       const st: any = useWebAuthStore.getState()
       if (typeof st.clearAuth === 'function') st.clearAuth()
       setProfileMenuOpen(false)
+      setServicesOpen(false)
       closeMobileMenu()
       router.refresh()
       router.push('/login')
     }
   }
 
-  // Scroll handling with rAF
   useEffect(() => {
     const handleScroll = () => {
       lastScrollY.current = window.scrollY
@@ -289,32 +370,46 @@ export default function HeaderClient({
     }
   }, [])
 
-  // ✅ đánh dấu trang để CSS biết home/inner
   useEffect(() => {
     document.body.dataset.page = pathname === '/' ? 'home' : 'inner'
   }, [pathname])
 
-  // ✅ đo height header thật -> set CSS var để đẩy nội dung xuống
-  useEffect(() => {
-    const setOffset = () => {
-      const h = headerRef.current?.getBoundingClientRect().height ?? 80
-      document.documentElement.style.setProperty(
-        '--rb-header-offset',
-        `${Math.ceil(h)}px`,
-      )
-    }
+  const updateHeaderOffset = useCallback(() => {
+    const h = headerRef.current?.getBoundingClientRect().height ?? 80
+    const px = Math.round(h - 16)
 
-    setOffset()
-    window.addEventListener('resize', setOffset)
-    const t = window.setTimeout(setOffset, 120)
+    headerOffsetRef.current = px
+    document.documentElement.style.setProperty('--rb-header-offset', `${px}px`)
+
+    return px
+  }, [])
+
+  useEffect(() => {
+    updateHeaderOffset()
+
+    const timeouts = [
+      setTimeout(updateHeaderOffset, 100),
+      setTimeout(updateHeaderOffset, 300),
+      setTimeout(updateHeaderOffset, 500),
+    ]
+
+    window.addEventListener('resize', updateHeaderOffset)
+
+    const observer = new ResizeObserver(() => {
+      updateHeaderOffset()
+    })
+
+    if (headerRef.current) {
+      observer.observe(headerRef.current)
+    }
 
     return () => {
-      window.removeEventListener('resize', setOffset)
-      window.clearTimeout(t)
+      timeouts.forEach(clearTimeout)
+      window.removeEventListener('resize', updateHeaderOffset)
+      observer.disconnect()
     }
-  }, [pathname, isSolid])
+  }, [pathname, isSolid, isHomeHero, updateHeaderOffset])
 
-  // Hero section observer (giữ logic cũ)
   useEffect(() => {
     if (!isHome) {
       setIsHomeHero(false)
@@ -333,83 +428,128 @@ export default function HeaderClient({
           setIsHomeHero(entry.intersectionRatio > 0.7)
         }
       },
-      {
-        threshold: [0, 0.3, 0.7, 1],
-        rootMargin: '0px 0px -15% 0px',
-      },
+      { threshold: [0, 0.3, 0.7, 1], rootMargin: '0px 0px -15% 0px' },
     )
 
     observer.observe(hero)
     return () => observer.disconnect()
   }, [isHome])
 
-  // ✅ Scroll-spy theo section (IntersectionObserver)
+  useEffect(() => {
+    if (!isHome) return
+
+    const applyHash = () => {
+      const raw = window.location.hash?.replace('#', '') || 'hero'
+      setActiveSection(raw === 'hero' ? 'home' : raw)
+    }
+
+    applyHash()
+    window.addEventListener('hashchange', applyHash)
+    return () => window.removeEventListener('hashchange', applyHash)
+  }, [isHome])
+
   useEffect(() => {
     if (!isHome) return
 
     const sectionIds = navItems
-      .map((i) => getHashFromHref(i.href))
-      .filter(Boolean) as string[]
+      .flatMap((i) =>
+        isDropdownItem(i)
+          ? i.children.map((c) => getHashFromHref(c.href))
+          : [getHashFromHref(i.href)],
+      )
+      .filter((id): id is string => !!id && id !== 'blogs')
 
-    // map hero -> home
     const normalize = (id: string) => (id === 'hero' ? 'home' : id)
 
-    const elements = sectionIds
-      .map((id) => document.getElementById(id))
-      .filter(Boolean) as HTMLElement[]
+    const getSections = () =>
+      sectionIds
+        .map((id) => document.getElementById(id))
+        .filter((el): el is HTMLElement => !!el)
 
-    if (!elements.length) return
+    let frame = 0
 
-    const obs = new IntersectionObserver(
-      (entries) => {
-        let best: IntersectionObserverEntry | null = null
-        for (const e of entries) {
-          if (!e.isIntersecting) continue
-          if (!best || e.intersectionRatio > best.intersectionRatio) best = e
+    const updateActiveSection = () => {
+      if (isNavigatingRef.current) return
+
+      const sections = getSections()
+      if (!sections.length) return
+
+      const headerOffset = getHeaderOffset()
+      const triggerLine = headerOffset + 24
+
+      let currentSection = sections[0]
+
+      for (const section of sections) {
+        const rect = section.getBoundingClientRect()
+
+        if (rect.top <= triggerLine) {
+          currentSection = section
+        } else {
+          break
         }
-        if (best?.target?.id) {
-          setActiveSection(normalize(best.target.id))
-        }
-      },
-      {
-        root: null,
-        threshold: [0.15, 0.25, 0.35, 0.5, 0.7],
-        rootMargin: `-${getHeaderOffset()}px 0px -55% 0px`,
-      },
-    )
+      }
 
-    elements.forEach((el) => obs.observe(el))
-    return () => obs.disconnect()
-  }, [isHome, navItems])
+      const next = normalize(currentSection.id)
+      setActiveSection((prev) => (prev === next ? prev : next))
+    }
 
-  // Lock body scroll when mobile menu opens
+    const onScroll = () => {
+      cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(updateActiveSection)
+    }
+
+    updateActiveSection()
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+    }
+  }, [isHome, navItems, getHeaderOffset])
+
   useEffect(() => {
     const originalOverflow = window.getComputedStyle(document.body).overflow
+    const originalTouchAction = document.body.style.touchAction
+    const originalPosition = document.body.style.position
+    const originalWidth = document.body.style.width
+    const scrollY = window.scrollY
 
     if (mobileOpen) {
       document.body.style.overflow = 'hidden'
       document.body.style.touchAction = 'none'
       document.body.style.position = 'fixed'
       document.body.style.width = '100%'
+      document.body.style.top = `-${scrollY}px`
     }
 
     return () => {
+      const bodyTop = document.body.style.top
+
       document.body.style.overflow = originalOverflow
-      document.body.style.touchAction = ''
-      document.body.style.position = ''
-      document.body.style.width = ''
+      document.body.style.touchAction = originalTouchAction
+      document.body.style.position = originalPosition
+      document.body.style.width = originalWidth
+      document.body.style.top = ''
+
+      if (mobileOpen && bodyTop) {
+        window.scrollTo(0, Math.abs(parseInt(bodyTop || '0', 10)))
+      }
     }
   }, [mobileOpen])
 
-  // Close profile dropdown when mobile closes
   useEffect(() => {
     if (!mobileOpen) {
-      const t = setTimeout(() => setProfileOpen(false), 150)
+      const t = setTimeout(() => {
+        setProfileOpen(false)
+        setMobileServicesOpen(false)
+      }, 150)
       return () => clearTimeout(t)
     }
   }, [mobileOpen])
 
-  // Close desktop dropdown on click outside
   useEffect(() => {
     if (!profileMenuOpen) return
 
@@ -430,20 +570,68 @@ export default function HeaderClient({
     }
   }, [profileMenuOpen])
 
-  // Close mobile when route changes
+  useEffect(() => {
+    if (!servicesOpen) return
+
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      const el = servicesMenuRef.current
+      if (!el) return
+      if (e.target instanceof Node && !el.contains(e.target)) {
+        setServicesOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('touchstart', onDown, { passive: true })
+
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('touchstart', onDown)
+    }
+  }, [servicesOpen])
+
   useEffect(() => {
     setProfileMenuOpen(false)
+    setServicesOpen(false)
+    setMobileServicesOpen(false)
     closeMobileMenu()
-  }, [pathname])
+  }, [pathname, closeMobileMenu])
 
   const showTopbar = isHome && isHomeHero && !isSolid
 
-  // ✅ Desktop active: ưu tiên blogs route, còn lại theo scroll-spy
-  const isNavActive = (itemId: string) => {
-    if (itemId === 'blogs') return isBlogsActive
-    if (isBlogsActive) return itemId === 'blogs'
-    return itemId === activeSection
-  }
+  const isNavActive = useCallback(
+    (itemId: string) => {
+      if (pathname === '/') {
+        return (
+          itemId === activeSection ||
+          (itemId === 'services-root' && activeSection === 'event')
+        )
+      }
+      if (pathname.startsWith('/blogs')) return itemId === 'blogs'
+      if (pathname.startsWith('/services')) {
+        return itemId === 'all-services' || itemId === 'services-root'
+      }
+      return false
+    },
+    [pathname, activeSection],
+  )
+
+  const isNavTextActive = useCallback(
+    (itemId: string) => {
+      if (pathname === '/') {
+        return (
+          itemId === activeSection ||
+          (itemId === 'services-root' && activeSection === 'event')
+        )
+      }
+      if (pathname.startsWith('/blogs')) return itemId === 'blogs'
+      if (pathname.startsWith('/services')) {
+        return itemId === 'all-services' || itemId === 'services-root'
+      }
+      return false
+    },
+    [pathname, activeSection],
+  )
 
   return (
     <motion.header
@@ -452,112 +640,261 @@ export default function HeaderClient({
       className={`header fixed-top ${isSolid ? 'solid' : 'transparent'} ${
         isScrolling ? 'scrolling' : ''
       }`}
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{
+        type: 'spring',
+        stiffness: 100,
+        damping: 20,
+        opacity: { duration: 0.4 },
+      }}
     >
-      {/* Animated background gradient */}
       <motion.div
         className="header-backdrop"
         animate={{
           opacity: isSolid ? 1 : 0.8,
           backdropFilter: isSolid ? 'blur(10px)' : 'blur(0px)',
         }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.35, ease: EASE_IN_OUT_CUBIC }}
       />
 
-      {/* Topbar */}
       <AnimatePresence mode="wait">
         {showTopbar && (
           <motion.div
             className="topbar d-flex align-items-center"
-            initial={{ height: 0, opacity: 0, y: -20 }}
+            initial={{ height: 0, opacity: 0, y: -16 }}
             animate={{
               height: 40,
               opacity: 1,
               y: 0,
               transition: {
                 height: { duration: 0.4, ease: EASE_OUT_EXPO },
-                opacity: { duration: 0.3, delay: 0.1 },
+                opacity: { duration: 0.28, delay: 0.08 },
                 y: { duration: 0.3, ease: EASE_OUT_EXPO },
               },
             }}
             exit={{
               height: 0,
               opacity: 0,
-              y: -20,
+              y: -16,
               transition: {
-                height: { duration: 0.3, ease: EASE_IN_OUT_CUBIC },
-                opacity: { duration: 0.2 },
-                y: { duration: 0.2 },
+                height: { duration: 0.28, ease: EASE_IN_OUT_CUBIC },
+                opacity: { duration: 0.18 },
+                y: { duration: 0.18 },
               },
             }}
           >
             <div className="container d-flex justify-content-center justify-content-md-between">
-              <div className="contact-info d-flex align-items-center">
+              <motion.div
+                className="contact-info d-flex align-items-center animate__animated animate__fadeInDown"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.12, duration: 0.35 }}
+              >
                 <i className="bi bi-envelope d-flex align-items-center">
-                  <a href="mailto:contact@example.com">KhangVoKhangVo.com</a>
+                  <a href="mailto:contact@example.com">
+                    Lehuuphuoc0804z@gmail.com
+                  </a>
                 </i>
                 <i className="bi bi-phone d-flex align-items-center ms-4">
-                  <span>+84 358777123</span>
+                  <span>+84 336 428 471</span>
                 </i>
-              </div>
-
-              <div className="languages d-none d-md-flex align-items-center">
-                <ul>
-                  <li>En</li>
-                  <li>
-                    <a href="#">De</a>
-                  </li>
-                </ul>
-              </div>
+              </motion.div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Branding */}
       <div className="branding d-flex align-items-center">
         <div className="container position-relative d-flex align-items-center justify-content-between">
           <Link
-            href="/"
+            href="/#hero"
             className="logo d-flex align-items-center me-auto me-xl-0"
+            onClick={(e) => {
+              if (pathname === '/') {
+                e.preventDefault()
+                handleNavClick('/#hero')
+              }
+            }}
           >
             <motion.h1
-              className="sitename"
+              className="sitename animate__animated animate__fadeInLeft"
               whileHover={{
                 scale: 1.05,
                 textShadow: '0 0 8px rgba(205, 164, 94, 0.5)',
               }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: 'spring', stiffness: 400 }}
-              animate={{
-                color: isSolid ? '#fff' : '#cda45e',
-              }}
+              animate={{ color: isSolid ? '#fff' : '#cda45e' }}
             >
               Restaurantly
             </motion.h1>
           </Link>
 
-          {/* Desktop nav */}
           <nav id="navmenu" className="navmenu d-none d-xl-flex">
             <motion.ul
               className="d-flex align-items-center"
-              variants={{
-                hidden: { opacity: 0 },
-                visible: {
-                  opacity: 1,
-                  transition: { staggerChildren: 0.05 },
-                },
-              }}
+              variants={navListVariants}
               initial="hidden"
               animate="visible"
             >
               {navItems.map((item) => {
                 const active = isNavActive(item.id)
+                const textActive = isNavTextActive(item.id)
+
+                if (isDropdownItem(item)) {
+                  return (
+                    <motion.li
+                      key={item.id}
+                      ref={servicesMenuRef}
+                      variants={navItemVariants}
+                      className="rb-nav-dropdown"
+                      style={{ position: 'relative' }}
+                      whileHover={{ y: -1 }}
+                      transition={SPRING_SOFT}
+                      onMouseEnter={() => setServicesOpen(true)}
+                      onMouseLeave={() => setServicesOpen(false)}
+                    >
+                      <button
+                        type="button"
+                        className={`rb-navlink ${active ? 'active' : ''} ${servicesOpen ? 'dropdown-open' : ''}`}
+                        onClick={() => setServicesOpen((v) => !v)}
+                      >
+                        <motion.span
+                          className="nav-text"
+                          animate={{
+                            color: textActive ? '#cda45e' : 'inherit',
+                          }}
+                          transition={{ duration: 0.22 }}
+                        >
+                          {item.label}
+                        </motion.span>
+
+                        <motion.i
+                          className="bi bi-chevron-down rb-nav-caret"
+                          animate={{
+                            rotate: servicesOpen ? 180 : 0,
+                            color: servicesOpen ? '#cda45e' : 'inherit',
+                          }}
+                          transition={{ duration: 0.22 }}
+                          style={{
+                            fontSize: '12px',
+                            marginLeft: '5px',
+                            display: 'inline-block',
+                          }}
+                        />
+
+                        {/* Thêm hiệu ứng hover background */}
+                        <motion.span
+                          className="nav-hover-effect"
+                          initial={{ opacity: 0, scale: 0.5 }}
+                          whileHover={{ opacity: 0.1, scale: 1 }}
+                          transition={{ duration: 0.3 }}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: '#cda45e',
+                            borderRadius: 'inherit',
+                            zIndex: -1,
+                          }}
+                        />
+                      </button>
+
+                      <AnimatePresence>
+                        {active && (
+                          <motion.div
+                            className="nav-indicator"
+                            layoutId="navIndicator"
+                            initial={{ opacity: 0, scaleX: 0.7 }}
+                            animate={{ opacity: 1, scaleX: 1 }}
+                            exit={{ opacity: 0, scaleX: 0.7 }}
+                            transition={{
+                              type: 'spring',
+                              stiffness: 320,
+                              damping: 30,
+                            }}
+                          />
+                        )}
+                      </AnimatePresence>
+
+                      <AnimatePresence>
+                        {servicesOpen && (
+                          <motion.div
+                            role="menu"
+                            className="rb-profileDropdown animate__animated animate__fadeInDown"
+                            variants={dropdownVariants}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                          >
+                            <motion.div
+                              variants={{
+                                hidden: { opacity: 0 },
+                                visible: {
+                                  opacity: 1,
+                                  transition: { staggerChildren: 0.045 },
+                                },
+                              }}
+                              initial="hidden"
+                              animate="visible"
+                            >
+                              {item.children.map((child) => {
+                                const childActive = isNavActive(child.id)
+
+                                return (
+                                  <motion.div
+                                    key={child.id}
+                                    variants={{
+                                      hidden: { opacity: 0, x: -10 },
+                                      visible: { opacity: 1, x: 0 },
+                                    }}
+                                    whileHover={{ x: 4 }}
+                                    transition={SPRING_SOFT}
+                                  >
+                                    <button
+                                      type="button"
+                                      role="menuitem"
+                                      className={`rb-profileDropdownItem rb-servicesProfileItem ${
+                                        childActive ? 'active' : ''
+                                      }`}
+                                      onClick={() => {
+                                        setServicesOpen(false)
+                                        handleNavClick(child.href)
+                                      }}
+                                      style={{
+                                        background: 'transparent',
+                                        border: 0,
+                                        width: '100%',
+                                        textAlign: 'left',
+                                      }}
+                                    >
+                                      <i
+                                        className={`bi ${child.icon || 'bi-arrow-up-right'} me-2`}
+                                      />
+                                      <span>{child.label}</span>
+                                    </button>
+                                  </motion.div>
+                                )
+                              })}
+                            </motion.div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.li>
+                  )
+                }
 
                 return (
-                  <motion.li key={item.id} variants={navItemVariants}>
+                  <motion.li
+                    key={item.id}
+                    variants={navItemVariants}
+                    style={{ position: 'relative' }}
+                    whileHover={{ y: -1 }}
+                    transition={SPRING_SOFT}
+                  >
                     <button
                       type="button"
                       className={`rb-navlink ${active ? 'active' : ''}`}
@@ -565,52 +902,58 @@ export default function HeaderClient({
                     >
                       <motion.span
                         animate={{
-                          color: active ? '#cda45e' : 'inherit',
+                          color: textActive ? '#cda45e' : 'inherit',
                         }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.22 }}
                       >
                         {item.label}
                       </motion.span>
                     </button>
 
-                    {active && (
-                      <motion.div
-                        className="nav-indicator"
-                        layoutId="navIndicator"
-                        transition={{
-                          type: 'spring',
-                          stiffness: 300,
-                          damping: 30,
-                        }}
-                      />
-                    )}
+                    <AnimatePresence>
+                      {active && (
+                        <motion.div
+                          className="nav-indicator"
+                          layoutId="navIndicator"
+                          initial={{ opacity: 0, scaleX: 0.7 }}
+                          animate={{ opacity: 1, scaleX: 1 }}
+                          exit={{ opacity: 0, scaleX: 0.7 }}
+                          transition={{
+                            type: 'spring',
+                            stiffness: 320,
+                            damping: 30,
+                          }}
+                        />
+                      )}
+                    </AnimatePresence>
                   </motion.li>
                 )
               })}
             </motion.ul>
           </nav>
 
-          {/* Desktop actions */}
           <div className="d-none d-xl-flex align-items-center gap-3">
             <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0, x: 20 }}
+              whileHover={{ scale: 1.05, y: -1 }}
+              whileTap={{ scale: 0.96 }}
+              initial={{ opacity: 0, x: 18 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.25, duration: 0.4, ease: EASE_OUT_EXPO }}
             >
               <Link className="btn-book-a-table" href="/reservations">
-                <motion.span>Book A Table</motion.span>
+                <motion.span className="animate__animated animate__fadeIn">
+                  Đặt bàn
+                </motion.span>
               </Link>
             </motion.div>
 
             {isHydrated && (
               <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                initial={{ opacity: 0, x: 20 }}
+                whileHover={{ scale: 1.05, y: -1 }}
+                whileTap={{ scale: 0.96 }}
+                initial={{ opacity: 0, x: 18 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.35 }}
+                transition={{ delay: 0.32, duration: 0.4, ease: EASE_OUT_EXPO }}
               >
                 {isLoggedIn ? (
                   <div
@@ -625,19 +968,20 @@ export default function HeaderClient({
                         e.preventDefault()
                         setProfileMenuOpen((v) => !v)
                       }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.96 }}
                       animate={{
                         backgroundColor: profileMenuOpen
                           ? 'rgba(205, 164, 94, 0.2)'
                           : 'transparent',
                       }}
+                      transition={{ duration: 0.22 }}
                     >
-                      <span>Profile</span>
+                      <span>Hồ sơ</span>
                       <motion.i
                         className="bi bi-chevron-down ms-1"
                         animate={{ rotate: profileMenuOpen ? 180 : 0 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.28 }}
                       />
                     </motion.button>
 
@@ -645,20 +989,22 @@ export default function HeaderClient({
                       {profileMenuOpen && (
                         <motion.div
                           role="menu"
-                          className="rb-profileDropdown"
+                          className="rb-profileDropdown animate__animated animate__fadeInDown"
                           variants={dropdownVariants}
                           initial="hidden"
                           animate="visible"
-                          exit="hidden"
+                          exit="exit"
                         >
                           <motion.div
                             variants={{
                               hidden: { opacity: 0 },
                               visible: {
                                 opacity: 1,
-                                transition: { staggerChildren: 0.05 },
+                                transition: { staggerChildren: 0.045 },
                               },
                             }}
+                            initial="hidden"
+                            animate="visible"
                           >
                             {desktopProfileItems.map((it) => (
                               <motion.div
@@ -667,7 +1013,8 @@ export default function HeaderClient({
                                   hidden: { opacity: 0, x: -10 },
                                   visible: { opacity: 1, x: 0 },
                                 }}
-                                whileHover={{ x: 5 }}
+                                whileHover={{ x: 4 }}
+                                transition={SPRING_SOFT}
                               >
                                 <Link
                                   role="menuitem"
@@ -684,19 +1031,19 @@ export default function HeaderClient({
                             <motion.div
                               className="rb-profileDropdownDivider"
                               variants={{
-                                hidden: { scaleX: 0 },
-                                visible: { scaleX: 1 },
+                                hidden: { scaleX: 0, opacity: 0 },
+                                visible: { scaleX: 1, opacity: 1 },
                               }}
-                              transition={{ delay: 0.2 }}
+                              transition={{ delay: 0.16 }}
                             />
 
-                            {/* ✅ Logout */}
                             <motion.div
                               variants={{
                                 hidden: { opacity: 0, x: -10 },
                                 visible: { opacity: 1, x: 0 },
                               }}
-                              whileHover={{ x: 5 }}
+                              whileHover={{ x: 4 }}
+                              transition={SPRING_SOFT}
                             >
                               <button
                                 type="button"
@@ -711,7 +1058,7 @@ export default function HeaderClient({
                                 }}
                               >
                                 <i className="bi bi-box-arrow-right me-2" />
-                                Logout
+                                Đăng xuất
                               </button>
                             </motion.div>
                           </motion.div>
@@ -721,20 +1068,21 @@ export default function HeaderClient({
                   </div>
                 ) : (
                   <Link className="btn-book-a-table" href="/login">
-                    <motion.span>Login</motion.span>
+                    <motion.span className="animate__animated animate__fadeIn">
+                      Đăng nhập
+                    </motion.span>
                   </Link>
                 )}
               </motion.div>
             )}
           </div>
 
-          {/* Mobile toggle */}
           <motion.button
             type="button"
             className="mobile-nav-toggle d-xl-none"
-            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            aria-label={mobileOpen ? 'Đóng menu' : 'Mở menu'}
             onClick={() => setMobileOpen((v) => !v)}
-            whileHover={{ scale: 1.1 }}
+            whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.9 }}
             animate={{
               rotate: mobileOpen ? 90 : 0,
@@ -742,14 +1090,17 @@ export default function HeaderClient({
                 ? 'rgba(205, 164, 94, 0.2)'
                 : 'transparent',
             }}
-            transition={{ duration: 0.3, ease: EASE_IN_OUT_CUBIC }}
+            transition={{ duration: 0.28, ease: EASE_IN_OUT_CUBIC }}
           >
-            <motion.i className={`bi ${mobileOpen ? 'bi-x' : 'bi-list'}`} />
+            <motion.i
+              className={`bi ${mobileOpen ? 'bi-x' : 'bi-list'}`}
+              animate={{ rotate: mobileOpen ? 90 : 0 }}
+              transition={{ duration: 0.24 }}
+            />
           </motion.button>
         </div>
       </div>
 
-      {/* Mobile drawer */}
       <AnimatePresence mode="wait">
         {mobileOpen && (
           <>
@@ -759,7 +1110,7 @@ export default function HeaderClient({
               initial="hidden"
               animate="visible"
               exit="exit"
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.28 }}
               onClick={closeMobileMenu}
             />
 
@@ -771,16 +1122,107 @@ export default function HeaderClient({
               transition={SPRING_GENTLE}
               style={{ willChange: 'transform' }}
             >
-              <div className="mobile-drawer-header">
+              <motion.div
+                className="mobile-drawer-header animate__animated animate__fadeInRight"
+                initial={{ opacity: 0, x: 18 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.28 }}
+              >
                 <h3>Menu</h3>
-                <button className="close-drawer" onClick={closeMobileMenu}>
+                <motion.button
+                  className="close-drawer"
+                  onClick={closeMobileMenu}
+                  whileHover={{ rotate: 90, scale: 1.05 }}
+                  whileTap={{ scale: 0.92 }}
+                  transition={{ duration: 0.25 }}
+                >
                   <i className="bi bi-x-lg" />
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
 
               <motion.ul className="mobile-menu-list">
                 {navItems.map((item, index) => {
                   const active = isNavActive(item.id)
+                  const textActive = isNavTextActive(item.id)
+
+                  if (isDropdownItem(item)) {
+                    return (
+                      <motion.li
+                        key={item.id}
+                        custom={index}
+                        variants={mobileMenuItemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                      >
+                        <button
+                          type="button"
+                          className={`rb-mobilelink ${active ? 'active' : ''}`}
+                          onClick={() => setMobileServicesOpen((v) => !v)}
+                        >
+                          <motion.span
+                            animate={{
+                              color: textActive ? '#cda45e' : undefined,
+                            }}
+                            transition={{ type: 'spring', stiffness: 280 }}
+                          >
+                            {item.label}
+                          </motion.span>
+
+                          <motion.i
+                            className="bi bi-chevron-down"
+                            animate={{ rotate: mobileServicesOpen ? 180 : 0 }}
+                            transition={{ duration: 0.25 }}
+                          />
+                        </button>
+
+                        <AnimatePresence initial={false}>
+                          {mobileServicesOpen && (
+                            <motion.ul
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{
+                                duration: 0.28,
+                                ease: EASE_IN_OUT_CUBIC,
+                              }}
+                              className="mobile-submenu"
+                            >
+                              {item.children.map((child, subIndex) => (
+                                <motion.li
+                                  key={child.id}
+                                  initial={{ x: -16, opacity: 0 }}
+                                  animate={{ x: 0, opacity: 1 }}
+                                  transition={{
+                                    delay: subIndex * 0.04,
+                                    type: 'spring',
+                                    stiffness: 280,
+                                  }}
+                                >
+                                  <button
+                                    type="button"
+                                    className="rb-mobile-sublink"
+                                    onClick={() => {
+                                      setMobileServicesOpen(false)
+                                      handleNavClick(child.href)
+                                    }}
+                                  >
+                                    <span>
+                                      <i
+                                        className={`bi ${child.icon || 'bi-arrow-up-right'} me-2`}
+                                      />
+                                      {child.label}
+                                    </span>
+                                    <i className="bi bi-arrow-right-short" />
+                                  </button>
+                                </motion.li>
+                              ))}
+                            </motion.ul>
+                          )}
+                        </AnimatePresence>
+                      </motion.li>
+                    )
+                  }
 
                   return (
                     <motion.li
@@ -797,8 +1239,11 @@ export default function HeaderClient({
                         onClick={() => handleNavClick(item.href)}
                       >
                         <motion.span
-                          whileHover={{ x: 10 }}
-                          transition={{ type: 'spring', stiffness: 300 }}
+                          whileHover={{ x: 8 }}
+                          animate={{
+                            color: textActive ? '#cda45e' : undefined,
+                          }}
+                          transition={{ type: 'spring', stiffness: 280 }}
                         >
                           {item.label}
                         </motion.span>
@@ -807,7 +1252,6 @@ export default function HeaderClient({
                   )
                 })}
 
-                {/* Profile dropdown (mobile) */}
                 <motion.li
                   custom={navItems.length}
                   variants={mobileMenuItemVariants}
@@ -823,30 +1267,35 @@ export default function HeaderClient({
                     whileHover={{
                       backgroundColor: 'rgba(255, 255, 255, 0.05)',
                     }}
+                    whileTap={{ scale: 0.99 }}
                   >
-                    <span>Profile</span>
+                    <span>Hồ sơ</span>
                     <motion.i
                       className="bi bi-chevron-down"
                       animate={{ rotate: profileOpen ? 180 : 0 }}
-                      transition={{ duration: 0.3, ease: EASE_OUT_EXPO }}
+                      transition={{ duration: 0.28, ease: EASE_OUT_EXPO }}
                     />
                   </motion.button>
 
-                  <AnimatePresence>
+                  <AnimatePresence initial={false}>
                     {profileOpen && (
                       <motion.ul
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3, ease: EASE_IN_OUT_CUBIC }}
-                        className="mobile-submenu"
+                        transition={{ duration: 0.28, ease: EASE_IN_OUT_CUBIC }}
+                        className="mobile-submenu animate__animated animate__fadeInDown"
                       >
-                        {mobileProfileItems.map((it) => (
+                        {mobileProfileItems.map((it, subIndex) => (
                           <motion.li
                             key={it.href}
-                            initial={{ x: -20, opacity: 0 }}
+                            initial={{ x: -16, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
-                            transition={{ type: 'spring', stiffness: 300 }}
+                            transition={{
+                              delay: subIndex * 0.04,
+                              type: 'spring',
+                              stiffness: 280,
+                            }}
                           >
                             <Link href={it.href} onClick={closeMobileMenu}>
                               <i className={`bi ${it.icon} me-2`} />
@@ -859,7 +1308,6 @@ export default function HeaderClient({
                   </AnimatePresence>
                 </motion.li>
 
-                {/* Actions (mobile) */}
                 <motion.li
                   custom={navItems.length + 2}
                   variants={mobileMenuItemVariants}
@@ -873,7 +1321,9 @@ export default function HeaderClient({
                     href="/table/create"
                     onClick={closeMobileMenu}
                   >
-                    Book A Table
+                    <motion.span whileHover={{ letterSpacing: 0.2 }}>
+                      Đặt bàn
+                    </motion.span>
                   </Link>
                 </motion.li>
 
@@ -892,7 +1342,7 @@ export default function HeaderClient({
                         onClick={handleLogout}
                         style={{ border: 0 }}
                       >
-                        Logout
+                        Đăng xuất
                       </button>
                     ) : (
                       <Link
@@ -900,7 +1350,7 @@ export default function HeaderClient({
                         href="/login"
                         onClick={closeMobileMenu}
                       >
-                        Login
+                        Đăng nhập
                       </Link>
                     )}
                   </motion.li>

@@ -2,20 +2,17 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
-// Phone must be exactly 10 digits
-const PHONE_REGEX = /^\d{10}$/
-
-// Full name: only letters (including Vietnamese) + spaces
-// Disallow special characters and numbers
+const PHONE_REGEX = /^(03[2-9]|05[689]|07[06789]|08[1-689]|09[0-489]|086)\d{7}$/
 const NAME_REGEX = /^[a-zA-ZÀ-ỹ\s]+$/u
-
+const PASSWORD_REGEX =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=[\]{};:'",.<>/?\\|`~]).{6,}$/
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => null)
 
     if (!body) {
       return NextResponse.json(
-        { message: 'Invalid JSON body' },
+        { message: 'Dữ liệu gửi lên không hợp lệ (JSON lỗi)' },
         { status: 400 },
       )
     }
@@ -27,55 +24,71 @@ export async function POST(req: Request) {
       password?: string
     }
 
-    // 1) Required fields
+    // 1) Kiểm tra dữ liệu bắt buộc
     if (!full_name || !phone || !email || !password) {
-      return NextResponse.json({ message: 'Missing fields' }, { status: 400 })
+      return NextResponse.json(
+        { message: 'Vui lòng nhập đầy đủ thông tin' },
+        { status: 400 },
+      )
     }
 
     const fullNameTrimmed = full_name.trim()
     const emailNormalized = email.trim().toLowerCase()
     const phoneTrimmed = phone.trim()
 
-    // 2) Validate full name: no special chars
+    // 2) Kiểm tra họ tên
     if (!NAME_REGEX.test(fullNameTrimmed)) {
       return NextResponse.json(
-        { message: 'Full name must not contain special characters or numbers' },
+        { message: 'Họ và tên không được chứa số hoặc ký tự đặc biệt' },
         { status: 400 },
       )
     }
 
-    // 3) Validate phone: exactly 10 digits
+    // 3) Kiểm tra số điện thoại Việt Nam
     if (!PHONE_REGEX.test(phoneTrimmed)) {
       return NextResponse.json(
-        { message: 'Phone number must be exactly 10 digits' },
+        {
+          message:
+            'Số điện thoại không hợp lệ (đầu số phải bắt đầu từ 03, 07,....)',
+        },
         { status: 400 },
       )
     }
 
-    // 4) Validate password length >= 6
+    // 4) Kiểm tra mật khẩu
     if (password.length < 6) {
       return NextResponse.json(
-        { message: 'Password must be at least 6 characters' },
+        { message: 'Mật khẩu phải có ít nhất 6 ký tự' },
         { status: 400 },
       )
     }
 
-    // 5) Check existing email
+    if (!PASSWORD_REGEX.test(password)) {
+      return NextResponse.json(
+        {
+          message:
+            'Mật khẩu phải bao gồm chữ in hoa, chữ thường, số và ký tự đặc biệt',
+        },
+        { status: 400 },
+      )
+    }
+
+    // 5) Kiểm tra email đã tồn tại
     const existingUser = await prisma.user.findUnique({
       where: { email: emailNormalized },
     })
 
     if (existingUser) {
       return NextResponse.json(
-        { message: 'Email already exists' },
+        { message: 'Email này đã được đăng ký' },
         { status: 409 },
       )
     }
 
-    // 6) Hash password
+    // 6) Mã hóa mật khẩu
     const password_hash = await bcrypt.hash(password, 10)
 
-    // 7) Create user
+    // 7) Tạo tài khoản
     const user = await prisma.user.create({
       data: {
         full_name: fullNameTrimmed,
@@ -86,10 +99,10 @@ export async function POST(req: Request) {
       },
     })
 
-    // 8) Response
+    // 8) Trả kết quả
     return NextResponse.json(
       {
-        message: 'Register successful',
+        message: 'Đăng ký tài khoản thành công',
         user: {
           id: user.id,
           full_name: user.full_name,
@@ -101,8 +114,9 @@ export async function POST(req: Request) {
     )
   } catch (err) {
     console.error('Register error:', err)
+
     return NextResponse.json(
-      { message: 'Something went wrong' },
+      { message: 'Đã xảy ra lỗi trong quá trình đăng ký' },
       { status: 500 },
     )
   }

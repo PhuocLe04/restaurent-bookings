@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { useEffect, useMemo, useState, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { useLiquidMessage } from '@/app/ui/LiquidGlassMessage'
+import { useLiquidToast } from '@/app/ui/LiquidToastProvider'
+import 'animate.css'
 
 type Membership = {
   id: number
@@ -96,101 +97,24 @@ function normalizeAvatarUrl(value?: string | null) {
   return `/${raw.replace(/^\/+/, '')}`
 }
 
-const easeOutSoft: [number, number, number, number] = [0.22, 1, 0.36, 1]
-
-const pageVariants = {
-  hidden: { opacity: 0, y: 12 },
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.45,
-      ease: easeOutSoft,
-      when: 'beforeChildren',
-      staggerChildren: 0.04,
-    },
-  },
-  exit: {
-    opacity: 0,
-    y: 8,
-    transition: {
-      duration: 0.2,
-      ease: 'easeOut',
+      duration: 0.6,
     },
   },
 }
 
-const headerVariants = {
-  hidden: { opacity: 0, y: 16 },
+const staggerContainer = {
+  hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    y: 0,
     transition: {
-      duration: 0.45,
-      ease: easeOutSoft,
+      staggerChildren: 0.1,
     },
-  },
-}
-
-const leftCardVariants = {
-  hidden: { opacity: 0, x: -20, y: 10 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: easeOutSoft,
-    },
-  },
-}
-
-const rightCardVariants = {
-  hidden: { opacity: 0, x: 20, y: 10 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: easeOutSoft,
-    },
-  },
-}
-
-const formContainerVariants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.06,
-      delayChildren: 0.05,
-    },
-  },
-}
-
-const fieldVariants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.35,
-      ease: easeOutSoft,
-    },
-  },
-}
-
-const avatarVariants = {
-  initial: { opacity: 0, scale: 0.94 },
-  animate: {
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 0.3, ease: easeOutSoft },
-  },
-  exit: {
-    opacity: 0,
-    scale: 1.03,
-    transition: { duration: 0.2, ease: 'easeOut' },
   },
 }
 
@@ -200,6 +124,7 @@ export default function ProfileClient() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [avatarBroken, setAvatarBroken] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   const [profile, setProfile] = useState<ProfileDTO | null>(null)
 
@@ -208,7 +133,6 @@ export default function ProfileClient() {
   const [phone, setPhone] = useState('')
   const [avatar, setAvatar] = useState<string>('')
   const [avatarPreview, setAvatarPreview] = useState<string>('')
-
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [showCurrentPw, setShowCurrentPw] = useState(false)
@@ -216,8 +140,12 @@ export default function ProfileClient() {
   const [currentPw, setCurrentPw] = useState('')
   const [newPw, setNewPw] = useState('')
 
-  const { MessageComponent, showSuccess, showError, showInfo, hideMessage } =
-    useLiquidMessage()
+  // Sử dụng hook Liquid Message
+  const {
+    showSuccess: showLiquidSuccess,
+    showError: showLiquidError,
+    showInfo: showLiquidInfo,
+  } = useLiquidToast()
 
   const memberPoint = useMemo(
     () => safeNum(profile?.member_point),
@@ -236,6 +164,7 @@ export default function ProfileClient() {
       try {
         setLoading(true)
         setError(null)
+        setSuccess(null)
 
         const data = await fetchJSON<ProfileDTO>('/api/profile')
         if (!mounted) return
@@ -269,7 +198,7 @@ export default function ProfileClient() {
     try {
       setUploadingAvatar(true)
       setError(null)
-      hideMessage()
+      setSuccess(null)
 
       const tempPreview = URL.createObjectURL(file)
       setAvatarPreview(tempPreview)
@@ -303,13 +232,12 @@ export default function ProfileClient() {
       setAvatar(imageUrl)
       setAvatarPreview(imageUrl)
       setAvatarBroken(false)
-
-      showSuccess(
+      showLiquidSuccess(
         'Tải ảnh lên thành công. Hãy bấm "Lưu thay đổi" để cập nhật.',
         'Upload thành công',
       )
     } catch (err: any) {
-      showError(err?.message || 'Không thể upload ảnh', 'Upload thất bại')
+      showLiquidError(err?.message || 'Không thể upload ảnh', 'Upload thất bại')
       const fallback = normalizeAvatarUrl(profile?.avatar)
       setAvatarPreview(fallback)
       setAvatar(fallback)
@@ -319,11 +247,22 @@ export default function ProfileClient() {
     }
   }
 
+  const handleAvatarUrlChange = (url: string) => {
+    const normalized = normalizeAvatarUrl(url)
+    setAvatar(normalized)
+    setAvatarPreview(normalized)
+    setAvatarBroken(false)
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
   const onSave = async () => {
     try {
       setSaving(true)
       setError(null)
-      hideMessage()
+      setSuccess(null)
 
       const body: UpdateBody = {}
 
@@ -346,7 +285,7 @@ export default function ProfileClient() {
       }
 
       if (Object.keys(body).length === 0) {
-        showInfo('Không có thay đổi nào được thực hiện.', 'Thông báo')
+        showLiquidInfo('Không có thay đổi nào được thực hiện.', 'Thông báo')
         return
       }
 
@@ -358,7 +297,7 @@ export default function ProfileClient() {
         },
       )
 
-      showSuccess(res.message || 'Cập nhật thành công!', 'Thành công')
+      showLiquidSuccess(res.message || 'Cập nhật thành công!', 'Thành công')
 
       const fresh = await fetchJSON<ProfileDTO>('/api/profile')
       const normalizedAvatar = normalizeAvatarUrl(fresh.avatar)
@@ -378,51 +317,23 @@ export default function ProfileClient() {
         fileInputRef.current.value = ''
       }
     } catch (e: any) {
-      showError(e?.message ?? 'Cập nhật thất bại', 'Lỗi')
+      showLiquidError(e?.message ?? 'Cập nhật thất bại', 'Lỗi')
     } finally {
       setSaving(false)
     }
   }
 
-  const handleReset = () => {
-    if (!profile) return
-
-    const fallback = normalizeAvatarUrl(profile.avatar)
-    setFullName(profile.full_name ?? '')
-    setPhone(profile.phone ?? '')
-    setAvatar(fallback)
-    setAvatarPreview(fallback)
-    setEmail(profile.email ?? '')
-    setCurrentPw('')
-    setNewPw('')
-    setAvatarBroken(false)
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-
-    showInfo('Đã khôi phục dữ liệu ban đầu.', 'Đặt lại thành công')
-  }
-
   if (loading) {
     return (
-      <motion.div
-        className="container py-5"
+      <div
+        className="container py-5 animate__animated animate__fadeIn animate__faster"
         style={{ backgroundColor: '#0c0b09', minHeight: '100vh' }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
       >
         <div
           className="d-flex justify-content-center align-items-center"
           style={{ minHeight: '60vh' }}
         >
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
+          <div className="text-center animate__animated animate__fadeInUp animate__faster">
             <div
               className="spinner-border mb-3"
               style={{ width: '3rem', height: '3rem', color: '#cda45e' }}
@@ -431,26 +342,23 @@ export default function ProfileClient() {
               <span className="visually-hidden">Đang tải...</span>
             </div>
             <p style={{ color: '#aaa' }}>Đang tải thông tin cá nhân...</p>
-          </motion.div>
+          </div>
         </div>
-      </motion.div>
+      </div>
     )
   }
 
   if (error && !profile) {
     return (
       <div
-        className="container py-5"
+        className="container py-5 animate__animated animate__fadeIn"
         style={{ backgroundColor: '#0c0b09', minHeight: '100vh' }}
       >
         <div className="row justify-content-center">
           <div className="col-md-6">
-            <motion.div
-              className="card border-0"
+            <div
+              className="card border-0 animate__animated animate__fadeInUp animate__faster"
               style={{ backgroundColor: '#1a1814', borderRadius: '15px' }}
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35 }}
             >
               <div className="card-body p-5 text-center">
                 <div className="display-1 mb-4" style={{ color: '#cda45e' }}>
@@ -474,7 +382,7 @@ export default function ProfileClient() {
                   Đi tới Đăng nhập
                 </Link>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
@@ -484,17 +392,14 @@ export default function ProfileClient() {
   if (!profile) {
     return (
       <div
-        className="container py-5"
+        className="container py-5 animate__animated animate__fadeIn"
         style={{ backgroundColor: '#0c0b09', minHeight: '100vh' }}
       >
         <div className="row justify-content-center">
           <div className="col-md-6">
-            <motion.div
-              className="card border-0"
+            <div
+              className="card border-0 animate__animated animate__fadeInUp animate__faster"
               style={{ backgroundColor: '#1a1814', borderRadius: '15px' }}
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35 }}
             >
               <div className="card-body p-5 text-center">
                 <div className="display-1 mb-4" style={{ color: '#cda45e' }}>
@@ -507,7 +412,7 @@ export default function ProfileClient() {
                   Vui lòng đăng nhập lại để tiếp tục.
                 </p>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
@@ -516,40 +421,30 @@ export default function ProfileClient() {
 
   return (
     <motion.div
-      className="container py-4 py-lg-5 position-relative"
+      className="container py-4 py-lg-5 position-relative animate__animated animate__fadeIn"
       style={{
         backgroundColor: '#0c0b09',
         minHeight: '100vh',
         color: '#fff',
       }}
-      variants={pageVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
     >
-      <MessageComponent
-        position="top-right"
-        autoClose={5000}
-        glassIntensity="medium"
-        bubbleEffect={true}
-        glowEffect={true}
-        showIcon={true}
-        showCloseButton={true}
-      />
-
-      <motion.div className="mb-4" variants={headerVariants}>
+      <motion.div
+        className="mb-4 animate__animated animate__fadeInDown animate__faster"
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+      >
         <div className="d-flex align-items-center gap-3">
           <h1 className="h2 mb-0 fw-bold" style={{ color: '#cda45e' }}>
             HỒ SƠ CÁ NHÂN
           </h1>
-          <motion.div
+          <div
             className="flex-grow-1"
-            initial={{ scaleX: 0, opacity: 0 }}
-            animate={{ scaleX: 1, opacity: 1 }}
-            transition={{ delay: 0.12, duration: 0.45, ease: easeOutSoft }}
             style={{
               height: '2px',
-              transformOrigin: 'left center',
               background: 'linear-gradient(90deg, #cda45e 0%, #cda45e1a 100%)',
             }}
           />
@@ -559,15 +454,18 @@ export default function ProfileClient() {
         </p>
       </motion.div>
 
-      <div className="row g-4">
-        <motion.div className="col-12 col-lg-5" variants={leftCardVariants}>
-          <motion.div
+      <motion.div
+        className="row g-4"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div
+          className="col-12 col-lg-5 animate__animated animate__fadeInLeft animate__faster"
+          variants={fadeInUp}
+        >
+          <div
             className="card border-0 h-100"
-            whileHover={{
-              y: -3,
-              boxShadow: '0 16px 36px rgba(205,164,94,0.08)',
-            }}
-            transition={{ duration: 0.22 }}
             style={{
               backgroundColor: '#1a1814',
               borderRadius: '20px',
@@ -587,13 +485,11 @@ export default function ProfileClient() {
                     disabled={uploadingAvatar}
                   />
 
-                  <motion.button
+                  <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingAvatar}
                     title="Chọn ảnh đại diện"
-                    whileHover={uploadingAvatar ? {} : { scale: 1.02 }}
-                    whileTap={uploadingAvatar ? {} : { scale: 0.98 }}
                     style={{
                       border: 'none',
                       background: 'transparent',
@@ -601,12 +497,8 @@ export default function ProfileClient() {
                       cursor: uploadingAvatar ? 'not-allowed' : 'pointer',
                     }}
                   >
-                    <motion.div
+                    <div
                       className="rounded-circle border border-3 d-flex align-items-center justify-content-center overflow-hidden"
-                      layout
-                      transition={{
-                        layout: { duration: 0.25, ease: easeOutSoft },
-                      }}
                       style={{
                         width: 150,
                         height: 150,
@@ -620,102 +512,67 @@ export default function ProfileClient() {
                         position: 'relative',
                       }}
                     >
-                      <AnimatePresence mode="wait">
-                        {!avatarBroken && resolvedAvatar ? (
-                          <motion.img
-                            key={resolvedAvatar}
-                            src={resolvedAvatar}
-                            alt={profile.full_name}
-                            loading="lazy"
-                            decoding="async"
-                            sizes="(max-width: 150px) 150px, 150px"
-                            onError={() => setAvatarBroken(true)}
-                            variants={avatarVariants}
-                            initial="initial"
-                            animate="animate"
-                            exit="exit"
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'cover',
-                              display: 'block',
-                            }}
-                          />
-                        ) : (
-                          <motion.span
-                            key="fallback-avatar"
-                            variants={avatarVariants}
-                            initial="initial"
-                            animate="animate"
-                            exit="exit"
-                            style={{
-                              fontSize: '3rem',
-                              fontWeight: 700,
-                              color: '#fff',
-                              lineHeight: 1,
-                            }}
-                          >
-                            {(profile.full_name || 'U')
-                              .trim()
-                              .charAt(0)
-                              .toUpperCase()}
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
+                      {!avatarBroken && resolvedAvatar ? (
+                        <img
+                          src={resolvedAvatar}
+                          alt={profile.full_name}
+                          onError={() => setAvatarBroken(true)}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            display: 'block',
+                          }}
+                        />
+                      ) : (
+                        <span
+                          style={{
+                            fontSize: '3rem',
+                            fontWeight: 700,
+                            color: '#fff',
+                            lineHeight: 1,
+                          }}
+                        >
+                          {(profile.full_name || 'U')
+                            .trim()
+                            .charAt(0)
+                            .toUpperCase()}
+                        </span>
+                      )}
 
-                      <AnimatePresence>
-                        {uploadingAvatar && (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="d-flex align-items-center justify-content-center"
-                            style={{
-                              position: 'absolute',
-                              inset: 0,
-                              background: 'rgba(0,0,0,0.45)',
-                            }}
-                          >
-                            <span
-                              className="spinner-border spinner-border-sm"
-                              style={{ color: '#fff' }}
-                            />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </motion.div>
-                  </motion.button>
+                      {uploadingAvatar ? (
+                        <div
+                          className="d-flex align-items-center justify-content-center"
+                          style={{
+                            position: 'absolute',
+                            inset: 0,
+                            background: 'rgba(0,0,0,0.45)',
+                          }}
+                        >
+                          <span
+                            className="spinner-border spinner-border-sm"
+                            style={{ color: '#fff' }}
+                          />
+                        </div>
+                      ) : null}
+                    </div>
+                  </button>
                 </div>
 
-                <motion.h3
-                  className="mt-3 mb-1 fw-bold"
-                  style={{ color: '#fff' }}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.06, duration: 0.35 }}
-                >
+                <h3 className="mt-3 mb-1 fw-bold" style={{ color: '#fff' }}>
                   {profile.full_name}
-                </motion.h3>
-
-                <motion.p
-                  style={{ color: '#aaa' }}
-                  className="mb-0"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.12, duration: 0.35 }}
-                >
+                </h3>
+                <p style={{ color: '#aaa' }} className="mb-0">
                   <i
                     className="bi bi-envelope me-1"
                     style={{ color: '#cda45e' }}
                   ></i>
                   {profile.email}
-                </motion.p>
+                </p>
               </div>
 
-              <motion.div
+              <div
                 className="rounded-3 p-3 mb-3"
-                whileHover={{ scale: 1.01 }}
-                transition={{ duration: 0.2 }}
                 style={{
                   backgroundColor: '#0c0b09',
                   borderLeft: '4px solid #cda45e',
@@ -739,14 +596,12 @@ export default function ProfileClient() {
                     {profile.role}
                   </span>
                 </div>
-              </motion.div>
+              </div>
 
               <div className="row g-3 mb-3">
                 <div className="col-6">
-                  <motion.div
+                  <div
                     className="rounded-3 p-3 text-center"
-                    whileHover={{ y: -2, scale: 1.015 }}
-                    transition={{ duration: 0.2 }}
                     style={{
                       backgroundColor: '#0c0b09',
                       border: '1px solid #cda45e33',
@@ -762,14 +617,12 @@ export default function ProfileClient() {
                     <div className="fw-bold fs-5" style={{ color: '#cda45e' }}>
                       {memberPoint.toLocaleString()}
                     </div>
-                  </motion.div>
+                  </div>
                 </div>
 
                 <div className="col-6">
-                  <motion.div
+                  <div
                     className="rounded-3 p-3 text-center"
-                    whileHover={{ y: -2, scale: 1.015 }}
-                    transition={{ duration: 0.2 }}
                     style={{
                       backgroundColor: '#0c0b09',
                       border: '1px solid #cda45e33',
@@ -785,62 +638,50 @@ export default function ProfileClient() {
                     <div className="fw-bold fs-5" style={{ color: '#cda45e' }}>
                       {profile.membership?.name ?? 'Tiêu chuẩn'}
                     </div>
-                  </motion.div>
+                  </div>
                 </div>
               </div>
 
-              <AnimatePresence>
-                {profile.staff && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0, y: 8 }}
-                    animate={{ opacity: 1, height: 'auto', y: 0 }}
-                    exit={{ opacity: 0, height: 0, y: -8 }}
-                    transition={{ duration: 0.28 }}
-                    className="rounded-3 p-3"
-                    style={{
-                      backgroundColor: '#0c0b09',
-                      border: '1px dashed #cda45e',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <div className="d-flex align-items-center gap-2 mb-2">
-                      <i
-                        className="bi bi-person-badge-fill"
-                        style={{ color: '#cda45e' }}
-                      ></i>
-                      <span className="fw-semibold" style={{ color: '#fff' }}>
-                        Thông tin nhân viên
-                      </span>
-                    </div>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span style={{ color: '#aaa' }}>
-                        {profile.staff.full_name}
-                      </span>
-                      <span
-                        className="badge"
-                        style={{
-                          backgroundColor: '#cda45e33',
-                          color: '#cda45e',
-                        }}
-                      >
-                        {profile.staff.role}
-                      </span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {profile.staff && (
+                <div
+                  className="rounded-3 p-3"
+                  style={{
+                    backgroundColor: '#0c0b09',
+                    border: '1px dashed #cda45e',
+                  }}
+                >
+                  <div className="d-flex align-items-center gap-2 mb-2">
+                    <i
+                      className="bi bi-person-badge-fill"
+                      style={{ color: '#cda45e' }}
+                    ></i>
+                    <span className="fw-semibold" style={{ color: '#fff' }}>
+                      Thông tin nhân viên
+                    </span>
+                  </div>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span style={{ color: '#aaa' }}>
+                      {profile.staff.full_name}
+                    </span>
+                    <span
+                      className="badge"
+                      style={{ backgroundColor: '#cda45e33', color: '#cda45e' }}
+                    >
+                      {profile.staff.role}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
-          </motion.div>
+          </div>
         </motion.div>
 
-        <motion.div className="col-12 col-lg-7" variants={rightCardVariants}>
-          <motion.div
+        <motion.div
+          className="col-12 col-lg-7 animate__animated animate__fadeInRight animate__faster"
+          variants={fadeInUp}
+        >
+          <div
             className="card border-0"
-            whileHover={{
-              y: -3,
-              boxShadow: '0 16px 36px rgba(205,164,94,0.08)',
-            }}
-            transition={{ duration: 0.22 }}
             style={{
               backgroundColor: '#1a1814',
               borderRadius: '20px',
@@ -848,25 +689,18 @@ export default function ProfileClient() {
             }}
           >
             <div className="card-body p-4">
-              <motion.h4
-                className="mb-4"
-                style={{ color: '#cda45e' }}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35 }}
-              >
+              <h4 className="mb-4" style={{ color: '#cda45e' }}>
                 <i className="bi bi-pencil-square me-2"></i>
                 CHỈNH SỬA THÔNG TIN
-              </motion.h4>
+              </h4>
 
               <motion.div
                 className="row g-4"
-                variants={formContainerVariants}
-                initial="false"
-                whileInView="visible"
-                viewport={{ once: true, margin: '-100px' }}
+                variants={staggerContainer}
+                initial="hidden"
+                animate="visible"
               >
-                <motion.div className="col-md-12" variants={fieldVariants}>
+                <motion.div className="col-md-12" variants={fadeInUp}>
                   <label
                     className="form-label fw-semibold"
                     style={{ color: '#fff' }}
@@ -891,7 +725,7 @@ export default function ProfileClient() {
                   />
                 </motion.div>
 
-                <motion.div className="col-md-6" variants={fieldVariants}>
+                <motion.div className="col-md-6" variants={fadeInUp}>
                   <label
                     className="form-label fw-semibold"
                     style={{ color: '#fff' }}
@@ -916,7 +750,7 @@ export default function ProfileClient() {
                   />
                 </motion.div>
 
-                <motion.div className="col-md-6" variants={fieldVariants}>
+                <motion.div className="col-md-6" variants={fadeInUp}>
                   <label
                     className="form-label fw-semibold"
                     style={{ color: '#fff' }}
@@ -941,7 +775,7 @@ export default function ProfileClient() {
                   />
                 </motion.div>
 
-                <motion.div className="col-md-8" variants={fieldVariants}>
+                <motion.div className="col-md-8" variants={fadeInUp}>
                   <label
                     className="form-label fw-semibold"
                     style={{ color: '#fff' }}
@@ -952,6 +786,7 @@ export default function ProfileClient() {
                     ></i>
                     URL ảnh đại diện
                   </label>
+
                   <input
                     type="text"
                     className="form-control form-control-lg"
@@ -972,20 +807,18 @@ export default function ProfileClient() {
                   />
                 </motion.div>
 
-                <motion.div className="col-md-4" variants={fieldVariants}>
+                <motion.div className="col-md-4" variants={fadeInUp}>
                   <label
                     className="form-label fw-semibold"
                     style={{ color: '#fff', visibility: 'hidden' }}
                   >
                     Upload
                   </label>
-                  <motion.button
+                  <button
                     className="btn w-100 h-100 d-flex align-items-center justify-content-center gap-2"
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingAvatar}
-                    whileHover={uploadingAvatar ? {} : { scale: 1.015 }}
-                    whileTap={uploadingAvatar ? {} : { scale: 0.985 }}
                     style={{
                       backgroundColor: '#cda45e33',
                       border: '1px solid #cda45e',
@@ -995,35 +828,21 @@ export default function ProfileClient() {
                       opacity: uploadingAvatar ? 0.7 : 1,
                     }}
                   >
-                    <AnimatePresence mode="wait">
-                      {uploadingAvatar ? (
-                        <motion.span
-                          key="uploading"
-                          initial={{ opacity: 0, y: 4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -4 }}
-                          className="d-inline-flex align-items-center gap-2"
-                        >
-                          <span className="spinner-border spinner-border-sm" />
-                          Đang upload...
-                        </motion.span>
-                      ) : (
-                        <motion.span
-                          key="idle"
-                          initial={{ opacity: 0, y: 4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -4 }}
-                          className="d-inline-flex align-items-center gap-2"
-                        >
-                          <i className="bi bi-upload"></i>
-                          Chọn file
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </motion.button>
+                    {uploadingAvatar ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm" />
+                        Đang upload...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-upload"></i>
+                        Chọn file
+                      </>
+                    )}
+                  </button>
                 </motion.div>
 
-                <motion.div className="col-12" variants={fieldVariants}>
+                <motion.div className="col-12" variants={fadeInUp}>
                   <hr style={{ borderColor: '#cda45e33' }} />
                   <h5 className="fw-semibold mb-3" style={{ color: '#cda45e' }}>
                     <i className="bi bi-key me-2"></i>
@@ -1049,12 +868,10 @@ export default function ProfileClient() {
                             borderRadius: '10px 0 0 10px',
                           }}
                         />
-                        <motion.button
+                        <button
                           className="btn"
                           type="button"
                           onClick={() => setShowCurrentPw(!showCurrentPw)}
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.97 }}
                           style={{
                             backgroundColor: '#cda45e33',
                             border: '1px solid #cda45e33',
@@ -1065,7 +882,7 @@ export default function ProfileClient() {
                           <i
                             className={`bi bi-${showCurrentPw ? 'eye-slash' : 'eye'}`}
                           ></i>
-                        </motion.button>
+                        </button>
                       </div>
                     </div>
 
@@ -1087,12 +904,10 @@ export default function ProfileClient() {
                             borderRadius: '10px 0 0 10px',
                           }}
                         />
-                        <motion.button
+                        <button
                           className="btn"
                           type="button"
                           onClick={() => setShowNewPw(!showNewPw)}
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.97 }}
                           style={{
                             backgroundColor: '#cda45e33',
                             border: '1px solid #cda45e33',
@@ -1103,7 +918,7 @@ export default function ProfileClient() {
                           <i
                             className={`bi bi-${showNewPw ? 'eye-slash' : 'eye'}`}
                           ></i>
-                        </motion.button>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -1119,12 +934,26 @@ export default function ProfileClient() {
 
                 <motion.div
                   className="col-12 d-flex justify-content-end gap-3 mt-4"
-                  variants={fieldVariants}
+                  variants={fadeInUp}
                 >
                   <motion.button
                     className="btn btn-outline-secondary btn-lg px-4"
                     type="button"
-                    onClick={handleReset}
+                    onClick={() => {
+                      const fallback = normalizeAvatarUrl(profile.avatar)
+                      setFullName(profile.full_name ?? '')
+                      setPhone(profile.phone ?? '')
+                      setAvatar(fallback)
+                      setAvatarPreview(fallback)
+                      setEmail(profile.email ?? '')
+                      setCurrentPw('')
+                      setNewPw('')
+                      setAvatarBroken(false)
+
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = ''
+                      }
+                    }}
                     disabled={saving || uploadingAvatar}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -1149,44 +978,29 @@ export default function ProfileClient() {
                       borderRadius: '10px',
                       backgroundColor: '#cda45e',
                       borderColor: '#cda45e',
-                      minWidth: 170,
                     }}
                   >
-                    <AnimatePresence mode="wait">
-                      {saving ? (
-                        <motion.span
-                          key="saving"
-                          initial={{ opacity: 0, y: 4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -4 }}
-                          className="d-inline-flex align-items-center"
-                        >
-                          <span
-                            className="spinner-border spinner-border-sm me-2"
-                            style={{ color: '#fff' }}
-                          />
-                          Đang lưu...
-                        </motion.span>
-                      ) : (
-                        <motion.span
-                          key="saved"
-                          initial={{ opacity: 0, y: 4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -4 }}
-                          className="d-inline-flex align-items-center"
-                        >
-                          <i className="bi bi-check-lg me-2"></i>
-                          Lưu thay đổi
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
+                    {saving ? (
+                      <>
+                        <span
+                          className="spinner-border spinner-border-sm me-2"
+                          style={{ color: '#fff' }}
+                        />
+                        Đang lưu...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-check-lg me-2"></i>
+                        Lưu thay đổi
+                      </>
+                    )}
                   </motion.button>
                 </motion.div>
               </motion.div>
             </div>
-          </motion.div>
+          </div>
         </motion.div>
-      </div>
+      </motion.div>
     </motion.div>
   )
 }

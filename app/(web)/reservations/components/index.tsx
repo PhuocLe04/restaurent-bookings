@@ -5,6 +5,7 @@ import ReservationForm from './reservations-form'
 import ComboSection from './reservations-combo'
 import MenuSection from './reservations-menu'
 import ServiceSection from './reservations-service'
+import '../page.css'
 
 export type TableType = {
   id: number
@@ -25,6 +26,7 @@ export type MenuItem = {
 export type Service = {
   id: number
   name: string
+  image: string | null
   description?: string | null
   price: number
 }
@@ -74,11 +76,13 @@ export type CreateReservationResponse = {
 function pad(n: number) {
   return String(n).padStart(2, '0')
 }
+
 function toDatetimeLocalValue(d: Date) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
     d.getHours(),
   )}:${pad(d.getMinutes())}`
 }
+
 function fromDatetimeLocal(value: string) {
   const m = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/)
   if (!m) return null
@@ -90,12 +94,19 @@ function fromDatetimeLocal(value: string) {
   const dt = new Date(y, mo, d, h, mi, 0, 0)
   return isNaN(dt.getTime()) ? null : dt
 }
+
 export function toNumber(v: any, fallback = 0) {
   const n = typeof v === 'number' ? v : Number(v?.toString?.() ?? v)
   return Number.isFinite(n) ? n : fallback
 }
 
-export default function ReservationClient({ userId }: { userId: number }) {
+export default function ReservationClient({
+  userId,
+  userName,
+}: {
+  userId: number
+  userName: string
+}) {
   const [guests, setGuests] = useState<number>(2)
   const [tableCount, setTableCount] = useState<number>(1)
 
@@ -115,31 +126,26 @@ export default function ReservationClient({ userId }: { userId: number }) {
   const [error, setError] = useState<string>('')
   const [success, setSuccess] = useState<string>('')
 
-  // toggles
   const [preorderFood, setPreorderFood] = useState<boolean>(false)
   const [enableServices, setEnableServices] = useState<boolean>(false)
 
-  // menu
   const [categories, setCategories] = useState<Category[]>([])
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [menuQuery, setMenuQuery] = useState<string>('')
   const [selectedItems, setSelectedItems] = useState<Record<number, number>>({})
 
-  // services
   const [services, setServices] = useState<Service[]>([])
   const [serviceQuery, setServiceQuery] = useState<string>('')
   const [selectedServices, setSelectedServices] = useState<
     Record<number, number>
   >({})
 
-  // combos
   const [combos, setCombos] = useState<Combo[]>([])
   const [comboId, setComboId] = useState<string>('')
   const [comboDetail, setComboDetail] = useState<ComboDetail | null>(null)
   const [appliedCombos, setAppliedCombos] = useState<Record<number, number>>({})
 
-  // derived arrays
   const itemsArray = useMemo(
     () =>
       Object.entries(selectedItems)
@@ -167,13 +173,11 @@ export default function ReservationClient({ userId }: { userId: number }) {
     [appliedCombos],
   )
 
-  // clock
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 30_000)
     return () => clearInterval(t)
   }, [])
 
-  // table types
   useEffect(() => {
     let mounted = true
     ;(async () => {
@@ -193,7 +197,6 @@ export default function ReservationClient({ userId }: { userId: number }) {
     }
   }, [])
 
-  // combos + services once
   useEffect(() => {
     let mounted = true
     ;(async () => {
@@ -236,6 +239,7 @@ export default function ReservationClient({ userId }: { userId: number }) {
                 name: String(x.name ?? ''),
                 description: x.description ?? null,
                 price: toNumber(x.price, 0),
+                image: x.image ?? null,
               })),
             )
           }
@@ -249,7 +253,6 @@ export default function ReservationClient({ userId }: { userId: number }) {
     }
   }, [])
 
-  // menu when preorderFood
   useEffect(() => {
     if (!preorderFood) return
     let mounted = true
@@ -282,14 +285,13 @@ export default function ReservationClient({ userId }: { userId: number }) {
     }
   }, [preorderFood])
 
-  // time bump
   useEffect(() => {
     const t = timeDate
     if (!t) return
-    if (t.getTime() < minDate.getTime())
+    if (t.getTime() < minDate.getTime()) {
       setTimeLocal(toDatetimeLocalValue(minDate))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [minTimeLocal])
+    }
+  }, [minDate, minTimeLocal, timeDate])
 
   const chosenType = useMemo(() => {
     const id = Number(tableTypeId)
@@ -297,7 +299,6 @@ export default function ReservationClient({ userId }: { userId: number }) {
     return tableTypes.find((t) => t.id === id) ?? null
   }, [tableTypeId, tableTypes])
 
-  // combo detail fetch
   useEffect(() => {
     if (!comboId) {
       setComboDetail(null)
@@ -380,7 +381,6 @@ export default function ReservationClient({ userId }: { userId: number }) {
     return true
   }
 
-  // ===== menu actions passed down =====
   const filteredMenu = useMemo(() => {
     const catId = categoryFilter === 'all' ? null : Number(categoryFilter)
     const q = menuQuery.trim().toLowerCase()
@@ -401,6 +401,7 @@ export default function ReservationClient({ userId }: { userId: number }) {
   function incItem(id: number) {
     setSelectedItems((p) => ({ ...p, [id]: (p[id] ?? 0) + 1 }))
   }
+
   function decItem(id: number) {
     setSelectedItems((p) => {
       const n = { ...p }
@@ -415,6 +416,7 @@ export default function ReservationClient({ userId }: { userId: number }) {
     setSelectedServices((p) => ({ ...p, [id]: (p[id] ?? 0) + 1 }))
     setEnableServices(true)
   }
+
   function decService(id: number) {
     setSelectedServices((p) => {
       const n = { ...p }
@@ -475,7 +477,6 @@ export default function ReservationClient({ userId }: { userId: number }) {
         mode: 'auto',
         table_count: tableCount,
         table_type_id: Number(tableTypeId),
-
         ...(preorderFood && itemsArray.length ? { items: itemsArray } : {}),
         ...(enableServices && servicesArray.length
           ? { services: servicesArray }
@@ -492,6 +493,7 @@ export default function ReservationClient({ userId }: { userId: number }) {
       const data = (await res.json()) as CreateReservationResponse & {
         message?: string
       }
+
       if (!res.ok) return setError(data.message ?? 'Đặt bàn thất bại')
 
       const extras = [
@@ -505,8 +507,9 @@ export default function ReservationClient({ userId }: { userId: number }) {
       ].filter(Boolean)
 
       setSuccess(
-        `Đặt bàn thành công. Bàn: ${(data.table_ids ?? []).join(', ') || '(không rõ)'}` +
-          (extras.length ? ` | ${extras.join(' | ')}` : ''),
+        `Đặt bàn thành công. Bàn: ${(data.table_ids ?? []).join(', ') || '(không rõ)'}${
+          extras.length ? ` | ${extras.join(' | ')}` : ''
+        }`,
       )
 
       setSelectedItems({})
@@ -522,104 +525,160 @@ export default function ReservationClient({ userId }: { userId: number }) {
   }
 
   return (
-    <div className="rounded-lg border p-4">
-      <ReservationForm
-        guests={guests}
-        setGuests={setGuests}
-        tableCount={tableCount}
-        setTableCount={setTableCount}
-        tableTypes={tableTypes}
-        tableTypeId={tableTypeId}
-        setTableTypeId={setTableTypeId}
-        chosenType={chosenType}
-        timeLocal={timeLocal}
-        setTimeLocal={setTimeLocal}
-        minTimeLocal={minTimeLocal}
-      />
+    <div className="reservation-page">
+      <div className="reservation-page__bg" />
 
-      {/* toggles */}
-      <div className="mt-6 grid gap-3 md:grid-cols-2">
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={preorderFood}
-            onChange={(e) => setPreorderFood(e.target.checked)}
-          />
-          <span className="font-medium">Đặt món trước</span>
-          <span className="text-muted-foreground">(tick mới hiện menu)</span>
-        </label>
+      <div className="reservation-page__container">
+        <section className="reservation-hero">
+          <div className="reservation-hero__badge">Đặt bàn trực tuyến</div>
+          <h1 className="reservation-hero__title">
+            Đặt bàn nhanh chóng và tiện lợi
+          </h1>
+          <p className="reservation-hero__desc">
+            Xin chào <span>{userName}</span>, chọn thời gian, số lượng khách và
+            dịch vụ phù hợp để hoàn tất đặt bàn.
+          </p>
+        </section>
 
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={enableServices}
-            onChange={(e) => setEnableServices(e.target.checked)}
-          />
-          <span className="font-medium">Chọn dịch vụ</span>
-          <span className="text-muted-foreground">
-            (có thể chọn dịch vụ mà không cần món)
-          </span>
-        </label>
+        <section className="reservation-card">
+          <div className="reservation-card__header">
+            <div>
+              <h2>Thông tin đặt bàn</h2>
+              <p>
+                Điền thông tin bên dưới để hệ thống tự động sắp xếp bàn phù hợp.
+              </p>
+            </div>
+
+            <div className="reservation-summary">
+              <div className="reservation-summary__item">
+                <strong>{guests}</strong>
+                <span>Khách</span>
+              </div>
+              <div className="reservation-summary__item">
+                <strong>{tableCount}</strong>
+                <span>Bàn</span>
+              </div>
+              <div className="reservation-summary__item">
+                <strong>
+                  {itemsArray.length +
+                    servicesArray.length +
+                    combosArray.length}
+                </strong>
+                <span>Lựa chọn</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="reservation-card__body">
+            <ReservationForm
+              guests={guests}
+              setGuests={setGuests}
+              tableCount={tableCount}
+              setTableCount={setTableCount}
+              tableTypes={tableTypes}
+              tableTypeId={tableTypeId}
+              setTableTypeId={setTableTypeId}
+              chosenType={chosenType}
+              timeLocal={timeLocal}
+              setTimeLocal={setTimeLocal}
+              minTimeLocal={minTimeLocal}
+            />
+
+            <div className="reservation-options">
+              <label className="reservation-toggle">
+                <input
+                  type="checkbox"
+                  checked={preorderFood}
+                  onChange={(e) => setPreorderFood(e.target.checked)}
+                />
+                <span className="reservation-toggle__box" />
+                <span className="reservation-toggle__content">
+                  <span className="reservation-toggle__title">
+                    Đặt món trước
+                  </span>
+                  <span className="reservation-toggle__desc">
+                    Bật để chọn món ăn trước khi đến nhà hàng
+                  </span>
+                </span>
+              </label>
+
+              <label className="reservation-toggle">
+                <input
+                  type="checkbox"
+                  checked={enableServices}
+                  onChange={(e) => setEnableServices(e.target.checked)}
+                />
+                <span className="reservation-toggle__box" />
+                <span className="reservation-toggle__content">
+                  <span className="reservation-toggle__title">
+                    Chọn dịch vụ
+                  </span>
+                  <span className="reservation-toggle__desc">
+                    Có thể chọn dịch vụ riêng mà không cần đặt món
+                  </span>
+                </span>
+              </label>
+            </div>
+
+            <ComboSection
+              combos={combos}
+              comboId={comboId}
+              setComboId={setComboId}
+              comboDetail={comboDetail}
+              onApplyCombo={applyCombo}
+            />
+
+            <MenuSection
+              preorderFood={preorderFood}
+              categories={categories}
+              categoryFilter={categoryFilter}
+              setCategoryFilter={setCategoryFilter}
+              menuQuery={menuQuery}
+              setMenuQuery={setMenuQuery}
+              filteredMenu={filteredMenu}
+              selectedItems={selectedItems}
+              onIncItem={incItem}
+              onDecItem={decItem}
+              onClearItems={() => setSelectedItems({})}
+              itemsCount={itemsArray.length}
+            />
+
+            <ServiceSection
+              enableServices={enableServices}
+              serviceQuery={serviceQuery}
+              setServiceQuery={setServiceQuery}
+              filteredServices={filteredServices}
+              selectedServices={selectedServices}
+              onIncService={incService}
+              onDecService={decService}
+              onClearServices={() => setSelectedServices({})}
+              servicesCount={servicesArray.length}
+            />
+
+            <div className="reservation-actions">
+              <button
+                className="reservation-submit"
+                onClick={createReservation}
+                disabled={loadingCreate || tableCount > guests}
+                type="button"
+              >
+                {loadingCreate ? 'Đang đặt...' : 'Đặt bàn ngay'}
+              </button>
+            </div>
+
+            {error && (
+              <div className="reservation-alert reservation-alert--error">
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="reservation-alert reservation-alert--success">
+                {success}
+              </div>
+            )}
+          </div>
+        </section>
       </div>
-
-      <ComboSection
-        combos={combos}
-        comboId={comboId}
-        setComboId={setComboId}
-        comboDetail={comboDetail}
-        onApplyCombo={applyCombo}
-      />
-
-      <MenuSection
-        preorderFood={preorderFood}
-        categories={categories}
-        categoryFilter={categoryFilter}
-        setCategoryFilter={setCategoryFilter}
-        menuQuery={menuQuery}
-        setMenuQuery={setMenuQuery}
-        filteredMenu={filteredMenu}
-        selectedItems={selectedItems}
-        onIncItem={incItem}
-        onDecItem={decItem}
-        onClearItems={() => setSelectedItems({})}
-        itemsCount={itemsArray.length}
-      />
-
-      <ServiceSection
-        enableServices={enableServices}
-        serviceQuery={serviceQuery}
-        setServiceQuery={setServiceQuery}
-        filteredServices={filteredServices}
-        selectedServices={selectedServices}
-        onIncService={incService}
-        onDecService={decService}
-        onClearServices={() => setSelectedServices({})}
-        servicesCount={servicesArray.length}
-      />
-
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <div className="ml-auto flex gap-2">
-          <button
-            className="rounded-md bg-emerald-600 px-3 py-2 text-sm text-white disabled:opacity-60"
-            onClick={createReservation}
-            disabled={loadingCreate || tableCount > guests}
-            type="button"
-          >
-            {loadingCreate ? 'Đang đặt...' : 'Đặt bàn'}
-          </button>
-        </div>
-      </div>
-
-      {error && (
-        <div className="mt-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="mt-4 rounded-md border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-800">
-          {success}
-        </div>
-      )}
     </div>
   )
 }
