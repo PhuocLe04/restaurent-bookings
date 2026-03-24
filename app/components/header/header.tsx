@@ -79,8 +79,8 @@ const mobileMenuItemVariants = {
 const dropdownVariants = {
   hidden: {
     opacity: 0,
-    y: -10,
-    scale: 0.96,
+    y: -12,
+    scale: 0.94,
     transition: { duration: 0.15 },
   },
   visible: {
@@ -89,16 +89,16 @@ const dropdownVariants = {
     scale: 1,
     transition: {
       type: 'spring' as const,
-      stiffness: 500,
-      damping: 30,
-      mass: 0.55,
+      stiffness: 380,
+      damping: 26,
+      mass: 0.7,
     },
   },
   exit: {
     opacity: 0,
-    y: -8,
-    scale: 0.97,
-    transition: { duration: 0.16 },
+    y: -6,
+    scale: 0.95,
+    transition: { duration: 0.18 },
   },
 }
 
@@ -171,6 +171,8 @@ export default function HeaderClient({
   const canSeeAdmin = profile?.role === 'admin'
   const canSeeStaff = profile?.is_staff === true
 
+  const suppressSectionTrackingRef = useRef(false)
+
   useEffect(() => {
     useWebAuthStore.getState().hydrateFromStorage()
   }, [])
@@ -178,8 +180,12 @@ export default function HeaderClient({
   const [mobileOpen, setMobileOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
-  const [servicesOpen, setServicesOpen] = useState(false)
-  const [mobileServicesOpen, setMobileServicesOpen] = useState(false)
+  const [desktopDropdownOpen, setDesktopDropdownOpen] = useState<string | null>(
+    null,
+  )
+  const [mobileDropdownOpen, setMobileDropdownOpen] = useState<string | null>(
+    null,
+  )
   const [isHomeHero, setIsHomeHero] = useState(false)
   const [isSolid, setIsSolid] = useState(initialIsSolid)
   const [isScrolling, setIsScrolling] = useState(false)
@@ -189,7 +195,7 @@ export default function HeaderClient({
   const getHeaderOffset = useCallback(() => headerOffsetRef.current, [])
 
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
-  const servicesMenuRef = useRef<HTMLLIElement | null>(null)
+  const dropdownMenuRef = useRef<HTMLLIElement | null>(null)
   const headerRef = useRef<HTMLElement | null>(null)
   const rafRef = useRef<number | null>(null)
   const lastScrollY = useRef(0)
@@ -199,7 +205,7 @@ export default function HeaderClient({
   const closeMobileMenu = useCallback(() => {
     setMobileOpen(false)
     setProfileOpen(false)
-    setMobileServicesOpen(false)
+    setMobileDropdownOpen(null)
   }, [])
 
   const isHome = pathname === '/'
@@ -208,7 +214,24 @@ export default function HeaderClient({
     () => [
       { href: '/#hero', label: 'Trang chủ', id: 'home' },
       { href: '/#about', label: 'Giới thiệu', id: 'about' },
-      { href: '/#menu', label: 'Thực đơn', id: 'menu' },
+      {
+        label: 'Thực đơn',
+        id: 'menu-root',
+        children: [
+          {
+            href: '/#menu',
+            label: 'Món ăn nổi bật',
+            id: 'menu',
+            icon: 'bi-stars',
+          },
+          {
+            href: '/menu',
+            label: 'Xem toàn bộ thực đơn',
+            id: 'all-menu',
+            icon: 'bi-grid',
+          },
+        ],
+      },
       {
         label: 'Dịch vụ',
         id: 'services-root',
@@ -220,7 +243,7 @@ export default function HeaderClient({
             icon: 'bi-stars',
           },
           {
-            href: '/services',
+            href: '/service-list',
             label: 'Xem tất cả dịch vụ',
             id: 'all-services',
             icon: 'bi-grid',
@@ -280,7 +303,7 @@ export default function HeaderClient({
       isNavigatingRef.current = true
       closeMobileMenu()
       setProfileMenuOpen(false)
-      setServicesOpen(false)
+      setDesktopDropdownOpen(null)
 
       if (!hash) {
         router.push(href)
@@ -288,7 +311,10 @@ export default function HeaderClient({
         return
       }
 
+      // đang ở trang khác -> chuyển về homepage và scroll đúng section,
+      // đồng thời KHÓA tracking section một nhịp
       if (!isHome) {
+        suppressSectionTrackingRef.current = true
         router.push(`/#${hash}`)
 
         setTimeout(() => {
@@ -297,9 +323,15 @@ export default function HeaderClient({
           isNavigatingRef.current = false
         }, 320)
 
+        // mở lại tracking sau khi điều hướng và cuộn ổn định
+        setTimeout(() => {
+          suppressSectionTrackingRef.current = false
+        }, 1400)
+
         return
       }
 
+      // đang ở homepage -> cho phép hiệu ứng đi theo section bình thường
       scrollToId(hash, getHeaderOffset)
       setActiveSection(hash === 'hero' ? 'home' : hash)
 
@@ -330,7 +362,7 @@ export default function HeaderClient({
       if (typeof st.clearAuth === 'function') st.clearAuth()
 
       setProfileMenuOpen(false)
-      setServicesOpen(false)
+      setDesktopDropdownOpen(null)
       closeMobileMenu()
 
       router.refresh()
@@ -339,7 +371,7 @@ export default function HeaderClient({
       const st: any = useWebAuthStore.getState()
       if (typeof st.clearAuth === 'function') st.clearAuth()
       setProfileMenuOpen(false)
-      setServicesOpen(false)
+      setDesktopDropdownOpen(null)
       closeMobileMenu()
       router.refresh()
       router.push('/login')
@@ -470,6 +502,7 @@ export default function HeaderClient({
 
     const updateActiveSection = () => {
       if (isNavigatingRef.current) return
+      if (suppressSectionTrackingRef.current) return
 
       const sections = getSections()
       if (!sections.length) return
@@ -544,7 +577,7 @@ export default function HeaderClient({
     if (!mobileOpen) {
       const t = setTimeout(() => {
         setProfileOpen(false)
-        setMobileServicesOpen(false)
+        setMobileDropdownOpen(null)
       }, 150)
       return () => clearTimeout(t)
     }
@@ -571,13 +604,13 @@ export default function HeaderClient({
   }, [profileMenuOpen])
 
   useEffect(() => {
-    if (!servicesOpen) return
+    if (!desktopDropdownOpen) return
 
     const onDown = (e: MouseEvent | TouchEvent) => {
-      const el = servicesMenuRef.current
+      const el = dropdownMenuRef.current
       if (!el) return
       if (e.target instanceof Node && !el.contains(e.target)) {
-        setServicesOpen(false)
+        setDesktopDropdownOpen(null)
       }
     }
 
@@ -588,12 +621,12 @@ export default function HeaderClient({
       document.removeEventListener('mousedown', onDown)
       document.removeEventListener('touchstart', onDown)
     }
-  }, [servicesOpen])
+  }, [desktopDropdownOpen])
 
   useEffect(() => {
     setProfileMenuOpen(false)
-    setServicesOpen(false)
-    setMobileServicesOpen(false)
+    setDesktopDropdownOpen(null)
+    setMobileDropdownOpen(null)
     closeMobileMenu()
   }, [pathname, closeMobileMenu])
 
@@ -604,13 +637,21 @@ export default function HeaderClient({
       if (pathname === '/') {
         return (
           itemId === activeSection ||
-          (itemId === 'services-root' && activeSection === 'event')
+          (itemId === 'menu-root' && activeSection === 'menu') ||
+          (itemId === 'services-root' && activeSection === 'services')
         )
       }
+
       if (pathname.startsWith('/blogs')) return itemId === 'blogs'
+
       if (pathname.startsWith('/services')) {
         return itemId === 'all-services' || itemId === 'services-root'
       }
+
+      if (pathname.startsWith('/menu')) {
+        return itemId === 'all-menu' || itemId === 'menu-root'
+      }
+
       return false
     },
     [pathname, activeSection],
@@ -621,13 +662,21 @@ export default function HeaderClient({
       if (pathname === '/') {
         return (
           itemId === activeSection ||
-          (itemId === 'services-root' && activeSection === 'event')
+          (itemId === 'menu-root' && activeSection === 'menu') ||
+          (itemId === 'services-root' && activeSection === 'services')
         )
       }
+
       if (pathname.startsWith('/blogs')) return itemId === 'blogs'
+
       if (pathname.startsWith('/services')) {
         return itemId === 'all-services' || itemId === 'services-root'
       }
+
+      if (pathname.startsWith('/menu')) {
+        return itemId === 'all-menu' || itemId === 'menu-root'
+      }
+
       return false
     },
     [pathname, activeSection],
@@ -741,24 +790,38 @@ export default function HeaderClient({
               {navItems.map((item) => {
                 const active = isNavActive(item.id)
                 const textActive = isNavTextActive(item.id)
+                const dropdownOpen =
+                  isDropdownItem(item) && desktopDropdownOpen === item.id
 
                 if (isDropdownItem(item)) {
                   return (
                     <motion.li
                       key={item.id}
-                      ref={servicesMenuRef}
+                      ref={
+                        desktopDropdownOpen === item.id ? dropdownMenuRef : null
+                      }
                       variants={navItemVariants}
                       className="rb-nav-dropdown"
                       style={{ position: 'relative' }}
                       whileHover={{ y: -1 }}
                       transition={SPRING_SOFT}
-                      onMouseEnter={() => setServicesOpen(true)}
-                      onMouseLeave={() => setServicesOpen(false)}
+                      onMouseEnter={() => setDesktopDropdownOpen(item.id)}
+                      onMouseLeave={() =>
+                        setDesktopDropdownOpen((prev) =>
+                          prev === item.id ? null : prev,
+                        )
+                      }
                     >
                       <button
                         type="button"
-                        className={`rb-navlink ${active ? 'active' : ''} ${servicesOpen ? 'dropdown-open' : ''}`}
-                        onClick={() => setServicesOpen((v) => !v)}
+                        className={`rb-navlink ${active ? 'active' : ''} ${
+                          dropdownOpen ? 'dropdown-open' : ''
+                        }`}
+                        onClick={() =>
+                          setDesktopDropdownOpen((prev) =>
+                            prev === item.id ? null : item.id,
+                          )
+                        }
                       >
                         <motion.span
                           className="nav-text"
@@ -773,8 +836,8 @@ export default function HeaderClient({
                         <motion.i
                           className="bi bi-chevron-down rb-nav-caret"
                           animate={{
-                            rotate: servicesOpen ? 180 : 0,
-                            color: servicesOpen ? '#cda45e' : 'inherit',
+                            rotate: dropdownOpen ? 180 : 0,
+                            color: dropdownOpen ? '#cda45e' : 'inherit',
                           }}
                           transition={{ duration: 0.22 }}
                           style={{
@@ -784,7 +847,6 @@ export default function HeaderClient({
                           }}
                         />
 
-                        {/* Thêm hiệu ứng hover background */}
                         <motion.span
                           className="nav-hover-effect"
                           initial={{ opacity: 0, scale: 0.5 }}
@@ -821,10 +883,10 @@ export default function HeaderClient({
                       </AnimatePresence>
 
                       <AnimatePresence>
-                        {servicesOpen && (
+                        {dropdownOpen && (
                           <motion.div
                             role="menu"
-                            className="rb-profileDropdown animate__animated animate__fadeInDown"
+                            className="rb-profileDropdown"
                             variants={dropdownVariants}
                             initial="hidden"
                             animate="visible"
@@ -861,7 +923,7 @@ export default function HeaderClient({
                                         childActive ? 'active' : ''
                                       }`}
                                       onClick={() => {
-                                        setServicesOpen(false)
+                                        setDesktopDropdownOpen(null)
                                         handleNavClick(child.href)
                                       }}
                                       style={{
@@ -872,7 +934,9 @@ export default function HeaderClient({
                                       }}
                                     >
                                       <i
-                                        className={`bi ${child.icon || 'bi-arrow-up-right'} me-2`}
+                                        className={`bi ${
+                                          child.icon || 'bi-arrow-up-right'
+                                        } me-2`}
                                       />
                                       <span>{child.label}</span>
                                     </button>
@@ -989,7 +1053,7 @@ export default function HeaderClient({
                       {profileMenuOpen && (
                         <motion.div
                           role="menu"
-                          className="rb-profileDropdown animate__animated animate__fadeInDown"
+                          className="rb-profileDropdown"
                           variants={dropdownVariants}
                           initial="hidden"
                           animate="visible"
@@ -1144,6 +1208,8 @@ export default function HeaderClient({
                 {navItems.map((item, index) => {
                   const active = isNavActive(item.id)
                   const textActive = isNavTextActive(item.id)
+                  const mobileDropdownActive =
+                    isDropdownItem(item) && mobileDropdownOpen === item.id
 
                   if (isDropdownItem(item)) {
                     return (
@@ -1158,7 +1224,11 @@ export default function HeaderClient({
                         <button
                           type="button"
                           className={`rb-mobilelink ${active ? 'active' : ''}`}
-                          onClick={() => setMobileServicesOpen((v) => !v)}
+                          onClick={() =>
+                            setMobileDropdownOpen((prev) =>
+                              prev === item.id ? null : item.id,
+                            )
+                          }
                         >
                           <motion.span
                             animate={{
@@ -1171,13 +1241,13 @@ export default function HeaderClient({
 
                           <motion.i
                             className="bi bi-chevron-down"
-                            animate={{ rotate: mobileServicesOpen ? 180 : 0 }}
+                            animate={{ rotate: mobileDropdownActive ? 180 : 0 }}
                             transition={{ duration: 0.25 }}
                           />
                         </button>
 
                         <AnimatePresence initial={false}>
-                          {mobileServicesOpen && (
+                          {mobileDropdownActive && (
                             <motion.ul
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: 'auto', opacity: 1 }}
@@ -1203,13 +1273,15 @@ export default function HeaderClient({
                                     type="button"
                                     className="rb-mobile-sublink"
                                     onClick={() => {
-                                      setMobileServicesOpen(false)
+                                      setMobileDropdownOpen(null)
                                       handleNavClick(child.href)
                                     }}
                                   >
                                     <span>
                                       <i
-                                        className={`bi ${child.icon || 'bi-arrow-up-right'} me-2`}
+                                        className={`bi ${
+                                          child.icon || 'bi-arrow-up-right'
+                                        } me-2`}
                                       />
                                       {child.label}
                                     </span>
@@ -1284,7 +1356,7 @@ export default function HeaderClient({
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.28, ease: EASE_IN_OUT_CUBIC }}
-                        className="mobile-submenu animate__animated animate__fadeInDown"
+                        className="mobile-submenu"
                       >
                         {mobileProfileItems.map((it, subIndex) => (
                           <motion.li

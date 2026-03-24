@@ -1,0 +1,1150 @@
+:root {
+  --combo-detail-bg:
+    radial-gradient(
+      circle at top left,
+      rgba(205, 164, 94, 0.07),
+      transparent 24%
+    ),
+    linear-gradient(180deg, #141210 0%, #0f0d0b 100%);
+  --combo-detail-card-bg: linear-gradient(
+    180deg,
+    rgba(28, 26, 22, 0.92),
+    rgba(20, 19, 17, 0.94)
+  );
+  --combo-detail-card-soft: rgba(255, 255, 255, 0.03);
+  --combo-detail-border: rgba(205, 164, 94, 0.16);
+  --combo-detail-border-soft: rgba(255, 255, 255, 0.08);
+  --combo-detail-text: #ffffff;
+  --combo-detail-text-soft: rgba(255, 255, 255, 0.62);
+  --combo-detail-text-muted: rgba(255, 255, 255, 0.44);
+  --combo-detail-gold: #cda45e;
+  --combo-detail-gold-2: #f3cb85;
+  --combo-detail-danger: #ff7c7c;
+  --combo-detail-success: #28d69b;
+  --combo-detail-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 18px 38px rgba(0, 0, 0, 0.22);
+  --combo-detail-shadow-soft: 0 12px 24px rgba(0, 0, 0, 0.16);
+  --combo-detail-radius-xl: 28px;
+  --combo-detail-radius-lg: 22px;
+  --combo-detail-radius-md: 18px;
+  --combo-detail-radius-sm: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.combo-detail-page {
+  min-height: 100vh;
+  min-width: 0;
+  padding: 6px 0 24px;
+  background: var(--combo-detail-bg);
+}
+
+.combo-detail-shell {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.combo-detail-loading-card {
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--combo-detail-border);
+  border-radius: var(--combo-detail-radius-xl);
+  background: var(--combo-detail-card-bg);
+  box-shadow: var(--combo-detail-shadow);
+  color: var(--combo-detail-text-soft);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.combo-detail-hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  border: 1px solid rgba(205, 164, 94, 0.2);
+  border-radius: 28px;
+  padding: 26px;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(205, 164, 94, 0.18),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at right center,
+      rgba(255, 255, 255, 0.05),
+      transparent 28%
+    ),
+    linear-gradient(135deg, rgba(26, 24, 20, 0.95), rgba(18, 17, 15, 0.9));
+  backdrop-filter: blur(14px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 16px 40px rgba(0, 0, 0, 0.22);
+}
+
+.combo-detail-hero__glow {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(30px);
+  pointer-events: none;
+}
+
+.combo-detail-hero__glow--1 {
+  width: 180px;
+  height: 180px;
+  top: -50px;
+  right: -20px;
+  background: rgba(205, 164, 94, 0.12);
+}
+
+.combo-detail-hero__glow--2 {
+  width: 160px;
+  height: 160px;
+  bottom: -70px;
+  left: 12%;
+  background: rgba(255, 210, 120, 0.08);
+}
+
+.combo-detail-hero__content,
+.combo-detail-hero__actions {
+  position: relative;
+  z-index: 1;
+}
+
+.combo-detail-hero__content {
+  /* flex: 1 1 700px; */
+  min-width: 280px;
+}
+
+.combo-detail-hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(205, 164, 94, 0.12);
+  border: 1px solid rgba(205, 164, 94, 0.2);
+  color: var(--combo-detail-gold-2);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.combo-detail-hero__title {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(28px, 4vw, 38px);
+  line-height: 1.08;
+  font-weight: 900;
+  background: linear-gradient(135deg, #fff, #f3cb85);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.combo-detail-hero__subtitle {
+  margin: 12px 0 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 15px;
+  line-height: 1.7;
+  max-width: 760px;
+}
+
+.combo-detail-hero__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.combo-detail-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.combo-detail-status-pill.on {
+  color: #0f1c15;
+  background: rgba(40, 214, 155, 0.9);
+  border-color: rgba(40, 214, 155, 0.45);
+}
+
+.combo-detail-status-pill.off {
+  color: #1b1711;
+  background: linear-gradient(135deg, #f3cb85, #cda45e);
+  border-color: rgba(205, 164, 94, 0.4);
+}
+
+.combo-detail-back-btn,
+.combo-detail-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: var(--combo-detail-shadow-soft);
+  transition: all 0.2s ease;
+}
+
+.combo-detail-back-btn {
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.combo-detail-back-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(205, 164, 94, 0.24);
+  color: var(--combo-detail-gold-2);
+}
+
+.combo-detail-delete-btn {
+  border: 1px solid rgba(255, 124, 124, 0.18);
+  background: rgba(255, 124, 124, 0.1);
+  color: #ffcccc;
+  cursor: pointer;
+}
+
+.combo-detail-delete-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 124, 124, 0.16);
+}
+
+.combo-detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 18px;
+  align-items: start;
+}
+
+.combo-detail-main {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.combo-detail-side {
+  position: sticky;
+  top: 18px;
+}
+
+.combo-detail-card,
+.combo-detail-summary-card {
+  border: 1px solid rgba(205, 164, 94, 0.14);
+  border-radius: 26px;
+  background: linear-gradient(
+    180deg,
+    rgba(28, 26, 22, 0.9),
+    rgba(20, 19, 17, 0.92)
+  );
+  backdrop-filter: blur(12px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 16px 34px rgba(0, 0, 0, 0.18);
+}
+
+.combo-detail-card {
+  padding: 22px;
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.combo-detail-summary-card {
+  padding: 18px;
+  overflow: hidden;
+}
+
+.combo-detail-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.combo-detail-card__title {
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.2px;
+}
+
+.combo-detail-card__subtitle {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.combo-detail-counter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(205, 164, 94, 0.14);
+  border: 1px solid rgba(205, 164, 94, 0.24);
+  color: var(--combo-detail-gold-2);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.combo-detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.combo-detail-field label {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+
+.combo-detail-field input,
+.combo-detail-field textarea,
+.combo-detail-toolbar select,
+.combo-detail-search input,
+.combo-detail-qty input {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.combo-detail-field input {
+  height: 48px;
+  padding: 0 14px;
+}
+
+.combo-detail-field textarea {
+  min-height: 120px;
+  padding: 14px;
+  resize: vertical;
+}
+
+.combo-detail-field input::placeholder,
+.combo-detail-field textarea::placeholder,
+.combo-detail-search input::placeholder {
+  color: rgba(255, 255, 255, 0.34);
+}
+
+.combo-detail-field input:focus,
+.combo-detail-field textarea:focus,
+.combo-detail-toolbar select:focus,
+.combo-detail-search input:focus,
+.combo-detail-qty input:focus {
+  border-color: rgba(205, 164, 94, 0.4);
+  box-shadow: 0 0 0 4px rgba(205, 164, 94, 0.12);
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.combo-detail-info-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 16px;
+}
+
+.combo-detail-discount-box {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 46px;
+  gap: 10px;
+}
+
+.combo-detail-discount-box__btn {
+  height: 48px;
+  border: 1px solid rgba(205, 164, 94, 0.18);
+  border-radius: 16px;
+  background: rgba(205, 164, 94, 0.08);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.combo-detail-discount-box__btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: rgba(205, 164, 94, 0.14);
+  border-color: rgba(205, 164, 94, 0.3);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.14);
+}
+
+.combo-detail-discount-box__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.combo-detail-discount-box__input {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 48px;
+  border-radius: 16px;
+  border: 1px solid rgba(205, 164, 94, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0 12px;
+}
+
+.combo-detail-discount-box__input input {
+  border: none;
+  background: transparent;
+  height: auto;
+  padding: 0;
+  box-shadow: none !important;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.combo-detail-discount-box__input span {
+  color: var(--combo-detail-gold-2);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.combo-detail-helper {
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 12px;
+}
+
+.combo-detail-state-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 80px;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.combo-detail-state-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.combo-detail-state-card__text strong {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.combo-detail-state-card__text span {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.combo-detail-switch {
+  position: relative;
+  width: 68px;
+  height: 38px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+
+.combo-detail-switch.active {
+  background: linear-gradient(135deg, #f3cb85, #cda45e);
+}
+
+.combo-detail-switch__thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 30px;
+  height: 30px;
+  background: #fff;
+  border-radius: 999px;
+  transition: transform 0.25s ease;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
+}
+
+.combo-detail-switch.active .combo-detail-switch__thumb {
+  transform: translateX(30px);
+}
+
+.combo-detail-picker {
+  position: relative;
+}
+
+.combo-detail-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) 220px 170px;
+  gap: 12px;
+}
+
+.combo-detail-toolbar--service {
+  grid-template-columns: minmax(0, 1fr) 170px;
+}
+
+.combo-detail-search {
+  position: relative;
+}
+
+.combo-detail-search__icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.combo-detail-search input {
+  min-height: 48px;
+  padding: 0 14px 0 42px;
+}
+
+.combo-detail-toolbar select {
+  min-height: 48px;
+  padding: 0 14px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.combo-detail-toolbar select option {
+  background: #1c1915;
+  color: #fff;
+}
+
+.combo-detail-toolbar__action {
+  min-height: 48px;
+  border-radius: 16px;
+  border: 1px solid rgba(205, 164, 94, 0.5);
+  color: #1b1711;
+  background: linear-gradient(135deg, #f3cb85, #cda45e);
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 14px 28px rgba(205, 164, 94, 0.22);
+  transition: all 0.2s ease;
+}
+
+.combo-detail-toolbar__action:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.04);
+}
+
+.combo-detail-option-list {
+  margin-top: 14px;
+  border: 1px solid rgba(205, 164, 94, 0.14);
+  background: rgba(18, 17, 15, 0.92);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--combo-detail-shadow-soft);
+}
+
+.combo-detail-option-list__empty {
+  padding: 20px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 14px;
+}
+
+.combo-detail-option-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.combo-detail-option-item:last-child {
+  border-bottom: none;
+}
+
+.combo-detail-option-item__left {
+  min-width: 0;
+}
+
+.combo-detail-option-item__name {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.combo-detail-option-item__meta {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 12px;
+}
+
+.combo-detail-option-item__right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.combo-detail-option-item__right strong {
+  color: var(--combo-detail-gold-2);
+  font-size: 14px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.combo-detail-option-item__right button {
+  min-width: 90px;
+  height: 40px;
+  border: 1px solid rgba(205, 164, 94, 0.2);
+  border-radius: 12px;
+  background: rgba(205, 164, 94, 0.1);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.combo-detail-option-item__right button:hover {
+  background: rgba(205, 164, 94, 0.16);
+  border-color: rgba(205, 164, 94, 0.32);
+}
+
+.combo-detail-picked-list {
+  position: relative;
+  margin-top: 18px;
+  display: grid;
+  gap: 14px;
+  max-height: 335px;
+  overflow: hidden;
+}
+
+.combo-detail-picked-list.has-fade::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 72px;
+  background: linear-gradient(
+    180deg,
+    rgba(20, 19, 17, 0) 0%,
+    rgba(20, 19, 17, 0.88) 55%,
+    rgba(20, 19, 17, 1) 100%
+  );
+  pointer-events: none;
+}
+
+.combo-detail-empty {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 18px;
+  color: rgba(255, 255, 255, 0.58);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px dashed rgba(205, 164, 94, 0.22);
+  border-radius: 18px;
+  font-size: 14px;
+}
+
+.combo-detail-picked-card {
+  border: 1px solid rgba(205, 164, 94, 0.12);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.04),
+    rgba(255, 255, 255, 0.025)
+  );
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: var(--combo-detail-shadow-soft);
+}
+
+.combo-detail-picked-card__main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.combo-detail-picked-card__title-wrap {
+  min-width: 0;
+}
+
+.combo-detail-picked-card__title {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.45;
+}
+
+.combo-detail-picked-card__sub {
+  margin-top: 5px;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 12px;
+}
+
+.combo-detail-picked-card__bottom {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.combo-detail-picked-card__prices {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.combo-detail-price-chip {
+  min-width: 132px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.combo-detail-price-chip span {
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.combo-detail-price-chip strong {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.combo-detail-price-chip--sale {
+  background: rgba(205, 164, 94, 0.08);
+  border-color: rgba(205, 164, 94, 0.18);
+}
+
+.combo-detail-price-chip--sale strong {
+  color: var(--combo-detail-gold-2);
+}
+
+.combo-detail-remove-btn {
+  min-width: 72px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 124, 124, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 124, 124, 0.08);
+  color: #ffb3b3;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.combo-detail-remove-btn:hover {
+  background: rgba(255, 124, 124, 0.14);
+}
+
+.combo-detail-qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.combo-detail-qty__btn {
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(205, 164, 94, 0.16);
+  border-radius: 12px;
+  background: rgba(205, 164, 94, 0.08);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.combo-detail-qty__btn:hover {
+  color: var(--combo-detail-gold-2);
+  transform: translateY(-1px);
+  background: rgba(205, 164, 94, 0.14);
+}
+
+.combo-detail-qty input {
+  width: 64px;
+  height: 38px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 0 8px;
+}
+
+.combo-detail-qty input::-webkit-outer-spin-button,
+.combo-detail-qty input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.combo-detail-qty input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.combo-detail-view-all {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.combo-detail-view-all__btn {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(205, 164, 94, 0.16);
+  background: rgba(205, 164, 94, 0.08);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.combo-detail-view-all__btn:hover {
+  background: rgba(205, 164, 94, 0.14);
+  color: var(--combo-detail-gold-2);
+}
+
+.combo-detail-summary-card__head h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #fff, #f3cb85);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.combo-detail-summary-card__head p {
+  margin: 8px 0 0;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.combo-detail-mini-stats {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.combo-detail-mini-stat {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(205, 164, 94, 0.12);
+}
+
+.combo-detail-mini-stat span {
+  display: block;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.combo-detail-mini-stat strong {
+  display: block;
+  margin-top: 8px;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.combo-detail-summary-list {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px dashed rgba(205, 164, 94, 0.18);
+  display: grid;
+  gap: 14px;
+}
+
+.combo-detail-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.combo-detail-summary-row span {
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 13px;
+}
+
+.combo-detail-summary-row strong {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.combo-detail-summary-row strong.is-discount {
+  color: #ffd39b;
+}
+
+.combo-detail-final-price {
+  margin-top: 20px;
+  padding: 18px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #f3cb85, #cda45e);
+  color: #1b1711;
+  box-shadow: 0 20px 32px rgba(205, 164, 94, 0.25);
+}
+
+.combo-detail-final-price span {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 0.92;
+  text-transform: uppercase;
+}
+
+.combo-detail-final-price strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 32px;
+  line-height: 1.2;
+  font-weight: 900;
+  word-break: break-word;
+}
+
+.combo-detail-submit-btn {
+  width: 100%;
+  height: 50px;
+  margin-top: 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(205, 164, 94, 0.5);
+  color: #1b1711;
+  background: linear-gradient(135deg, #f3cb85, #cda45e);
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 14px 28px rgba(205, 164, 94, 0.22);
+  transition: all 0.2s ease;
+}
+
+.combo-detail-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.04);
+}
+
+.combo-detail-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.combo-detail-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+}
+
+.combo-detail-modal__dialog {
+  width: min(960px, 100%);
+  max-height: 88vh;
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    rgba(28, 26, 22, 0.96),
+    rgba(18, 17, 15, 0.98)
+  );
+  border: 1px solid rgba(205, 164, 94, 0.18);
+  border-radius: 28px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+}
+
+.combo-detail-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.combo-detail-modal__header h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.combo-detail-modal__header p {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 13px;
+}
+
+.combo-detail-modal__close {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(205, 164, 94, 0.16);
+  border-radius: 14px;
+  background: rgba(205, 164, 94, 0.08);
+  color: #fff;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.combo-detail-modal__body {
+  padding: 24px;
+  overflow: auto;
+  display: grid;
+  gap: 14px;
+}
+
+@media (max-width: 1180px) {
+  .combo-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .combo-detail-side {
+    position: static;
+  }
+}
+
+@media (max-width: 860px) {
+  .combo-detail-hero {
+    padding: 20px;
+  }
+
+  .combo-detail-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .combo-detail-toolbar,
+  .combo-detail-toolbar--service {
+    grid-template-columns: 1fr;
+  }
+
+  .combo-detail-option-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .combo-detail-option-item__right {
+    justify-content: space-between;
+  }
+
+  .combo-detail-picked-card__bottom {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .combo-detail-picked-card__prices {
+    width: 100%;
+  }
+
+  .combo-detail-price-chip {
+    flex: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .combo-detail-card,
+  .combo-detail-summary-card {
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .combo-detail-discount-box {
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
+  }
+
+  .combo-detail-hero__title {
+    font-size: 28px;
+  }
+
+  .combo-detail-card__title,
+  .combo-detail-summary-card__head h3,
+  .combo-detail-modal__header h3 {
+    font-size: 20px;
+  }
+
+  .combo-detail-final-price strong {
+    font-size: 28px;
+  }
+
+  .combo-detail-modal {
+    padding: 12px;
+  }
+
+  .combo-detail-modal__header,
+  .combo-detail-modal__body {
+    padding: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

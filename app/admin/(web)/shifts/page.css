@@ -1,8 +1,3 @@
-/* ======================
-   SHIFT MANAGEMENT UI
-   Inspired by staff and membership style
-   ====================== */
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -728,5 +723,255 @@
   .shift-card-foot {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+/* ======================
+   SHIFT DETAIL MODAL
+   Đồng bộ với shift-card / admin style
+   ====================== */
+
+.shift-detail-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(8, 8, 8, 0.58);
+  backdrop-filter: blur(10px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.shift-detail-modal {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: 24px;
+  border: 1px solid var(--admin-border);
+  background: rgba(26, 24, 20, 0.94);
+  backdrop-filter: blur(14px);
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(205, 164, 94, 0.06) inset;
+  color: #fff;
+  animation: shiftModalIn 0.24s ease-out;
+}
+
+@keyframes shiftModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.shift-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid rgba(205, 164, 94, 0.14);
+  background: linear-gradient(
+    180deg,
+    rgba(205, 164, 94, 0.08),
+    rgba(205, 164, 94, 0.02)
+  );
+}
+
+.shift-detail-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 850;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.shift-detail-subtitle {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.shift-detail-close {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(205, 164, 94, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shift-detail-close:hover {
+  border-color: rgba(205, 164, 94, 0.34);
+  background: rgba(205, 164, 94, 0.1);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.shift-detail-close:active {
+  transform: translateY(0);
+}
+
+.shift-detail-body {
+  padding: 22px 24px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(205, 164, 94, 0.3) transparent;
+}
+
+.shift-detail-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.shift-detail-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.shift-detail-body::-webkit-scrollbar-thumb {
+  background: rgba(205, 164, 94, 0.28);
+  border-radius: 999px;
+}
+
+.shift-detail-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(205, 164, 94, 0.45);
+}
+
+.shift-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.shift-detail-item {
+  position: relative;
+  padding: 16px 16px 15px;
+  border-radius: 18px;
+  border: 1px solid rgba(205, 164, 94, 0.12);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.035),
+      rgba(255, 255, 255, 0.015)
+    ),
+    rgba(255, 255, 255, 0.02);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.shift-detail-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(205, 164, 94, 0.24);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(205, 164, 94, 0.08),
+      rgba(255, 255, 255, 0.02)
+    ),
+    rgba(255, 255, 255, 0.025);
+}
+
+.shift-detail-label {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: rgba(205, 164, 94, 0.88);
+  text-transform: uppercase;
+}
+
+.shift-detail-value {
+  display: block;
+  font-size: 14px;
+  line-height: 1.65;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.94);
+  word-break: break-word;
+}
+
+.shift-detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 18px 24px 24px;
+  border-top: 1px solid rgba(205, 164, 94, 0.12);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+/* Optional: cho item full width nếu cần */
+.shift-detail-item--full {
+  grid-column: 1 / -1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .shift-detail-modal-overlay {
+    padding: 14px;
+    align-items: flex-end;
+  }
+
+  .shift-detail-modal {
+    width: 100%;
+    max-height: calc(100vh - 20px);
+    border-radius: 22px 22px 18px 18px;
+  }
+
+  .shift-detail-head {
+    padding: 18px 18px 16px;
+  }
+
+  .shift-detail-title {
+    font-size: 19px;
+  }
+
+  .shift-detail-subtitle {
+    font-size: 12px;
+  }
+
+  .shift-detail-body {
+    padding: 18px;
+  }
+
+  .shift-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .shift-detail-item {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .shift-detail-value {
+    font-size: 13px;
+  }
+
+  .shift-detail-actions {
+    padding: 16px 18px 18px;
+    flex-direction: column-reverse;
+  }
+
+  .shift-detail-actions .shift-btn {
+    width: 100%;
   }
 }

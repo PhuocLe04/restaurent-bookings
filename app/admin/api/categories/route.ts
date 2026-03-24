@@ -1,74 +1,103 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requireAdmin } from '@/lib/require-admin'
+import { requireAdminOnly } from '@/lib/requireAdminOnly'
 
 export const dynamic = 'force-dynamic'
 
+function toInt(value: string | null, fallback: number) {
+  const n = Number(value)
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback
+}
+
+function normalizeString(value: unknown) {
+  if (typeof value !== 'string') return ''
+  return value.trim()
+}
+
+function normalizeBoolean(value: unknown, fallback = true) {
+  if (typeof value === 'boolean') return value
+
+  if (typeof value === 'string') {
+    const v = value.trim().toLowerCase()
+    if (v === 'true') return true
+    if (v === 'false') return false
+  }
+
+  if (typeof value === 'number') {
+    if (value === 1) return true
+    if (value === 0) return false
+  }
+
+  return fallback
+}
+
+// ================= GET LIST =================
 export async function GET(req: Request) {
+  const access = await requireAdminOnly()
+  if (!access.ok) return access.res
+
   try {
-    const auth = await requireAdmin()
-    if (!auth.ok) {
-      return auth.res
-    }
-
     const { searchParams } = new URL(req.url)
-    const q = searchParams.get('q')?.trim() || ''
 
-    const pageRaw = Number(searchParams.get('page') || 1)
-    const limitRaw = Number(searchParams.get('limit') || 10)
-
-    const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1
-    const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? limitRaw : 10
+    const page = toInt(searchParams.get('page'), 1)
+    const limit = Math.min(toInt(searchParams.get('limit'), 10), 100)
     const skip = (page - 1) * limit
 
-    const where = q
+    const q = normalizeString(searchParams.get('q'))
+
+    const where: any = q
       ? {
-          name: {
-            contains: q,
-          },
+          name: { contains: q },
         }
-      : undefined
+      : {}
 
     const [items, total] = await Promise.all([
       prisma.categories.findMany({
         where,
-        orderBy: { id: 'desc' },
-        skip,
-        take: limit,
         include: {
           _count: {
             select: { menu_items: true },
           },
         },
+        orderBy: { id: 'desc' },
+        skip,
+        take: limit,
       }),
       prisma.categories.count({ where }),
     ])
-
-    const totalPages = Math.max(1, Math.ceil(total / limit))
 
     return NextResponse.json({
       items,
       total,
       page,
       limit,
-      totalPages,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
     })
-  } catch (error) {
-    console.error('GET /api/admin/categories error:', error)
-    return NextResponse.json({ message: 'Lỗi server' }, { status: 500 })
+  } catch (error: any) {
+    return NextResponse.json(
+      { message: 'Lấy danh mục thất bại', detail: error?.message },
+      { status: 500 },
+    )
   }
 }
 
+// ================= CREATE =================
 export async function POST(req: Request) {
+  const access = await requireAdminOnly()
+  if (!access.ok) return access.res
+
   try {
-    const auth = await requireAdmin()
-    if (!auth.ok) {
-      return auth.res
+    const body = await req.json().catch(() => null)
+
+    if (!body) {
+      return NextResponse.json(
+        { message: 'Dữ liệu không hợp lệ' },
+        { status: 400 },
+      )
     }
 
-    const body = await req.json()
-    const name = String(body.name || '').trim()
-    const is_active = body.is_active ?? true
+    const name = normalizeString(body.name)
+    const is_active = normalizeBoolean(body.is_active, true)
 
     if (!name) {
       return NextResponse.json(
@@ -77,19 +106,49 @@ export async function POST(req: Request) {
       )
     }
 
-    const created = await prisma.categories.create({
-      data: {
-        name,
-        is_active: Boolean(is_active),
-      },
+    const existed = await prisma.categories.findFirst({
+      where: { name },
+    })
+
+    if (existed) {
+      return NextResponse.json(
+        { message: 'Tên danh mục đã tồn tại' },
+        { status: 409 },
+      )
+    }
+
+    const item = await prisma.$transaction(async (tx) => {
+      const created = await tx.categories.create({
+        data: {
+          name,
+          is_active,
+        },
+        include: {
+          _count: { select: { menu_items: true } },
+        },
+      })
+
+      await tx.audit_logs.create({
+        data: {
+          entity: 'categories',
+          entity_id: created.id,
+          action: 'INSERT',
+          description: `Admin #${access.userId} tạo danh mục #${created.id} - ${created.name} | active: ${created.is_active}`,
+          user_id: access.userId,
+        },
+      })
+
+      return created
     })
 
     return NextResponse.json(
-      { message: 'Tạo danh mục thành công', item: created },
+      { message: 'Tạo thành công', item },
       { status: 201 },
     )
-  } catch (error) {
-    console.error('POST /api/admin/categories error:', error)
-    return NextResponse.json({ message: 'Lỗi server' }, { status: 500 })
+  } catch (error: any) {
+    return NextResponse.json(
+      { message: 'Tạo thất bại', detail: error?.message },
+      { status: 500 },
+    )
   }
 }

@@ -112,7 +112,7 @@ export default function MenuSection() {
   const imageSrc = (img: string | null) => img || '/img/menu-placeholder.png'
 
   const pills = useMemo(
-    () => [{ id: 'all' as const, name: 'All' }, ...categories],
+    () => [{ id: 'all' as const, name: 'Tất cả' }, ...categories],
     [categories],
   )
 
@@ -128,7 +128,7 @@ export default function MenuSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.6, ease: EASE_OUT_EXPO }}
         >
-          Menu
+          Thực đơn
         </motion.h2>
 
         <motion.p
@@ -137,7 +137,7 @@ export default function MenuSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.08, ease: EASE_OUT_EXPO }}
         >
-          Customer Favorites
+          Món ăn được yêu thích
         </motion.p>
 
         <motion.div
@@ -154,7 +154,7 @@ export default function MenuSection() {
         <div className="row">
           <div className="col-lg-12 d-flex justify-content-center">
             <div className="rb-filtersWrap">
-              <ul className="rb-filters" aria-label="Menu filters">
+              <ul className="rb-filters" aria-label="Bộ lọc thực đơn">
                 {pills.map((c) => {
                   const id = typeof c.id === 'number' ? c.id : 'all'
                   const active = activeCategory === id
@@ -196,9 +196,9 @@ export default function MenuSection() {
               <motion.div className="col-12" variants={itemVariants}>
                 <div className="rb-empty">
                   <div className="rb-emptyIcon">😕</div>
-                  <div className="rb-emptyTitle">No items found</div>
+                  <div className="rb-emptyTitle">Không tìm thấy món</div>
                   <div className="rb-emptyDesc">
-                    Try another category or check back later.
+                    Hãy thử danh mục khác hoặc quay lại sau.
                   </div>
                 </div>
               </motion.div>
@@ -220,7 +220,7 @@ export default function MenuSection() {
                         alt={item.name}
                         loading="lazy"
                       />
-                      <div className="rb-badge" title="Total sold">
+                      <div className="rb-badge" title="Tổng số đã bán">
                         🔥 {item.total_sold}
                       </div>
                     </div>
@@ -235,7 +235,6 @@ export default function MenuSection() {
                         </div>
                       </div>
 
-                      {/* ✅ bỏ dấu chấm và ordered count */}
                       <div className="rb-meta">
                         <span className="rb-tag">{item.category.name}</span>
                       </div>
@@ -245,7 +244,7 @@ export default function MenuSection() {
                           className="rb-link"
                           href={`/menu?item=${item.id}`}
                         >
-                          View details <span aria-hidden>→</span>
+                          Xem chi tiết <span aria-hidden>→</span>
                         </Link>
                       </div>
                     </div>
@@ -273,7 +272,7 @@ export default function MenuSection() {
               transition={{ type: 'spring', stiffness: 320, damping: 22 }}
             >
               <Link href="/menu" className="btn-book-a-table rb-cta-book">
-                <span>See more menu</span>
+                <span>Xem thêm thực đơn</span>
                 <span aria-hidden>→</span>
               </Link>
             </motion.div>

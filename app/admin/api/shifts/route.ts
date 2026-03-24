@@ -1,14 +1,37 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAdminOrStaff } from '@/lib/require-admin'
 
 export const dynamic = 'force-dynamic'
 
-function parseDate(value: any) {
-  const d = new Date(value)
+const OPEN_HOUR = 7
+const OPEN_MINUTE = 30
+const CLOSE_HOUR = 23
+const CLOSE_MINUTE = 30
+const MIN_SHIFT_HOURS = 4
+const MAX_SHIFT_HOURS = 8
+
+function parseDate(value: unknown) {
+  const d = new Date(String(value))
   return Number.isNaN(d.getTime()) ? null : d
 }
 
+function isWithinAllowedTime(date: Date) {
+  const minutes = date.getHours() * 60 + date.getMinutes()
+  const openMinutes = OPEN_HOUR * 60 + OPEN_MINUTE
+  const closeMinutes = CLOSE_HOUR * 60 + CLOSE_MINUTE
+
+  return minutes >= openMinutes && minutes <= closeMinutes
+}
+
+function getShiftDurationHours(start: Date, end: Date) {
+  return (end.getTime() - start.getTime()) / (1000 * 60 * 60)
+}
+
 export async function GET(req: Request) {
+  const access = await requireAdminOrStaff()
+  if (!access.ok) return access.res
+
   try {
     const { searchParams } = new URL(req.url)
 
@@ -34,13 +57,19 @@ export async function GET(req: Request) {
 
     if (from_raw || to_raw) {
       where.start_time = {}
+
       if (from_raw) {
-        const from = parseDate(from_raw)
-        if (from) where.start_time.gte = from
+        const from = new Date(`${from_raw}T00:00:00`)
+        if (!Number.isNaN(from.getTime())) {
+          where.start_time.gte = from
+        }
       }
+
       if (to_raw) {
-        const to = parseDate(to_raw)
-        if (to) where.start_time.lte = to
+        const to = new Date(`${to_raw}T23:59:59.999`)
+        if (!Number.isNaN(to.getTime())) {
+          where.start_time.lte = to
+        }
       }
     }
 
@@ -73,7 +102,12 @@ export async function GET(req: Request) {
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+      access: {
+        userId: access.userId,
+        isAdmin: access.isAdmin,
+        isStaff: access.isStaff,
+      },
     })
   } catch (error: any) {
     console.error('GET /admin/api/shifts error:', error)
@@ -85,19 +119,14 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const access = await requireAdminOrStaff()
+  if (!access.ok) return access.res
+
   try {
     const body = await req.json()
 
-    const staff_id = Number(body.staff_id)
     const start_time = parseDate(body.start_time)
     const end_time = parseDate(body.end_time)
-
-    if (!Number.isFinite(staff_id) || staff_id <= 0) {
-      return NextResponse.json(
-        { message: 'staff_id không hợp lệ' },
-        { status: 400 },
-      )
-    }
 
     if (!start_time || !end_time) {
       return NextResponse.json(
@@ -113,11 +142,91 @@ export async function POST(req: Request) {
       )
     }
 
+    if (start_time.toDateString() !== end_time.toDateString()) {
+      return NextResponse.json(
+        { message: 'Ca làm phải nằm trong cùng một ngày' },
+        { status: 400 },
+      )
+    }
+
+    if (!isWithinAllowedTime(start_time) || !isWithinAllowedTime(end_time)) {
+      return NextResponse.json(
+        {
+          message: 'Chỉ được chọn thời gian trong khoảng từ 07:30 đến 23:30',
+        },
+        { status: 400 },
+      )
+    }
+
+    const durationHours = getShiftDurationHours(start_time, end_time)
+
+    if (durationHours < MIN_SHIFT_HOURS) {
+      return NextResponse.json(
+        {
+          message: `Ca làm tối thiểu ${MIN_SHIFT_HOURS} tiếng`,
+        },
+        { status: 400 },
+      )
+    }
+
+    if (durationHours > MAX_SHIFT_HOURS) {
+      return NextResponse.json(
+        {
+          message: `Ca làm tối đa ${MAX_SHIFT_HOURS} tiếng`,
+        },
+        { status: 400 },
+      )
+    }
+
+    let resolvedStaffId: number | null = null
+
+    if (access.isAdmin) {
+      const staff_id = Number(body.staff_id)
+
+      if (!Number.isFinite(staff_id) || staff_id <= 0) {
+        return NextResponse.json(
+          { message: 'staff_id không hợp lệ' },
+          { status: 400 },
+        )
+      }
+
+      resolvedStaffId = staff_id
+    } else if (access.isStaff) {
+      const myStaff = await prisma.staff.findFirst({
+        where: {
+          user_id: access.userId,
+        },
+        select: {
+          id: true,
+          is_active: true,
+        },
+      })
+
+      if (!myStaff) {
+        return NextResponse.json(
+          { message: 'Tài khoản staff chưa được liên kết với hồ sơ nhân viên' },
+          { status: 404 },
+        )
+      }
+
+      if (myStaff.is_active === false) {
+        return NextResponse.json(
+          { message: 'Nhân viên đang bị khóa, không thể tạo ca làm' },
+          { status: 409 },
+        )
+      }
+
+      resolvedStaffId = myStaff.id
+    } else {
+      return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
+    }
+
     const staff = await prisma.staff.findUnique({
-      where: { id: staff_id },
+      where: { id: resolvedStaffId },
       select: {
         id: true,
         is_active: true,
+        full_name: true,
       },
     })
 
@@ -135,29 +244,66 @@ export async function POST(req: Request) {
       )
     }
 
-    // kiểm tra trùng ca:
-    // start mới < end cũ AND end mới > start cũ
-    const overlap = await prisma.shifts.findFirst({
+    const overlapSameStaff = await prisma.shifts.findFirst({
       where: {
-        staff_id,
+        staff_id: resolvedStaffId,
         AND: [
           { start_time: { lt: end_time } },
           { end_time: { gt: start_time } },
         ],
       },
-      select: { id: true, start_time: true, end_time: true },
+      select: {
+        id: true,
+        start_time: true,
+        end_time: true,
+      },
     })
 
-    if (overlap) {
+    if (overlapSameStaff) {
       return NextResponse.json(
-        { message: 'Ca làm bị trùng thời gian với ca khác của nhân viên này' },
+        {
+          message: 'Ca làm bị trùng thời gian với ca khác của nhân viên này',
+          conflict: overlapSameStaff,
+        },
+        { status: 409 },
+      )
+    }
+
+    const overlapOtherStaff = await prisma.shifts.findFirst({
+      where: {
+        staff_id: { not: resolvedStaffId },
+        AND: [
+          { start_time: { lt: end_time } },
+          { end_time: { gt: start_time } },
+        ],
+      },
+      select: {
+        id: true,
+        staff_id: true,
+        start_time: true,
+        end_time: true,
+        staff: {
+          select: {
+            id: true,
+            full_name: true,
+          },
+        },
+      },
+    })
+
+    if (overlapOtherStaff) {
+      return NextResponse.json(
+        {
+          message: 'Khung giờ này đã bị trùng với lịch của nhân viên khác',
+          conflict: overlapOtherStaff,
+        },
         { status: 409 },
       )
     }
 
     const created = await prisma.shifts.create({
       data: {
-        staff_id,
+        staff_id: resolvedStaffId,
         start_time,
         end_time,
       },

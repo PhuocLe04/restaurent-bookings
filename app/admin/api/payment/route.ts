@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { cookies } from 'next/headers'
+import { requireAdminOrStaff } from '@/lib/require-admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,8 +21,36 @@ function normalizeString(value: unknown) {
   return value.trim()
 }
 
+async function parseUserIdFromCookies(): Promise<number | null> {
+  const cookieStore = await cookies()
+
+  const raw =
+    cookieStore.get('web_user_id')?.value ?? cookieStore.get('user_id')?.value
+
+  if (!raw) return null
+
+  const n = Number(raw)
+  return Number.isFinite(n) && n > 0 ? n : null
+}
+
+async function getCurrentUser() {
+  const userId = await parseUserIdFromCookies()
+  if (!userId) return null
+
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      role: true,
+    },
+  })
+}
+
 export async function GET(req: Request) {
   try {
+    const access = await requireAdminOrStaff()
+    if (!access.ok) return access.res
+
     const { searchParams } = new URL(req.url)
 
     const page = toNumber(searchParams.get('page'), 1)
@@ -112,8 +142,16 @@ export async function POST(req: Request) {
   try {
     const body = await req.json()
 
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      return NextResponse.json({ message: 'Unauthenticated' }, { status: 401 })
+    }
+
+    const access = await requireAdminOrStaff()
+    const isAdminOrStaff = access.ok
+
     const reservation_id = Number(body?.reservation_id)
-    const user_id = Number(body?.user_id)
+    const body_user_id = Number(body?.user_id)
     const amount = toDecimalNumber(body?.amount)
 
     const payment_method = normalizeString(body?.payment_method)
@@ -136,6 +174,8 @@ export async function POST(req: Request) {
         { status: 400 },
       )
     }
+
+    const user_id = isAdminOrStaff ? body_user_id : currentUser.id
 
     if (!Number.isFinite(user_id) || user_id <= 0) {
       return NextResponse.json(
@@ -189,7 +229,10 @@ export async function POST(req: Request) {
     const [reservation, user, existedOrderId] = await Promise.all([
       prisma.reservations.findUnique({
         where: { id: reservation_id },
-        select: { id: true },
+        select: {
+          id: true,
+          user_id: true,
+        },
       }),
       prisma.user.findUnique({
         where: { id: user_id },
@@ -220,6 +263,11 @@ export async function POST(req: Request) {
         { message: 'order_id đã tồn tại' },
         { status: 409 },
       )
+    }
+
+    // User thường chỉ được tạo payment cho reservation của chính mình
+    if (!isAdminOrStaff && reservation.user_id !== currentUser.id) {
+      return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
     }
 
     const created = await prisma.payments.create({

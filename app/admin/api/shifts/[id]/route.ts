@@ -1,11 +1,17 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAdminOrStaff } from '@/lib/require-admin'
 
 export const dynamic = 'force-dynamic'
 
-function parseId(params: { id: string }) {
-  const id = Number(params.id)
-  return Number.isFinite(id) && id > 0 ? id : null
+type RouteContext = {
+  params: Promise<{ id: string }>
+}
+
+async function parseId(params: Promise<{ id: string }>) {
+  const { id } = await params
+  const numericId = Number(id)
+  return Number.isFinite(numericId) && numericId > 0 ? numericId : null
 }
 
 function parseDate(value: any) {
@@ -13,12 +19,12 @@ function parseDate(value: any) {
   return Number.isNaN(d.getTime()) ? null : d
 }
 
-export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } },
-) {
+export async function GET(_req: Request, { params }: RouteContext) {
+  const access = await requireAdminOrStaff()
+  if (!access.ok) return access.res
+
   try {
-    const id = parseId(params)
+    const id = await parseId(params)
     if (!id) {
       return NextResponse.json(
         { message: 'ID ca làm không hợp lệ' },
@@ -52,7 +58,14 @@ export async function GET(
       )
     }
 
-    return NextResponse.json(item)
+    return NextResponse.json({
+      item,
+      access: {
+        userId: access.userId,
+        isAdmin: access.isAdmin,
+        isStaff: access.isStaff,
+      },
+    })
   } catch (error: any) {
     console.error('GET /admin/api/shifts/[id] error:', error)
     return NextResponse.json(
@@ -62,12 +75,19 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } },
-) {
+export async function PATCH(req: Request, { params }: RouteContext) {
+  const access = await requireAdminOrStaff()
+  if (!access.ok) return access.res
+
+  if (!access.isAdmin) {
+    return NextResponse.json(
+      { message: 'Chỉ admin mới được cập nhật ca làm' },
+      { status: 403 },
+    )
+  }
+
   try {
-    const id = parseId(params)
+    const id = await parseId(params)
     if (!id) {
       return NextResponse.json(
         { message: 'ID ca làm không hợp lệ' },
@@ -96,10 +116,12 @@ export async function PATCH(
 
     const staff_id =
       body.staff_id !== undefined ? Number(body.staff_id) : existed.staff_id
+
     const start_time =
       body.start_time !== undefined
         ? parseDate(body.start_time)
         : existed.start_time
+
     const end_time =
       body.end_time !== undefined ? parseDate(body.end_time) : existed.end_time
 
@@ -198,12 +220,19 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  _req: Request,
-  { params }: { params: { id: string } },
-) {
+export async function DELETE(_req: Request, { params }: RouteContext) {
+  const access = await requireAdminOrStaff()
+  if (!access.ok) return access.res
+
+  if (!access.isAdmin) {
+    return NextResponse.json(
+      { message: 'Chỉ admin mới được xóa ca làm' },
+      { status: 403 },
+    )
+  }
+
   try {
-    const id = parseId(params)
+    const id = await parseId(params)
     if (!id) {
       return NextResponse.json(
         { message: 'ID ca làm không hợp lệ' },

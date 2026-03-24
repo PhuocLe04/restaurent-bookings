@@ -1,7 +1,7 @@
 /* ======================
-   TABLE TYPE MANAGEMENT UI
-   Inspired by staff and membership style
-   ====================== */
+    TABLE TYPE MANAGEMENT UI
+    Inspired by staff and membership style
+    ====================== */
 
 @keyframes fadeIn {
   from {
@@ -609,5 +609,143 @@
 
   .table-type-table {
     min-width: 700px;
+  }
+}
+.table-type-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(7, 7, 8, 0.56);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.table-type-modal {
+  width: min(100%, 640px);
+  border-radius: 22px;
+  border: 1px solid var(--admin-border);
+  background: rgba(26, 24, 20, 0.96);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.table-type-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 20px 12px;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.table-type-modal-title {
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.table-type-modal-subtitle {
+  margin: 6px 0 0;
+  color: var(--admin-text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.table-type-modal-close {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.table-type-modal-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.table-type-modal-form {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.table-type-modal-field {
+  display: grid;
+  gap: 8px;
+}
+
+.table-type-modal-field label {
+  color: var(--admin-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.table-type-modal-field input,
+.table-type-modal-field textarea {
+  width: 100%;
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+  padding: 12px 14px;
+  outline: none;
+  font-size: 14px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.table-type-modal-field input {
+  height: 46px;
+}
+
+.table-type-modal-field textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+.table-type-modal-field input:focus,
+.table-type-modal-field textarea:focus {
+  border-color: rgba(205, 164, 94, 0.45);
+  box-shadow: 0 0 0 4px rgba(205, 164, 94, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.table-type-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.table-type-modal-loading {
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--admin-text-muted);
+  font-style: italic;
+}
+
+@media (max-width: 640px) {
+  .table-type-modal {
+    width: 100%;
+  }
+
+  .table-type-modal-actions {
+    flex-direction: column;
+  }
+
+  .table-type-modal-actions .table-type-btn {
+    width: 100%;
   }
 }

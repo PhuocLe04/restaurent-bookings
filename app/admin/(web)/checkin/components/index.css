@@ -1,49 +1,49 @@
 /* ======================
-   RESERVATIONS UI (desktop)
+   CHECKIN UI (desktop)
    ====================== */
 
-.rsv-page {
+.checkin-page {
   display: grid;
   gap: 14px;
 }
 
-.rsv-head {
+.checkin-head {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 14px;
 }
 
-.rsv-h1 {
+.checkin-h1 {
   margin: 0;
   font-size: 20px;
   color: #fff;
   font-weight: 850;
 }
 
-.rsv-muted {
+.checkin-muted {
   margin-top: 6px;
   color: var(--admin-text-muted);
   font-size: 13px;
 }
 
-.rsv-muted-sm {
+.checkin-muted-sm {
   color: var(--admin-text-muted);
   font-size: 12px;
 }
 
-.rsv-strong {
+.checkin-strong {
   font-weight: 800;
   color: #fff;
 }
 
-.rsv-head-actions {
+.checkin-head-actions {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.rsv-card {
+.checkin-card {
   border: 1px solid var(--admin-border);
   border-radius: 16px;
   background: rgba(26, 24, 20, 0.75);
@@ -51,7 +51,7 @@
   padding: 14px;
 }
 
-.rsv-btn {
+.checkin-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -68,30 +68,30 @@
   font-size: 13px;
 }
 
-.rsv-btn:hover {
+.checkin-btn:hover {
   border-color: rgba(205, 164, 94, 0.35);
   background: rgba(205, 164, 94, 0.08);
   color: #fff;
 }
 
-.rsv-btn:disabled {
+.checkin-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.rsv-primary {
+.checkin-primary {
   border-color: rgba(205, 164, 94, 0.35);
   background: rgba(205, 164, 94, 0.12);
   color: #fff;
 }
 
-.rsv-danger {
+.checkin-danger {
   border-color: rgba(255, 77, 77, 0.35);
   background: rgba(255, 77, 77, 0.12);
   color: #fff;
 }
 
-.rsv-alert {
+.checkin-alert {
   border: 1px solid rgba(255, 77, 77, 0.35);
   background: rgba(255, 77, 77, 0.12);
   color: #fff;
@@ -100,53 +100,53 @@
   font-size: 13px;
 }
 
-.rsv-alert-title {
+.checkin-alert-title {
   font-weight: 800;
   margin-bottom: 4px;
 }
 
-.rsv-alert-msg {
+.checkin-alert-msg {
   color: rgba(255, 255, 255, 0.88);
 }
 
 /* filters */
-.rsv-filters {
+.checkin-filters {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.rsv-filters-row {
+.checkin-filters-row {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   align-items: flex-end;
 }
 
-.rsv-filters-row--top {
+.checkin-filters-row--top {
   justify-content: flex-start;
 }
 
-.rsv-filters-row--bottom {
+.checkin-filters-row--bottom {
   justify-content: flex-end;
 }
 
-.rsv-field {
+.checkin-field {
   display: grid;
   gap: 6px;
   min-width: 180px;
 }
 
-.rsv-field label {
+.checkin-field label {
   font-size: 12px;
   color: var(--admin-text-muted);
   font-weight: 700;
 }
 
-.rsv-field input,
-.rsv-field select,
-.rsv-service-row input,
-.rsv-service-row select {
+.checkin-field input,
+.checkin-field select,
+.checkin-service-row input,
+.checkin-service-row select {
   height: 38px;
   border-radius: 12px;
   border: 1px solid var(--admin-border);
@@ -156,14 +156,14 @@
   outline: none;
 }
 
-.rsv-field input::placeholder,
-.rsv-service-row input::placeholder {
+.checkin-field input::placeholder,
+.checkin-service-row input::placeholder {
   color: rgba(255, 255, 255, 0.35);
 }
 
 /* dropdown tối màu, bỏ nền trắng */
-.rsv-field select,
-.rsv-service-row select {
+.checkin-field select,
+.checkin-service-row select {
   padding: 0 40px 0 12px;
   appearance: none;
   -webkit-appearance: none;
@@ -182,39 +182,39 @@
   background-repeat: no-repeat;
 }
 
-.rsv-field select option,
-.rsv-service-row select option {
+.checkin-field select option,
+.checkin-service-row select option {
   background: #1a1814;
   color: rgba(255, 255, 255, 0.92);
 }
 
-.rsv-field select optgroup,
-.rsv-service-row select optgroup {
+.checkin-field select optgroup,
+.checkin-service-row select optgroup {
   background: #1a1814;
   color: #cda45e;
   font-weight: 700;
 }
 
-.rsv-field input:focus,
-.rsv-field select:focus,
-.rsv-service-row input:focus,
-.rsv-service-row select:focus {
+.checkin-field input:focus,
+.checkin-field select:focus,
+.checkin-service-row input:focus,
+.checkin-service-row select:focus {
   border-color: rgba(205, 164, 94, 0.35);
   box-shadow: 0 0 0 3px rgba(205, 164, 94, 0.12);
 }
 
 /* ép input date gọn và đều */
-.rsv-field input[type='date'] {
+.checkin-field input[type='date'] {
   min-width: 160px;
 }
 
-.rsv-toggle {
+.checkin-toggle {
   display: inline-flex;
   gap: 10px;
   flex-wrap: wrap;
 }
 
-.rsv-pagination {
+.checkin-pagination {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -222,25 +222,25 @@
   width: 100%;
 }
 
-.rsv-page-indicator {
+.checkin-page-indicator {
   color: var(--admin-text);
   font-size: 13px;
   white-space: nowrap;
 }
 
 /* table */
-.rsv-table-wrap {
+.checkin-table-wrap {
   overflow: auto;
 }
 
-.rsv-table {
+.checkin-table {
   width: 100%;
   border-collapse: collapse;
   min-width: 980px;
 }
 
-.rsv-table th,
-.rsv-table td {
+.checkin-table th,
+.checkin-table td {
   padding: 10px 10px;
   border-bottom: 1px solid var(--admin-border);
   text-align: left;
@@ -249,31 +249,38 @@
   color: var(--admin-text);
 }
 
-.rsv-table th {
+.checkin-table th {
   color: rgba(255, 255, 255, 0.85);
   font-weight: 800;
 }
 
-.rsv-td-muted {
+.checkin-td-muted {
   padding: 18px 10px;
   color: var(--admin-text-muted);
   text-align: center;
 }
 
-.rsv-cell {
+.checkin-cell {
   display: grid;
   gap: 4px;
 }
 
-.rsv-actions-row {
+.checkin-actions-row {
   display: flex;
   gap: 10px;
   align-items: center;
   flex-wrap: wrap;
 }
 
+.checkin-group-title {
+  font-size: 15px;
+  font-weight: 850;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
 /* badges */
-.rsv-badge {
+.checkin-badge {
   display: inline-flex;
   min-height: 22px;
   padding: 0 10px;
@@ -288,103 +295,103 @@
   white-space: nowrap;
 }
 
-.rsv-badge-PENDING {
+.checkin-badge-PENDING {
   border-color: rgba(205, 164, 94, 0.35);
   background: rgba(205, 164, 94, 0.12);
 }
 
-.rsv-badge-CONFIRMED {
+.checkin-badge-CONFIRMED {
   border-color: rgba(0, 200, 140, 0.35);
   background: rgba(0, 200, 140, 0.12);
 }
 
-.rsv-badge-SEATED {
+.checkin-badge-SEATED {
   border-color: rgba(72, 187, 255, 0.35);
   background: rgba(72, 187, 255, 0.12);
 }
 
-.rsv-badge-CANCELLED {
+.checkin-badge-CANCELLED {
   border-color: rgba(255, 77, 77, 0.35);
   background: rgba(255, 77, 77, 0.12);
 }
 
-.rsv-badge-COMPLETED {
+.checkin-badge-COMPLETED {
   border-color: rgba(120, 170, 255, 0.35);
   background: rgba(120, 170, 255, 0.12);
 }
 
-.rsv-badge-NO_SHOW {
+.checkin-badge-NO_SHOW {
   border-color: rgba(255, 77, 77, 0.35);
   background: rgba(255, 77, 77, 0.12);
 }
 
 /* form */
-.rsv-form {
+.checkin-form {
   display: grid;
   gap: 14px;
 }
 
-.rsv-grid {
+.checkin-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
-.rsv-span-2 {
+.checkin-span-2 {
   grid-column: span 2;
 }
 
-.rsv-services {
+.checkin-services {
   border: 1px dashed rgba(255, 255, 255, 0.12);
   border-radius: 14px;
   padding: 12px;
   background: rgba(255, 255, 255, 0.02);
 }
 
-.rsv-services-head {
+.checkin-services-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 10px;
 }
 
-.rsv-title {
+.checkin-title {
   font-weight: 850;
   color: #fff;
 }
 
-.rsv-sub {
+.checkin-sub {
   color: var(--admin-text-muted);
   font-size: 12px;
   margin-top: 4px;
 }
 
-.rsv-empty {
+.checkin-empty {
   color: var(--admin-text-muted);
   padding: 12px 0 2px;
   font-size: 13px;
 }
 
-.rsv-services-list {
+.checkin-services-list {
   display: grid;
   gap: 10px;
   margin-top: 12px;
 }
 
-.rsv-service-row {
+.checkin-service-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1.3fr 120px;
   gap: 10px;
 }
 
-.rsv-actions {
+.checkin-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
 }
 
 /* modal */
-.rsv-modal-overlay {
+.checkin-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
@@ -393,7 +400,7 @@
   z-index: 999;
 }
 
-.rsv-modal {
+.checkin-modal {
   width: 860px;
   max-width: calc(100vw - 40px);
   max-height: calc(100vh - 40px);
@@ -406,7 +413,7 @@
   padding: 14px;
 }
 
-.rsv-modal-head {
+.checkin-modal-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -416,25 +423,25 @@
   margin-bottom: 12px;
 }
 
-.rsv-modal-title {
+.checkin-modal-title {
   font-weight: 900;
   color: #fff;
   font-size: 15px;
 }
 
-.rsv-divider {
+.checkin-divider {
   height: 1px;
   background: var(--admin-border);
   margin: 12px 0;
 }
 
-.rsv-sum {
+.checkin-sum {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
 }
 
-.rsv-sum-item {
+.checkin-sum-item {
   border: 1px solid var(--admin-border);
   border-radius: 14px;
   padding: 10px;
@@ -442,20 +449,20 @@
 }
 
 /* scrollbar nhẹ */
-.rsv-table-wrap::-webkit-scrollbar,
-.rsv-modal::-webkit-scrollbar {
+.checkin-table-wrap::-webkit-scrollbar,
+.checkin-modal::-webkit-scrollbar {
   height: 8px;
   width: 8px;
 }
 
-.rsv-table-wrap::-webkit-scrollbar-thumb,
-.rsv-modal::-webkit-scrollbar-thumb {
+.checkin-table-wrap::-webkit-scrollbar-thumb,
+.checkin-modal::-webkit-scrollbar-thumb {
   background: rgba(205, 164, 94, 0.25);
   border-radius: 999px;
 }
 
-.rsv-table-wrap::-webkit-scrollbar-track,
-.rsv-modal::-webkit-scrollbar-track {
+.checkin-table-wrap::-webkit-scrollbar-track,
+.checkin-modal::-webkit-scrollbar-track {
   background: transparent;
 }
 
@@ -464,96 +471,96 @@
    ====================== */
 
 @media (max-width: 1100px) {
-  .rsv-filters-row--top {
+  .checkin-filters-row--top {
     justify-content: flex-start;
   }
 
-  .rsv-filters-row--bottom {
+  .checkin-filters-row--bottom {
     justify-content: flex-start;
   }
 
-  .rsv-pagination {
+  .checkin-pagination {
     justify-content: flex-start;
   }
 
-  .rsv-sum {
+  .checkin-sum {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 768px) {
-  .rsv-head {
+  .checkin-head {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .rsv-head-actions {
+  .checkin-head-actions {
     flex-wrap: wrap;
   }
 
-  .rsv-filters-row {
+  .checkin-filters-row {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .rsv-field {
+  .checkin-field {
     min-width: unset;
     width: 100%;
   }
 
-  .rsv-pagination {
+  .checkin-pagination {
     justify-content: stretch;
     flex-wrap: wrap;
   }
 
-  .rsv-grid {
+  .checkin-grid {
     grid-template-columns: 1fr;
   }
 
-  .rsv-span-2 {
+  .checkin-span-2 {
     grid-column: span 1;
   }
 
-  .rsv-service-row {
+  .checkin-service-row {
     grid-template-columns: 1fr;
   }
 
-  .rsv-actions {
+  .checkin-actions {
     justify-content: stretch;
     flex-wrap: wrap;
   }
 
-  .rsv-sum {
+  .checkin-sum {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .rsv-modal {
+  .checkin-modal {
     max-width: calc(100vw - 20px);
     max-height: calc(100vh - 20px);
     padding: 12px;
   }
 
-  .rsv-modal-head {
+  .checkin-modal-head {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .rsv-actions-row {
+  .checkin-actions-row {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .rsv-btn {
+  .checkin-btn {
     width: 100%;
   }
 }
 
 @media (max-width: 520px) {
-  .rsv-sum {
+  .checkin-sum {
     grid-template-columns: 1fr;
   }
 
-  .rsv-table {
+  .checkin-table {
     min-width: 860px;
   }
 }

@@ -13,7 +13,17 @@
   --nav-dropdown-color: #ffffff;
   --nav-dropdown-hover-color: #cda45e;
 }
+.rh-badge-info {
+  background: rgba(59, 130, 246, 0.16);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.28);
+}
 
+.rh-badge-dark {
+  background: rgba(148, 163, 184, 0.14);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+}
 .reservation-history-page {
   min-height: 100vh;
   background:

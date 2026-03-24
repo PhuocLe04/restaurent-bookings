@@ -2,19 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { AnimatePresence, motion, easeOut } from 'framer-motion'
+import { useEffect, useMemo, useState } from 'react'
 import {
   LayoutDashboard,
   CalendarCheck,
   UtensilsCrossed,
   Users,
-  ChefHat,
-  Images,
-  MessageSquare,
-  Package,
-  CombineIcon,
-  UserCog,
-  UserCircle,
-  Settings,
   PieChart,
   ShoppingBag,
   CreditCard,
@@ -22,15 +16,16 @@ import {
   Table,
   Grid,
   FileText,
-  BookOpen,
-  Tag,
   Gift,
   Briefcase,
   Database,
-  Bell,
   UserCheck,
+  CombineIcon,
+  UserCircle,
 } from 'lucide-react'
+import 'animate.css'
 import './index.css'
+
 interface SidebarProps {
   collapsed: boolean
 }
@@ -41,9 +36,37 @@ type NavItem = {
   icon: React.ComponentType<{ size?: number }>
   exact?: boolean
   badge?: string
+  adminOnly?: boolean
+  allowStaff?: boolean
 }
 
-const navSections: { label: string; items: NavItem[] }[] = [
+type NavSection = {
+  label: string
+  items: NavItem[]
+}
+
+type MeResponse = {
+  message?: string
+  access?: {
+    userId: number
+    isAdmin: boolean
+    isStaff: boolean
+  }
+  user?: {
+    id: number
+    full_name: string
+    email: string
+    phone: string
+    role: string
+  }
+  staff?: {
+    id: number
+    full_name: string
+    is_active: boolean | null
+  } | null
+}
+
+const navSections: NavSection[] = [
   {
     label: 'Tổng quan',
     items: [
@@ -52,11 +75,13 @@ const navSections: { label: string; items: NavItem[] }[] = [
         label: 'Dashboard',
         icon: LayoutDashboard,
         exact: true,
+        adminOnly: true,
       },
       {
         href: '/admin/analytics',
         label: 'Phân tích',
         icon: PieChart,
+        adminOnly: true,
       },
     ],
   },
@@ -67,26 +92,25 @@ const navSections: { label: string; items: NavItem[] }[] = [
         href: '/admin/reservations',
         label: 'Đặt bàn',
         icon: CalendarCheck,
+        allowStaff: true,
       },
       {
         href: '/admin/checkin',
         label: 'Check-in',
         icon: UserCheck,
+        allowStaff: true,
       },
       {
         href: '/admin/order',
         label: 'Đơn hàng',
         icon: ShoppingBag,
-      },
-      {
-        href: '/admin/order-items',
-        label: 'Chi tiết đơn hàng',
-        icon: Package,
+        allowStaff: true,
       },
       {
         href: '/admin/payment',
         label: 'Thanh toán',
         icon: CreditCard,
+        allowStaff: true,
       },
     ],
   },
@@ -97,31 +121,25 @@ const navSections: { label: string; items: NavItem[] }[] = [
         href: '/admin/menu-items',
         label: 'Món ăn',
         icon: UtensilsCrossed,
+        adminOnly: true,
       },
       {
         href: '/admin/categories',
         label: 'Danh mục',
         icon: Grid,
+        adminOnly: true,
       },
       {
         href: '/admin/combo',
         label: 'Combo',
         icon: CombineIcon,
-      },
-      {
-        href: '/admin/combo-menu-items',
-        label: 'Món trong Combo',
-        icon: Package,
+        adminOnly: true,
       },
       {
         href: '/admin/reservation-services',
         label: 'Dịch vụ',
         icon: Gift,
-      },
-      {
-        href: '/admin/combo-services',
-        label: 'Dịch vụ trong Combo',
-        icon: CombineIcon,
+        adminOnly: true,
       },
     ],
   },
@@ -132,16 +150,19 @@ const navSections: { label: string; items: NavItem[] }[] = [
         href: '/admin/restaurant-table',
         label: 'Bàn ăn',
         icon: Table,
+        adminOnly: true,
       },
       {
         href: '/admin/table-type',
         label: 'Loại bàn',
         icon: Grid,
+        adminOnly: true,
       },
       {
         href: '/admin/reservation-table',
         label: 'Bàn đã đặt',
         icon: CalendarCheck,
+        adminOnly: true,
       },
     ],
   },
@@ -152,11 +173,13 @@ const navSections: { label: string; items: NavItem[] }[] = [
         href: '/admin/staff',
         label: 'Nhân viên',
         icon: Briefcase,
+        adminOnly: true,
       },
       {
         href: '/admin/shifts',
         label: 'Ca làm việc',
         icon: Clock,
+        allowStaff: true,
       },
     ],
   },
@@ -167,11 +190,13 @@ const navSections: { label: string; items: NavItem[] }[] = [
         href: '/admin/user',
         label: 'Người dùng',
         icon: Users,
+        adminOnly: true,
       },
       {
         href: '/admin/membership',
         label: 'Hạng thành viên',
         icon: UserCircle,
+        adminOnly: true,
       },
     ],
   },
@@ -182,6 +207,7 @@ const navSections: { label: string; items: NavItem[] }[] = [
         href: '/admin/blogs',
         label: 'Bài viết',
         icon: FileText,
+        adminOnly: true,
       },
     ],
   },
@@ -192,13 +218,119 @@ const navSections: { label: string; items: NavItem[] }[] = [
         href: '/admin/audit-log',
         label: 'Lịch sử hoạt động',
         icon: Database,
+        adminOnly: true,
       },
     ],
   },
 ]
 
+const sidebarVariants = {
+  hidden: { opacity: 0, x: -18 },
+  show: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.35,
+      ease: easeOut,
+      when: 'beforeChildren',
+      staggerChildren: 0.04,
+    },
+  },
+}
+
+const sectionVariants = {
+  hidden: { opacity: 0, y: 12 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.28,
+      ease: easeOut,
+    },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, x: -10 },
+  show: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.22,
+      ease: easeOut,
+    },
+  },
+}
+
 export default function AdminSidebar({ collapsed }: SidebarProps) {
   const pathname = usePathname()
+
+  const [me, setMe] = useState<MeResponse | null>(null)
+  const [loadingMe, setLoadingMe] = useState(true)
+
+  useEffect(() => {
+    let mounted = true
+
+    async function fetchMe() {
+      try {
+        setLoadingMe(true)
+
+        const res = await fetch('/admin/api/auth/me', {
+          method: 'GET',
+          credentials: 'include',
+          cache: 'no-store',
+        })
+
+        const data = await res.json().catch(() => null)
+
+        if (!mounted) return
+
+        if (!res.ok) {
+          setMe(null)
+          return
+        }
+
+        setMe(data)
+      } catch (error) {
+        console.error('Fetch /admin/api/auth/me failed:', error)
+        if (mounted) setMe(null)
+      } finally {
+        if (mounted) setLoadingMe(false)
+      }
+    }
+
+    fetchMe()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  const isAdmin = !!me?.access?.isAdmin
+  const isStaff = !!me?.access?.isStaff
+
+  const filteredSections = useMemo(() => {
+    if (loadingMe) return []
+
+    const sections = navSections
+      .map((section) => {
+        const items = section.items.filter((item) => {
+          if (isAdmin) return true
+
+          if (item.allowStaff && isStaff) return true
+
+          return false
+        })
+
+        return {
+          ...section,
+          items,
+        }
+      })
+      .filter((section) => section.items.length > 0)
+
+    return sections
+  }, [isAdmin, isStaff, loadingMe])
 
   const isActive = (href: string, exact = false) => {
     if (!pathname) return false
@@ -208,63 +340,196 @@ export default function AdminSidebar({ collapsed }: SidebarProps) {
   }
 
   return (
-    <aside className={`admin-sidebar ${collapsed ? 'collapsed' : ''}`}>
-      {/* Logo */}
-      <Link href="/admin" className="sidebar-logo">
-        <div className="sidebar-logo-icon">
-          <UtensilsCrossed size={20} />
-        </div>
-        {!collapsed && (
-          <div className="sidebar-logo-text">
-            <span className="sidebar-logo-name">Restaurantly</span>
-            <span className="sidebar-logo-badge">Admin</span>
-          </div>
-        )}
-      </Link>
+    <motion.aside
+      className={`admin-sidebar ${collapsed ? 'collapsed' : ''}`}
+      variants={sidebarVariants}
+      initial="hidden"
+      animate="show"
+    >
+      <motion.div
+        variants={sectionVariants}
+        className="animate__animated animate__fadeInLeft animate__faster"
+      >
+        <Link href="/admin" className="sidebar-logo">
+          <motion.div
+            className="sidebar-logo-icon"
+            whileHover={{ rotate: -8, scale: 1.06 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+          >
+            <UtensilsCrossed size={20} />
+          </motion.div>
 
-      {/* Navigation */}
-      <nav className="sidebar-nav">
-        {navSections.map((section) => (
-          <div key={section.label} className="sidebar-nav-section">
+          <AnimatePresence initial={false}>
             {!collapsed && (
-              <div className="sidebar-nav-label">{section.label}</div>
+              <motion.div
+                className="sidebar-logo-text"
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -8 }}
+                transition={{ duration: 0.2 }}
+              >
+                <span className="sidebar-logo-name animate__animated animate__fadeInDown animate__faster">
+                  Restaurantly
+                </span>
+                <span className="sidebar-logo-badge animate__animated animate__fadeInUp animate__faster">
+                  {isAdmin ? 'Admin' : isStaff ? 'Staff' : 'User'}
+                </span>
+              </motion.div>
             )}
+          </AnimatePresence>
+        </Link>
+      </motion.div>
 
-            {section.items.map((item) => {
-              const active = isActive(item.href, !!item.exact)
-              const Icon = item.icon
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`sidebar-nav-item ${active ? 'active' : ''}`}
-                  data-tooltip={item.label}
+      <motion.nav className="sidebar-nav" variants={sidebarVariants}>
+        {loadingMe ? (
+          <motion.div
+            className="sidebar-nav-section"
+            variants={sectionVariants}
+          >
+            <AnimatePresence initial={false}>
+              {!collapsed && (
+                <motion.div
+                  className="sidebar-nav-label animate__animated animate__fadeInLeft animate__faster"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <span className="nav-item-icon">
-                    <Icon size={18} />
-                  </span>
-                  {!collapsed && (
-                    <>
-                      <span className="nav-item-label">{item.label}</span>
-                      {item.badge && (
-                        <span className="nav-item-badge">{item.badge}</span>
-                      )}
-                    </>
-                  )}
-                  {collapsed && item.badge && (
-                    <span className="nav-item-badge-collapsed">
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              )
-            })}
+                  Đang tải quyền...
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        ) : (
+          filteredSections.map((section, sectionIndex) => (
+            <motion.div
+              key={section.label}
+              className="sidebar-nav-section"
+              variants={sectionVariants}
+              transition={{ delay: sectionIndex * 0.03 }}
+            >
+              <AnimatePresence initial={false}>
+                {!collapsed && (
+                  <motion.div
+                    className="sidebar-nav-label animate__animated animate__fadeInLeft animate__faster"
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -8 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {section.label}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-            {!collapsed && <div className="sidebar-divider" />}
-          </div>
-        ))}
-      </nav>
-    </aside>
+              {section.items.map((item, itemIndex) => {
+                const active = isActive(item.href, !!item.exact)
+                const Icon = item.icon
+
+                return (
+                  <motion.div
+                    key={item.href}
+                    variants={itemVariants}
+                    transition={{ delay: itemIndex * 0.02 }}
+                  >
+                    <motion.div
+                      whileHover={{
+                        x: collapsed ? 0 : 4,
+                        scale: active ? 1 : 1.01,
+                      }}
+                      whileTap={{ scale: 0.98 }}
+                      transition={{
+                        type: 'spring',
+                        stiffness: 320,
+                        damping: 22,
+                      }}
+                    >
+                      <Link
+                        href={item.href}
+                        className={`sidebar-nav-item ${active ? 'active' : ''} ${
+                          active
+                            ? 'animate__animated animate__pulse animate__faster'
+                            : ''
+                        }`}
+                        data-tooltip={item.label}
+                      >
+                        <motion.span
+                          className="nav-item-icon"
+                          animate={
+                            active
+                              ? {
+                                  scale: [1, 1.08, 1],
+                                }
+                              : { scale: 1 }
+                          }
+                          transition={{
+                            duration: 0.35,
+                            ease: 'easeOut',
+                          }}
+                        >
+                          <Icon size={18} />
+                        </motion.span>
+
+                        <AnimatePresence initial={false}>
+                          {!collapsed && (
+                            <>
+                              <motion.span
+                                className="nav-item-label"
+                                initial={{ opacity: 0, x: -6 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -6 }}
+                                transition={{ duration: 0.18 }}
+                              >
+                                {item.label}
+                              </motion.span>
+
+                              {item.badge && (
+                                <motion.span
+                                  className="nav-item-badge"
+                                  initial={{ opacity: 0, scale: 0.9 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  exit={{ opacity: 0, scale: 0.9 }}
+                                  transition={{ duration: 0.18 }}
+                                >
+                                  {item.badge}
+                                </motion.span>
+                              )}
+                            </>
+                          )}
+                        </AnimatePresence>
+
+                        {collapsed && item.badge && (
+                          <motion.span
+                            className="nav-item-badge-collapsed"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.18 }}
+                          >
+                            {item.badge}
+                          </motion.span>
+                        )}
+                      </Link>
+                    </motion.div>
+                  </motion.div>
+                )
+              })}
+
+              <AnimatePresence initial={false}>
+                {!collapsed && (
+                  <motion.div
+                    className="sidebar-divider"
+                    initial={{ opacity: 0, scaleX: 0.8 }}
+                    animate={{ opacity: 1, scaleX: 1 }}
+                    exit={{ opacity: 0, scaleX: 0.8 }}
+                    transition={{ duration: 0.2 }}
+                  />
+                )}
+              </AnimatePresence>
+            </motion.div>
+          ))
+        )}
+      </motion.nav>
+    </motion.aside>
   )
 }

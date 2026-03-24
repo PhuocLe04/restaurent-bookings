@@ -14,11 +14,10 @@ type Tx = Parameters<typeof prisma.$transaction>[0] extends (tx: infer T) => any
   : never
 
 async function getBusyTableIds(tx: Tx, start: Date, end: Date) {
-  // overlap: oldStart < newEnd && oldEnd > newStart
   const busy = await tx.reservation_tables.findMany({
     where: {
       reservations: {
-        status: { in: ['pending', 'confirmed'] },
+        status: { in: ['pending', 'confirmed', 'PENDING', 'CONFIRMED'] },
         reservation_time: { lt: end },
         reservation_endtime: { gt: start },
       },
@@ -56,86 +55,90 @@ function pickTablesByCount(
 }
 
 export async function GET(req: Request) {
-  const url = new URL(req.url)
+  try {
+    const url = new URL(req.url)
 
-  const time = toDate(url.searchParams.get('time'))
-  const guests = Number(url.searchParams.get('guests') ?? '0')
-  const tableTypeId = url.searchParams.get('tableTypeId')
-  const tableCount = Number(url.searchParams.get('tableCount') ?? '1')
+    const time = toDate(url.searchParams.get('time'))
+    const guests = Number(url.searchParams.get('guests') ?? '0')
+    const tableTypeId = url.searchParams.get('tableTypeId')
+    const tableCount = Number(url.searchParams.get('tableCount') ?? '1')
 
-  if (!time || !guests || guests <= 0) {
-    return NextResponse.json(
-      { message: 'Invalid query params' },
-      { status: 400 },
-    )
-  }
-
-  if (!tableCount || tableCount <= 0) {
-    return NextResponse.json(
-      { message: 'tableCount must be >= 1' },
-      { status: 400 },
-    )
-  }
-
-  if (tableCount > guests) {
-    return NextResponse.json(
-      { message: 'Number of tables cannot exceed number of guests' },
-      { status: 400 },
-    )
-  }
-
-  const start = time
-  const end = new Date(time.getTime() + HOLD_MINUTES * 60 * 1000)
-
-  const data = await prisma.$transaction(
-    async (tx) => {
-      const busyIds = await getBusyTableIds(tx, start, end)
-
-      const tables = await tx.restaurant_tables.findMany({
-        where: {
-          is_active: true,
-          ...(tableTypeId ? { table_type_id: Number(tableTypeId) } : {}),
-        },
-        select: {
-          id: true,
-          table_name: true,
-          capacity: true,
-          table_type: {
-            select: { id: true, name: true, description: true },
-          },
-        },
-        orderBy: [{ capacity: 'asc' }, { id: 'asc' }],
-      })
-
-      const free = tables.filter((t) => !busyIds.has(t.id))
-
-      const suggestion = pickTablesByCount(
-        free.map((t) => ({ id: t.id, capacity: t.capacity })),
-        guests,
-        tableCount,
+    if (!time || !guests || guests <= 0) {
+      return NextResponse.json(
+        { message: 'Invalid query params' },
+        { status: 400 },
       )
+    }
 
-      return {
-        time: start.toISOString(),
-        end: end.toISOString(),
-        guests,
-        tableCount,
+    if (!tableCount || tableCount <= 0) {
+      return NextResponse.json(
+        { message: 'tableCount must be >= 1' },
+        { status: 400 },
+      )
+    }
 
-        // ✅ luôn trả list bàn trống (để UI hiển thị)
-        available: free.map((t) => ({
-          id: t.id,
-          table_name: t.table_name,
-          capacity: t.capacity,
-          table_type: t.table_type,
-        })),
+    if (tableCount > guests) {
+      return NextResponse.json(
+        { message: 'Number of tables cannot exceed number of guests' },
+        { status: 400 },
+      )
+    }
 
-        // ✅ auto suggestion
-        suggestion,
-        suggestion_table_ids: suggestion.map((t) => t.id),
-      }
-    },
-    { isolationLevel: 'Serializable' },
-  )
+    const start = time
+    const end = new Date(time.getTime() + HOLD_MINUTES * 60 * 1000)
 
-  return NextResponse.json(data)
+    const data = await prisma.$transaction(
+      async (tx) => {
+        const busyIds = await getBusyTableIds(tx, start, end)
+
+        const tables = await tx.restaurant_tables.findMany({
+          where: {
+            is_active: true,
+            ...(tableTypeId ? { table_type_id: Number(tableTypeId) } : {}),
+          },
+          select: {
+            id: true,
+            table_name: true,
+            capacity: true,
+            table_types: {
+              select: { id: true, name: true, description: true },
+            },
+          },
+          orderBy: [{ capacity: 'asc' }, { id: 'asc' }],
+        })
+
+        const free = tables.filter((t) => !busyIds.has(t.id))
+
+        const suggestion = pickTablesByCount(
+          free.map((t) => ({ id: t.id, capacity: t.capacity })),
+          guests,
+          tableCount,
+        )
+
+        return {
+          time: start.toISOString(),
+          end: end.toISOString(),
+          guests,
+          tableCount,
+          available: free.map((t) => ({
+            id: t.id,
+            table_name: t.table_name,
+            capacity: t.capacity,
+            table_type: t.table_types,
+          })),
+          suggestion,
+          suggestion_table_ids: suggestion.map((t) => t.id),
+        }
+      },
+      { isolationLevel: 'Serializable' },
+    )
+
+    return NextResponse.json(data)
+  } catch (err: any) {
+    console.error('GET /api/available-table LỖI:', err)
+    return NextResponse.json(
+      { message: 'Đã xảy ra lỗi khi lấy danh sách bàn trống' },
+      { status: 500 },
+    )
+  }
 }

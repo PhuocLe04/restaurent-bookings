@@ -157,7 +157,10 @@ export default function PaymentsPage() {
       alert(err?.message || 'Xoá payment thất bại')
     }
   }
-
+  function handleRefreshPage() {
+    setRefreshing(true)
+    window.location.reload()
+  }
   function handleSearchSubmit(e: React.FormEvent) {
     e.preventDefault()
     setPage(1)
@@ -182,7 +185,7 @@ export default function PaymentsPage() {
         <div className="payment-head-actions">
           <button
             className="payment-btn"
-            onClick={() => fetchPayments(false)}
+            onClick={handleRefreshPage}
             disabled={refreshing}
           >
             {refreshing ? 'Đang làm mới...' : 'Làm mới'}
@@ -322,7 +325,7 @@ export default function PaymentsPage() {
             <table className="payment-table">
               <thead>
                 <tr>
-                  <th>ID</th>
+                  <th style={{ width: 60 }}>ID</th>
                   <th>Khách hàng</th>
                   <th>Đặt bàn</th>
                   <th>Số tiền</th>

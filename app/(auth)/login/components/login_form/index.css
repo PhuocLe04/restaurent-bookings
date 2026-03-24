@@ -159,7 +159,7 @@
     transform 0.28s ease,
     opacity 0.28s ease;
 }
-
+a.social-icon:hover,
 .social-icon:hover {
   background: rgba(255, 255, 255, 0.2);
   border-color: var(--glass-border-hover);
@@ -167,6 +167,7 @@
   box-shadow:
     0 10px 20px -10px rgba(0, 0, 0, 0.3),
     0 6px 18px rgba(255, 255, 255, 0.06);
+  color: #ffffff;
 }
 
 .social-icon:hover svg {

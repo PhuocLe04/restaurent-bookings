@@ -11,22 +11,40 @@ import './global.css'
 export default function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem('admin-sidebar-collapsed')
-    if (saved) setCollapsed(saved === 'true')
+    if (saved !== null) {
+      setCollapsed(saved === 'true')
+    }
+    setMounted(true)
   }, [])
 
   const handleToggle = () => {
-    const newState = !collapsed
-    setCollapsed(newState)
-    localStorage.setItem('admin-sidebar-collapsed', String(newState))
+    setCollapsed((prev) => {
+      const next = !prev
+      localStorage.setItem('admin-sidebar-collapsed', String(next))
+      return next
+    })
+  }
+
+  if (!mounted) {
+    return (
+      <div className="admin-root">
+        <AdminSidebar collapsed={false} />
+        <AdminTopbar collapsed={false} onToggle={handleToggle} />
+
+        <main className="admin-content">
+          <div className="admin-page">{children}</div>
+        </main>
+      </div>
+    )
   }
 
   return (
     <div className="admin-root">
       <AdminSidebar collapsed={collapsed} />
-
       <AdminTopbar collapsed={collapsed} onToggle={handleToggle} />
 
       <main className={`admin-content ${collapsed ? 'sidebar-collapsed' : ''}`}>

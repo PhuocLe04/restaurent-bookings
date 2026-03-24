@@ -8,9 +8,19 @@ export default function ReservationCombo(props: {
   comboId: string
   setComboId: (v: string) => void
   comboDetail: ComboDetail | null
-  onApplyCombo: () => void
+  onToggleCombo: () => void
+  isApplied: boolean
+  busy: boolean
 }) {
-  const { combos, comboId, setComboId, comboDetail, onApplyCombo } = props
+  const {
+    combos,
+    comboId,
+    setComboId,
+    comboDetail,
+    onToggleCombo,
+    isApplied,
+    busy,
+  } = props
 
   return (
     <section className="reservation-block">
@@ -29,13 +39,14 @@ export default function ReservationCombo(props: {
         )}
       </div>
 
-      <div className="reservation-combo-panel">
+      <div className={`reservation-combo-panel ${busy ? 'is-busy' : ''}`}>
         <label className="reservation-field__label">Chọn combo</label>
 
         <select
           className="reservation-control"
           value={comboId}
           onChange={(e) => setComboId(e.target.value)}
+          disabled={busy}
         >
           <option value="">-- Chọn combo --</option>
           {combos.map((c) => (
@@ -140,11 +151,17 @@ export default function ReservationCombo(props: {
             <div className="reservation-combo-card__actions">
               <button
                 type="button"
-                className="reservation-submit reservation-submit--combo"
-                onClick={onApplyCombo}
-                disabled={!comboDetail}
+                className={`reservation-submit reservation-submit--combo ${
+                  isApplied ? 'reservation-submit--danger' : ''
+                }`}
+                onClick={onToggleCombo}
+                disabled={!comboDetail || busy}
               >
-                Áp dụng combo
+                {busy
+                  ? 'Đang xử lý...'
+                  : isApplied
+                    ? 'Bỏ áp dụng combo'
+                    : 'Áp dụng combo'}
               </button>
             </div>
           </div>

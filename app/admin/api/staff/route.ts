@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAdminOnly } from '@/lib/requireAdminOnly'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,7 +11,15 @@ function toBool(v: string | null, defaultValue?: boolean) {
   return defaultValue
 }
 
+function toPositiveInt(value: unknown) {
+  const n = Number(value)
+  return Number.isInteger(n) && n > 0 ? n : null
+}
+
 export async function GET(req: Request) {
+  const access = await requireAdminOnly()
+  if (!access.ok) return access.res
+
   try {
     const { searchParams } = new URL(req.url)
 
@@ -31,9 +40,9 @@ export async function GET(req: Request) {
               { full_name: { contains: q } },
               { role: { contains: q } },
               { phone: { contains: q } },
-              { users: { full_name: { contains: q } } },
-              { users: { email: { contains: q } } },
-              { users: { phone: { contains: q } } },
+              { users: { is: { full_name: { contains: q } } } },
+              { users: { is: { email: { contains: q } } } },
+              { users: { is: { phone: { contains: q } } } },
             ],
           }
         : {}),
@@ -76,7 +85,12 @@ export async function GET(req: Request) {
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+      access: {
+        userId: access.userId,
+        isAdmin: access.isAdmin,
+        isStaff: access.isStaff,
+      },
     })
   } catch (error: any) {
     console.error('GET /admin/api/staff error:', error)
@@ -88,19 +102,21 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const access = await requireAdminOnly()
+  if (!access.ok) return access.res
+
   try {
     const body = await req.json()
 
-    const full_name = String(body.full_name || '').trim()
+    const user_id = toPositiveInt(body.user_id)
     const role = String(body.role || '').trim()
-    const phone = body.phone ? String(body.phone).trim() : null
-    const user_id = Number(body.user_id)
+    const inputPhone = body.phone ? String(body.phone).trim() : null
     const is_active =
       typeof body.is_active === 'boolean' ? body.is_active : true
 
-    if (!full_name) {
+    if (!user_id) {
       return NextResponse.json(
-        { message: 'Vui lòng nhập họ tên nhân viên' },
+        { message: 'user_id không hợp lệ' },
         { status: 400 },
       )
     }
@@ -108,13 +124,6 @@ export async function POST(req: Request) {
     if (!role) {
       return NextResponse.json(
         { message: 'Vui lòng nhập vai trò nhân viên' },
-        { status: 400 },
-      )
-    }
-
-    if (!Number.isFinite(user_id) || user_id <= 0) {
-      return NextResponse.json(
-        { message: 'user_id không hợp lệ' },
         { status: 400 },
       )
     }
@@ -127,6 +136,8 @@ export async function POST(req: Request) {
         email: true,
         phone: true,
         role: true,
+        avatar: true,
+        created_at: true,
       },
     })
 
@@ -149,26 +160,51 @@ export async function POST(req: Request) {
       )
     }
 
-    const created = await prisma.staff.create({
-      data: {
-        full_name,
-        role,
-        phone,
-        user_id,
-        is_active,
-      },
-      include: {
-        users: {
-          select: {
-            id: true,
-            full_name: true,
-            email: true,
-            phone: true,
-            role: true,
-            avatar: true,
+    const full_name = user.full_name?.trim()
+    const phone = inputPhone || user.phone || null
+
+    if (!full_name) {
+      return NextResponse.json(
+        { message: 'User chưa có full_name hợp lệ' },
+        { status: 400 },
+      )
+    }
+
+    const created = await prisma.$transaction(async (tx) => {
+      const newStaff = await tx.staff.create({
+        data: {
+          full_name,
+          role,
+          phone,
+          user_id,
+          is_active,
+        },
+        include: {
+          users: {
+            select: {
+              id: true,
+              full_name: true,
+              email: true,
+              phone: true,
+              role: true,
+              avatar: true,
+              created_at: true,
+            },
           },
         },
-      },
+      })
+
+      await tx.audit_logs.create({
+        data: {
+          entity: 'staff',
+          entity_id: newStaff.id,
+          action: 'INSERT',
+          description: `Admin"${access.userId}"Tạo nhân viên "${newStaff.full_name}" (staff_id=${newStaff.id}, user_id=${newStaff.user_id}, role=${newStaff.role})`,
+          user_id: access.userId,
+        },
+      })
+
+      return newStaff
     })
 
     return NextResponse.json(

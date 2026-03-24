@@ -1,0 +1,438 @@
+.admin-service-create {
+  min-width: 0;
+}
+
+.admin-service-create .service-create-page {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 24px;
+}
+
+.admin-service-create .service-create-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.admin-service-create .service-create-title {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.15;
+}
+
+.admin-service-create .service-create-subtitle {
+  margin: 6px 0 0;
+  color: var(--admin-text-muted);
+  font-size: 13px;
+}
+
+.admin-service-create .service-create-head-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-service-create .service-create-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 16px;
+  align-items: start;
+}
+
+.admin-service-create .service-create-main,
+.admin-service-create .service-create-side {
+  min-width: 0;
+}
+
+.admin-service-create .service-card {
+  border: 1px solid var(--admin-border);
+  border-radius: 18px;
+  background: rgba(26, 24, 20, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 16px;
+  min-width: 0;
+  overflow: hidden;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.admin-service-create .service-card:hover {
+  transform: translateY(-2px);
+}
+
+.admin-service-create .service-section-head {
+  margin-bottom: 14px;
+}
+
+.admin-service-create .service-section-head h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.admin-service-create .service-section-head p {
+  margin: 6px 0 0;
+  color: var(--admin-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.admin-service-create .service-form-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-service-create .service-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.admin-service-create .service-field-full {
+  grid-column: 1 / -1;
+}
+
+.admin-service-create .service-field label {
+  font-size: 12px;
+  color: var(--admin-text-muted);
+  font-weight: 700;
+}
+
+.admin-service-create .service-field input,
+.admin-service-create .service-field select,
+.admin-service-create .service-field textarea,
+.admin-service-create .service-status-select {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+  padding: 12px;
+  outline: none;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.admin-service-create .service-field input {
+  height: 40px;
+  padding: 0 12px;
+}
+
+.admin-service-create .service-field select,
+.admin-service-create .service-status-select {
+  height: 45px;
+  background-color: #1a1814;
+}
+
+.admin-service-create .service-field textarea {
+  resize: vertical;
+  min-height: 360px;
+  line-height: 1.6;
+}
+
+.admin-service-create .service-field input::placeholder,
+.admin-service-create .service-field textarea::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.admin-service-create .service-field input:focus,
+.admin-service-create .service-field select:focus,
+.admin-service-create .service-field textarea:focus,
+.admin-service-create .service-status-select:focus {
+  border-color: rgba(205, 164, 94, 0.35);
+  box-shadow: 0 0 0 3px rgba(205, 164, 94, 0.12);
+  transform: translateY(-1px);
+}
+
+.admin-service-create .service-hidden-file-input {
+  display: none;
+}
+
+.admin-service-create .service-thumb-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.admin-service-create .service-thumb-tab {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.admin-service-create .service-thumb-tab:hover {
+  transform: translateY(-1px);
+  border-color: rgba(205, 164, 94, 0.35);
+  background: rgba(205, 164, 94, 0.08);
+}
+
+.admin-service-create .service-thumb-tab.is-active {
+  background: rgba(205, 164, 94, 0.14);
+  border-color: rgba(205, 164, 94, 0.35);
+  color: #fff;
+}
+
+.admin-service-create .service-thumb-helper {
+  font-size: 12px;
+  color: var(--admin-text-muted);
+  line-height: 1.5;
+}
+
+.admin-service-create .service-upload-box {
+  border: 1px dashed rgba(205, 164, 94, 0.35);
+  border-radius: 14px;
+  padding: 18px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.02);
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  outline: none;
+}
+
+.admin-service-create .service-upload-box:hover,
+.admin-service-create .service-upload-box:focus {
+  transform: translateY(-1px);
+  background: rgba(205, 164, 94, 0.06);
+  border-color: rgba(205, 164, 94, 0.5);
+}
+
+.admin-service-create .service-upload-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-service-create .service-upload-icon {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  background: rgba(205, 164, 94, 0.1);
+  border: 1px solid rgba(205, 164, 94, 0.2);
+}
+
+.admin-service-create .service-upload-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-service-create .service-upload-text strong {
+  color: #fff;
+  font-size: 14px;
+  word-break: break-word;
+}
+
+.admin-service-create .service-upload-text span {
+  font-size: 12px;
+  color: var(--admin-text-muted);
+}
+
+.admin-service-create .service-preview-box {
+  margin-top: 12px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.03);
+  min-height: 220px;
+  position: relative;
+}
+
+.admin-service-create .service-preview-image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.admin-service-create .service-preview-box:hover .service-preview-image {
+  transform: scale(1.03);
+}
+
+.admin-service-create .service-preview-box::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.35), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.admin-service-create .service-preview-box:hover::after {
+  opacity: 1;
+}
+
+.admin-service-create .service-preview-placeholder {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--admin-text-muted);
+  font-size: 14px;
+  padding: 24px;
+  gap: 10px;
+}
+
+.admin-service-create .service-preview-placeholder-icon {
+  font-size: 34px;
+  line-height: 1;
+}
+
+.admin-service-create .service-action-stack {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.admin-service-create .service-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 13px;
+  box-sizing: border-box;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.admin-service-create .service-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(205, 164, 94, 0.35);
+  background: rgba(205, 164, 94, 0.08);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+}
+
+.admin-service-create .service-btn:active {
+  transform: translateY(0);
+}
+
+.admin-service-create .service-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.admin-service-create .service-btn-primary {
+  background: rgba(205, 164, 94, 0.14);
+  border-color: rgba(205, 164, 94, 0.35);
+  color: #fff;
+}
+
+.admin-service-create .service-select-wrap {
+  position: relative;
+}
+
+.admin-service-create .service-status-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 40px;
+}
+
+.admin-service-create .service-select-arrow {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 12px;
+  opacity: 0.7;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+@media (max-width: 1100px) {
+  .admin-service-create .service-create-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-service-create .service-create-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-service-create .service-create-head-actions {
+    width: 100%;
+  }
+
+  .admin-service-create .service-create-head-actions .service-btn {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-service-create .service-create-page {
+    padding: 16px;
+  }
+
+  .admin-service-create .service-create-title {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-service-create .service-card {
+    padding: 12px;
+  }
+
+  .admin-service-create .service-action-stack .service-btn,
+  .admin-service-create .service-thumb-tab {
+    width: 100%;
+  }
+
+  .admin-service-create .service-upload-inner {
+    align-items: flex-start;
+  }
+}

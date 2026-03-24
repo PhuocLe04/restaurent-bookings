@@ -690,3 +690,186 @@
     min-width: 800px;
   }
 }
+.restaurant-table-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(7, 7, 8, 0.56);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.restaurant-table-modal {
+  width: min(100%, 720px);
+  border-radius: 22px;
+  border: 1px solid var(--admin-border);
+  background: rgba(26, 24, 20, 0.96);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.restaurant-table-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 20px 12px;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.restaurant-table-modal-title {
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.restaurant-table-modal-subtitle {
+  margin: 6px 0 0;
+  color: var(--admin-text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.restaurant-table-modal-close {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.restaurant-table-modal-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.restaurant-table-modal-form {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.restaurant-table-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.restaurant-table-modal-field {
+  display: grid;
+  gap: 8px;
+}
+
+.restaurant-table-modal-field-full {
+  grid-column: 1 / -1;
+}
+
+.restaurant-table-modal-field label {
+  color: var(--admin-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.restaurant-table-modal-field input,
+.restaurant-table-modal-field textarea,
+.restaurant-table-modal-field select {
+  width: 100%;
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+  padding: 12px 14px;
+  outline: none;
+  font-size: 14px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.restaurant-table-modal-field input,
+.restaurant-table-modal-field select {
+  height: 46px;
+}
+
+.restaurant-table-modal-field select option {
+  background: #171511;
+  color: #fff;
+}
+
+.restaurant-table-modal-field input:focus,
+.restaurant-table-modal-field textarea:focus,
+.restaurant-table-modal-field select:focus {
+  border-color: rgba(205, 164, 94, 0.45);
+  box-shadow: 0 0 0 4px rgba(205, 164, 94, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.restaurant-table-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.restaurant-table-modal-loading {
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--admin-text-muted);
+  font-style: italic;
+}
+
+.restaurant-table-type-preview {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(205, 164, 94, 0.18);
+  background: rgba(205, 164, 94, 0.06);
+}
+
+.restaurant-table-type-preview-name {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.restaurant-table-type-preview-desc {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.restaurant-table-type-preview-id {
+  margin-top: 6px;
+  color: #cda45e;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .restaurant-table-modal {
+    width: 100%;
+  }
+
+  .restaurant-table-modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .restaurant-table-modal-actions {
+    flex-direction: column;
+  }
+
+  .restaurant-table-modal-actions .restaurant-table-btn {
+    width: 100%;
+  }
+}

@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAdminOnly } from '@/lib/requireAdminOnly'
 
 export const dynamic = 'force-dynamic'
 
-function toNumber(value: string | null, fallback: number) {
-  const n = Number(value)
-  return Number.isFinite(n) && n > 0 ? n : fallback
+const BLOG_FILTER_STATUSES = ['DRAFT', 'PUBLISHED', 'ARCHIVED'] as const
+const BLOG_CREATE_STATUSES = ['DRAFT', 'PUBLISHED'] as const
+
+function toInt(v: string | null, fallback: number) {
+  const n = Number(v)
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback
 }
 
 function normalizeString(value: unknown) {
@@ -14,41 +18,58 @@ function normalizeString(value: unknown) {
 }
 
 export async function GET(req: Request) {
+  const access = await requireAdminOnly()
+  if (!access.ok) return access.res
+
   try {
-    const { searchParams } = new URL(req.url)
+    const url = new URL(req.url)
 
-    const page = toNumber(searchParams.get('page'), 1)
-    const limit = toNumber(searchParams.get('limit'), 10)
+    const page = toInt(url.searchParams.get('page'), 1)
+    const limit = Math.min(toInt(url.searchParams.get('limit'), 20), 50)
 
-    const skip = (page - 1) * limit
+    const search = (url.searchParams.get('search') ?? '').trim()
+    const q = (url.searchParams.get('q') ?? '').trim()
+    const keyword = (search || q).trim()
 
-    const keyword = normalizeString(searchParams.get('keyword'))
-    const status = normalizeString(searchParams.get('status'))
+    const status = (url.searchParams.get('status') ?? '').trim().toUpperCase()
 
-    const where: any = {
-      ...(status ? { status } : {}),
-      ...(keyword
-        ? {
-            OR: [
-              { title: { contains: keyword } },
-              { slug: { contains: keyword } },
-              { short_description: { contains: keyword } },
-              {
-                users: {
-                  full_name: { contains: keyword },
-                },
-              },
-            ],
-          }
-        : {}),
+    const where: any = {}
+
+    if (status) {
+      if (
+        !BLOG_FILTER_STATUSES.includes(
+          status as (typeof BLOG_FILTER_STATUSES)[number],
+        )
+      ) {
+        return NextResponse.json(
+          { message: 'Trạng thái lọc không hợp lệ' },
+          { status: 400 },
+        )
+      }
+
+      where.status = status
+    }
+
+    if (keyword) {
+      where.OR = [
+        { title: { contains: keyword } },
+        { slug: { contains: keyword } },
+        { short_description: { contains: keyword } },
+        { content: { contains: keyword } },
+        {
+          users: {
+            full_name: { contains: keyword },
+          },
+        },
+      ]
     }
 
     const [items, total] = await Promise.all([
       prisma.blogs.findMany({
         where,
-        skip,
-        take: limit,
         orderBy: { id: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
         include: {
           users: {
             select: {
@@ -67,79 +88,126 @@ export async function GET(req: Request) {
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+      access: {
+        userId: access.userId,
+        isAdmin: access.isAdmin,
+        isStaff: access.isStaff,
+      },
     })
-  } catch (error) {
-    console.error(error)
-
+  } catch (error: any) {
+    console.error('GET /admin/api/blog error:', error)
     return NextResponse.json(
-      { message: 'Không thể lấy danh sách blog' },
+      {
+        message: 'Lấy danh sách blog thất bại',
+        detail: error?.message,
+      },
       { status: 500 },
     )
   }
 }
 
 export async function POST(req: Request) {
+  const access = await requireAdminOnly()
+  if (!access.ok) return access.res
+
   try {
-    const body = await req.json()
+    const body = await req.json().catch(() => null)
+
+    if (!body) {
+      return NextResponse.json(
+        { message: 'Dữ liệu gửi lên không hợp lệ (JSON lỗi)' },
+        { status: 400 },
+      )
+    }
 
     const title = normalizeString(body.title)
     const slug = normalizeString(body.slug)
     const content = normalizeString(body.content)
-
     const short_description = normalizeString(body.short_description)
     const thumbnail_url = normalizeString(body.thumbnail_url)
+    const status = normalizeString(body.status || 'DRAFT').toUpperCase()
 
-    const status = normalizeString(body.status) || 'DRAFT'
-    const author_id = Number(body.author_id)
-
-    if (!title)
+    if (!title || !slug || !content) {
       return NextResponse.json(
-        { message: 'Title là bắt buộc' },
+        {
+          message: 'Thiếu thông tin bắt buộc: title, slug, content',
+        },
         { status: 400 },
       )
+    }
 
-    if (!slug)
-      return NextResponse.json({ message: 'Slug là bắt buộc' }, { status: 400 })
-
-    if (!content)
+    if (
+      !BLOG_CREATE_STATUSES.includes(
+        status as (typeof BLOG_CREATE_STATUSES)[number],
+      )
+    ) {
       return NextResponse.json(
-        { message: 'Content là bắt buộc' },
+        { message: 'Trạng thái không hợp lệ' },
         { status: 400 },
       )
+    }
 
-    const existSlug = await prisma.blogs.findUnique({
+    const existedSlug = await prisma.blogs.findUnique({
       where: { slug },
       select: { id: true },
     })
 
-    if (existSlug) {
-      return NextResponse.json({ message: 'Slug đã tồn tại' }, { status: 400 })
+    if (existedSlug) {
+      return NextResponse.json({ message: 'Slug đã tồn tại' }, { status: 409 })
     }
 
-    const created = await prisma.blogs.create({
-      data: {
-        title,
-        slug,
-        short_description,
-        content,
-        thumbnail_url,
-        author_id,
-        status,
-        published_at: status === 'PUBLISHED' ? new Date() : null,
-      },
+    const created = await prisma.$transaction(async (tx) => {
+      const blog = await tx.blogs.create({
+        data: {
+          title,
+          slug,
+          content,
+          short_description: short_description || null,
+          thumbnail_url: thumbnail_url || null,
+          author_id: access.userId,
+          status,
+          published_at: status === 'PUBLISHED' ? new Date() : null,
+        },
+        include: {
+          users: {
+            select: {
+              id: true,
+              full_name: true,
+              email: true,
+            },
+          },
+        },
+      })
+
+      await tx.audit_logs.create({
+        data: {
+          entity: 'blogs',
+          entity_id: blog.id,
+          action: 'INSERT',
+          description: `Admin #${access.userId} đã tạo blog #${blog.id} (${blog.title})`,
+          user_id: access.userId,
+        },
+      })
+
+      return blog
     })
 
     return NextResponse.json(
       {
         message: 'Tạo blog thành công',
-        data: created,
+        item: created,
       },
       { status: 201 },
     )
-  } catch (error) {
-    console.error(error)
-
-    return NextResponse.json({ message: 'Không thể tạo blog' }, { status: 500 })
+  } catch (error: any) {
+    console.error('POST /admin/api/blog error:', error)
+    return NextResponse.json(
+      {
+        message: 'Tạo blog thất bại',
+        detail: error?.message,
+      },
+      { status: 500 },
+    )
   }
 }

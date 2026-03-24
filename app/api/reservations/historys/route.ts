@@ -7,13 +7,15 @@ export const dynamic = 'force-dynamic'
 async function getUserId(): Promise<number | null> {
   const raw = (await cookies()).get('web_user_id')?.value
   if (!raw) return null
+
   const n = Number(raw)
   return Number.isFinite(n) && n > 0 ? n : null
 }
 
 export async function GET(req: Request) {
   try {
-    const userId = getUserId()
+    const userId = await getUserId()
+
     if (!userId) {
       return NextResponse.json({ message: 'Unauthenticated' }, { status: 401 })
     }
@@ -25,39 +27,54 @@ export async function GET(req: Request) {
       50,
       Math.max(1, Number(searchParams.get('limit') ?? '10') || 10),
     )
-    const status = searchParams.get('status') // optional: PENDING/CONFIRMED/COMPLETED/CANCELLED...
-    const q = (searchParams.get('q') ?? '').trim() // optional search (table_name / table_type)
 
-    const where: any = { user_id: userId }
-    if (status) where.status = status
+    const status = (searchParams.get('status') ?? '').trim()
+    const q = (searchParams.get('q') ?? '').trim()
 
-    // search theo table_name / table_type name (optional)
+    const where: any = {
+      user_id: userId,
+    }
+
+    if (status) {
+      where.status = status
+    }
+
     if (q) {
       where.OR = [
         {
           reservation_tables: {
-            some: { restaurant_tables: { table_name: { contains: q } } },
+            some: {
+              restaurant_tables: {
+                table_name: { contains: q },
+              },
+            },
           },
         },
         {
           reservation_tables: {
             some: {
-              restaurant_tables: { table_types: { name: { contains: q } } },
+              restaurant_tables: {
+                table_types: {
+                  name: { contains: q },
+                },
+              },
             },
           },
         },
       ]
     }
 
-    const [total, rows] = await prisma.$transaction([
+    const [total, rows, successPaymentCount] = await prisma.$transaction([
       prisma.reservations.count({ where }),
+
       prisma.reservations.findMany({
         where,
-        orderBy: { reservation_time: 'desc' },
+        orderBy: [{ created_at: 'desc' }, { id: 'desc' }],
         skip: (page - 1) * limit,
         take: limit,
         select: {
           id: true,
+          user_id: true,
           reservation_time: true,
           reservation_endtime: true,
           checked_in_at: true,
@@ -66,7 +83,6 @@ export async function GET(req: Request) {
           status: true,
           created_at: true,
 
-          // tables
           reservation_tables: {
             select: {
               table_id: true,
@@ -82,17 +98,17 @@ export async function GET(req: Request) {
             },
           },
 
-          // services (nếu có)
           reservation_services: {
             select: {
               service_id: true,
               quantity: true,
               unit_price: true,
-              services: { select: { id: true, name: true, image: true } },
+              services: {
+                select: { id: true, name: true, image: true },
+              },
             },
           },
 
-          // payments (để hiện trạng thái cọc/thanhtoan)
           payments: {
             select: {
               id: true,
@@ -105,11 +121,10 @@ export async function GET(req: Request) {
               order_id: true,
               request_id: true,
             },
-            orderBy: { created_at: 'desc' },
-            take: 3, // lấy 3 cái gần nhất cho list
+            orderBy: [{ created_at: 'desc' }, { id: 'desc' }],
+            take: 3,
           },
 
-          // orders (để có grand_total/deposit_required)
           orders: {
             select: {
               id: true,
@@ -118,8 +133,17 @@ export async function GET(req: Request) {
               deposit_required: true,
               created_at: true,
             },
-            orderBy: { created_at: 'desc' },
+            orderBy: [{ created_at: 'desc' }, { id: 'desc' }],
             take: 1,
+          },
+        },
+      }),
+
+      prisma.payments.count({
+        where: {
+          status: 'SUCCESS',
+          reservations: {
+            user_id: userId,
           },
         },
       }),
@@ -132,6 +156,7 @@ export async function GET(req: Request) {
       limit,
       total,
       totalPages,
+      successPaymentCount,
       data: rows,
     })
   } catch (e: any) {

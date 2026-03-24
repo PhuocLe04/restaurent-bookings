@@ -729,7 +729,6 @@ a.social-icon.tiktok:hover,
   border-radius: 12px;
 }
 
-/* Custom Scrollbar - Đẹp và mỏng */
 .scrollable-fields::-webkit-scrollbar {
   width: 4px;
 }
@@ -750,18 +749,15 @@ a.social-icon.tiktok:hover,
   background: rgba(255, 255, 255, 0.3);
 }
 
-/* Firefox scrollbar */
 .scrollable-fields {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
 }
 
-/* Điều chỉnh khoảng cách giữa các field trong scroll container */
 .scrollable-fields .glass-form-group:last-child {
   margin-bottom: 5px;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .scrollable-fields {
     max-height: 250px;
@@ -786,7 +782,6 @@ a.social-icon.tiktok:hover,
   }
 }
 
-/* Hiệu ứng fade nhẹ ở cuối scroll container để báo hiệu có thể scroll */
 .scrollable-fields {
   mask-image: linear-gradient(
     to bottom,

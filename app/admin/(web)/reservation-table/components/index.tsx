@@ -143,6 +143,11 @@ export default function ReservationTablePage() {
     setKeyword(q)
   }
 
+  function handleRefreshPage() {
+    setRefreshing(true)
+    window.location.reload()
+  }
+
   function handleClearFilters() {
     setQ('')
     setKeyword('')
@@ -157,7 +162,7 @@ export default function ReservationTablePage() {
       {/* Header */}
       <div className="reservation-head">
         <div>
-          <h1 className="reservation-h1">Quản lý bàn đã đặt</h1>
+          <h1 className="admin-title">Quản lý bàn đã đặt</h1>
           <p className="reservation-muted">
             Tổng số bản ghi: <span className="reservation-strong">{total}</span>
           </p>
@@ -167,7 +172,7 @@ export default function ReservationTablePage() {
           <button
             type="button"
             className="reservation-btn reservation-btn-secondary"
-            onClick={() => fetchData(true)}
+            onClick={handleRefreshPage}
             disabled={refreshing}
           >
             <span className={refreshing ? 'reservation-refresh-icon' : ''}>
@@ -350,7 +355,7 @@ export default function ReservationTablePage() {
                       <td>
                         <div className="reservation-actions-row">
                           <Link
-                            href={`/admin/reservation/${item.reservation_id}`}
+                            href={`/admin/reservations/${item.reservation_id}`}
                             className="reservation-btn"
                             title="Xem chi tiết reservation"
                           >

@@ -1,5 +1,11 @@
 import { headers } from 'next/headers'
-import { BlogCard, Pagination, type BlogsResponse } from './components'
+import {
+  BlogCard,
+  Pagination,
+  SearchForm,
+  type BlogsResponse,
+} from './components'
+import './page.css'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,7 +34,6 @@ async function getBlogs(params: { page?: string; q?: string }) {
 export default async function BlogsPage({
   searchParams,
 }: {
-  // ✅ Next mới: searchParams là Promise
   searchParams?: Promise<{ page?: string; q?: string }>
 }) {
   const sp = (await searchParams) ?? {}
@@ -38,41 +43,97 @@ export default async function BlogsPage({
   const blogs = await getBlogs({ page, q })
 
   return (
-    <main className="container py-4">
-      <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
-        <div>
-          <h1 className="h3 mb-1">Blogs</h1>
-          <p className="text-muted mb-0">Bài viết mới nhất từ nhà hàng</p>
-        </div>
+    <main className="blogs-page">
+      <section className="blogs-hero">
+        <div className="blogs-hero-bg" />
+        <div className="blogs-hero-overlay" />
+        <div className="blogs-hero-noise" />
 
-        <form className="d-flex gap-2" action="/blogs" method="GET">
-          <input
-            className="form-control"
-            name="q"
-            placeholder="Tìm kiếm tiêu đề..."
-            defaultValue={q}
-          />
-          <button className="btn btn-dark" type="submit">
-            Tìm
-          </button>
-        </form>
-      </div>
-
-      {blogs.data.length === 0 ? (
-        <div className="alert alert-secondary">Chưa có bài viết.</div>
-      ) : (
-        <div className="row g-3">
-          {blogs.data.map((b) => (
-            <div key={b.id} className="col-12 col-md-6 col-lg-4">
-              <BlogCard blog={b} />
+        <div className="container">
+          <div className="blogs-hero-content">
+            <div className="blogs-hero-badge">
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z" />
+              </svg>
+              <span>BÀI VIẾT ẨM THỰC</span>
             </div>
-          ))}
-        </div>
-      )}
 
-      <div className="mt-4">
-        <Pagination page={blogs.page} totalPages={blogs.totalPages} q={q} />
-      </div>
+            <h1 className="blogs-hero-title">
+              Bài Viết <span className="blogs-hero-title-accent">Ẩm Thực</span>
+            </h1>
+
+            <div className="blogs-hero-divider">
+              <span className="blogs-hero-divider-line" />
+              <span className="blogs-hero-divider-dot" />
+              <span className="blogs-hero-divider-line" />
+            </div>
+
+            <p className="blogs-hero-subtitle">
+              Khám phá những câu chuyện, bí quyết và cảm hứng từ thế giới ẩm
+              thực, nhà hàng và trải nghiệm vị giác đầy tinh tế
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="blogs-content-shell">
+        <div className="container blogs-container">
+          <div className="blogs-search-section">
+            <SearchForm defaultValue={q} />
+          </div>
+
+          <div className="blogs-toolbar">
+            <div className="blogs-toolbar-left">
+              <div className="blogs-stats">
+                <span className="blogs-stats-number">{blogs.total}</span>
+                <span className="blogs-stats-text">bài viết</span>
+              </div>
+
+              {q && (
+                <div className="blogs-search-query">
+                  <span className="badge">Từ khóa: “{q}”</span>
+                </div>
+              )}
+            </div>
+
+            <div className="blogs-toolbar-right">
+              <div className="blogs-toolbar-note">
+                Cập nhật nội dung về ẩm thực
+              </div>
+            </div>
+          </div>
+
+          {blogs.data.length === 0 ? (
+            <div className="blogs-empty">
+              <i className="bi bi-emoji-frown" />
+              <h3>Không tìm thấy bài viết</h3>
+              <p>Thử tìm kiếm với từ khóa khác hoặc quay lại sau nhé.</p>
+            </div>
+          ) : (
+            <div className="blogs-grid">
+              {blogs.data.map((blog, index) => (
+                <BlogCard key={blog.id} blog={blog} index={index} />
+              ))}
+            </div>
+          )}
+
+          {blogs.totalPages > 1 && (
+            <div className="blogs-pagination-wrapper">
+              <Pagination
+                page={blogs.page}
+                totalPages={blogs.totalPages}
+                q={q}
+              />
+            </div>
+          )}
+        </div>
+      </section>
     </main>
   )
 }

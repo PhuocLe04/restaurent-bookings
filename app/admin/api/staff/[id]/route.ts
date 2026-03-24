@@ -1,19 +1,37 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAdminOnly } from '@/lib/requireAdminOnly'
 
 export const dynamic = 'force-dynamic'
 
-function parseId(params: { id: string }) {
-  const id = Number(params.id)
+type RouteContext = {
+  params: Promise<{ id: string }> | { id: string }
+}
+
+async function getRouteId(context: RouteContext) {
+  const resolvedParams = await context.params
+  const id = Number(resolvedParams?.id)
   return Number.isFinite(id) && id > 0 ? id : null
 }
 
-export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } },
-) {
+const staffDetailInclude = {
+  users: {
+    include: {
+      membership: true,
+    },
+  },
+  shifts: {
+    orderBy: { start_time: 'desc' as const },
+  },
+}
+
+export async function GET(_req: Request, context: RouteContext) {
+  const access = await requireAdminOnly()
+  if (!access.ok) return access.res
+
   try {
-    const id = parseId(params)
+    const id = await getRouteId(context)
+
     if (!id) {
       return NextResponse.json(
         { message: 'ID nhân viên không hợp lệ' },
@@ -23,23 +41,7 @@ export async function GET(
 
     const item = await prisma.staff.findUnique({
       where: { id },
-      include: {
-        users: {
-          select: {
-            id: true,
-            full_name: true,
-            email: true,
-            phone: true,
-            role: true,
-            avatar: true,
-            membership_id: true,
-            created_at: true,
-          },
-        },
-        shifts: {
-          orderBy: { start_time: 'desc' },
-        },
-      },
+      include: staffDetailInclude,
     })
 
     if (!item) {
@@ -49,7 +51,14 @@ export async function GET(
       )
     }
 
-    return NextResponse.json(item)
+    return NextResponse.json({
+      item,
+      access: {
+        userId: access.userId,
+        isAdmin: access.isAdmin,
+        isStaff: access.isStaff,
+      },
+    })
   } catch (error: any) {
     console.error('GET /admin/api/staff/[id] error:', error)
     return NextResponse.json(
@@ -59,12 +68,13 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } },
-) {
+export async function PATCH(req: Request, context: RouteContext) {
+  const access = await requireAdminOnly()
+  if (!access.ok) return access.res
+
   try {
-    const id = parseId(params)
+    const id = await getRouteId(context)
+
     if (!id) {
       return NextResponse.json(
         { message: 'ID nhân viên không hợp lệ' },
@@ -76,7 +86,14 @@ export async function PATCH(
 
     const existed = await prisma.staff.findUnique({
       where: { id },
-      select: { id: true, user_id: true },
+      select: {
+        id: true,
+        user_id: true,
+        full_name: true,
+        role: true,
+        phone: true,
+        is_active: true,
+      },
     })
 
     if (!existed) {
@@ -86,7 +103,13 @@ export async function PATCH(
       )
     }
 
-    const data: any = {}
+    const data: {
+      full_name?: string
+      role?: string
+      phone?: string | null
+      is_active?: boolean
+      user_id?: number
+    } = {}
 
     if (body.full_name !== undefined) {
       const full_name = String(body.full_name || '').trim()
@@ -120,6 +143,7 @@ export async function PATCH(
 
     if (body.user_id !== undefined) {
       const user_id = Number(body.user_id)
+
       if (!Number.isFinite(user_id) || user_id <= 0) {
         return NextResponse.json(
           { message: 'user_id không hợp lệ' },
@@ -129,7 +153,9 @@ export async function PATCH(
 
       const user = await prisma.user.findUnique({
         where: { id: user_id },
-        select: { id: true },
+        include: {
+          membership: true,
+        },
       })
 
       if (!user) {
@@ -155,23 +181,42 @@ export async function PATCH(
       }
 
       data.user_id = user_id
+
+      if (body.full_name === undefined && user.full_name?.trim()) {
+        data.full_name = user.full_name.trim()
+      }
+
+      if (body.phone === undefined) {
+        data.phone = user.phone ? String(user.phone).trim() : null
+      }
     }
 
-    const updated = await prisma.staff.update({
-      where: { id },
-      data,
-      include: {
-        users: {
-          select: {
-            id: true,
-            full_name: true,
-            email: true,
-            phone: true,
-            role: true,
-            avatar: true,
+    const updated = await prisma.$transaction(async (tx) => {
+      const item = await tx.staff.update({
+        where: { id },
+        data,
+        include: {
+          users: {
+            include: {
+              membership: true,
+            },
           },
         },
-      },
+      })
+
+      await tx.audit_logs.create({
+        data: {
+          entity: 'staff',
+          entity_id: item.id,
+          action: 'UPDATE',
+          description:
+            `Cập nhật nhân viên "${item.full_name}" ` +
+            `(staff_id=${item.id}, user_id=${item.user_id}, role=${item.role}, is_active=${item.is_active})`,
+          user_id: access.userId,
+        },
+      })
+
+      return item
     })
 
     return NextResponse.json({
@@ -187,12 +232,13 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  _req: Request,
-  { params }: { params: { id: string } },
-) {
+export async function DELETE(_req: Request, context: RouteContext) {
+  const access = await requireAdminOnly()
+  if (!access.ok) return access.res
+
   try {
-    const id = parseId(params)
+    const id = await getRouteId(context)
+
     if (!id) {
       return NextResponse.json(
         { message: 'ID nhân viên không hợp lệ' },
@@ -203,6 +249,11 @@ export async function DELETE(
     const existed = await prisma.staff.findUnique({
       where: { id },
       include: {
+        users: {
+          include: {
+            membership: true,
+          },
+        },
         shifts: {
           select: { id: true },
           take: 1,
@@ -227,8 +278,23 @@ export async function DELETE(
       )
     }
 
-    await prisma.staff.delete({
-      where: { id },
+    await prisma.$transaction(async (tx) => {
+      await tx.staff.delete({
+        where: { id },
+      })
+
+      await tx.audit_logs.create({
+        data: {
+          entity: 'staff',
+          entity_id: existed.id,
+          action: 'DELETE',
+          description:
+            `Xóa nhân viên "${existed.full_name}" ` +
+            `(staff_id=${existed.id}, user_id=${existed.user_id}, role=${existed.role}` +
+            `${existed.users ? `, user_name=${existed.users.full_name}` : ''})`,
+          user_id: access.userId,
+        },
+      })
     })
 
     return NextResponse.json({

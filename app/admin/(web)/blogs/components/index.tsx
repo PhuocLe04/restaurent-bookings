@@ -2,6 +2,10 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
+import DeleteConfirmModal from '@/app/admin/ui/popup_delete/DeleteConfirm'
+import LiquidGlassMessage, {
+  type MessageType,
+} from '@/app/ui/LiquidGlassMessage'
 import './index.css'
 
 type BlogRow = {
@@ -27,6 +31,14 @@ type ListResponse = {
   limit: number
   totalPages: number
   message?: string
+}
+
+type ToastState = {
+  visible: boolean
+  type: MessageType
+  title?: string
+  message: string
+  key: number
 }
 
 function formatDate(value?: string | null) {
@@ -58,6 +70,7 @@ export default function BlogsPage() {
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
 
+  const [searchInput, setSearchInput] = useState('')
   const [keyword, setKeyword] = useState('')
   const [status, setStatus] = useState('')
 
@@ -67,16 +80,45 @@ export default function BlogsPage() {
   const [total, setTotal] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
 
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [selectedBlog, setSelectedBlog] = useState<BlogRow | null>(null)
+
+  const [toast, setToast] = useState<ToastState>({
+    visible: false,
+    type: 'info',
+    title: '',
+    message: '',
+    key: 0,
+  })
+
+  function showToast(
+    type: MessageType,
+    message: string,
+    title?: string,
+    autoHide = true,
+  ) {
+    setToast((prev) => ({
+      visible: true,
+      type,
+      title,
+      message,
+      key: prev.key + 1,
+    }))
+
+    if (!autoHide) return
+  }
+
   const queryString = useMemo(() => {
     const params = new URLSearchParams()
     params.set('page', String(page))
     params.set('limit', String(limit))
 
-    if (keyword.trim()) params.set('keyword', keyword.trim())
+    if (keyword.trim()) params.set('search', keyword.trim())
     if (status) params.set('status', status)
 
     return params.toString()
-  }, [page, keyword, status])
+  }, [page, limit, keyword, status])
 
   async function fetchBlogs(showLoading = true) {
     try {
@@ -95,9 +137,17 @@ export default function BlogsPage() {
         throw new Error(data?.message || 'Không thể tải danh sách blog')
       }
 
-      setItems(Array.isArray(data.items) ? data.items : [])
-      setTotal(Number(data.total || 0))
-      setTotalPages(Number(data.totalPages || 1))
+      const nextItems = Array.isArray(data.items) ? data.items : []
+      const nextTotal = Number(data.total || 0)
+      const nextTotalPages = Math.max(1, Number(data.totalPages || 1))
+
+      setItems(nextItems)
+      setTotal(nextTotal)
+      setTotalPages(nextTotalPages)
+
+      if (page > nextTotalPages) {
+        setPage(nextTotalPages)
+      }
     } catch (err: any) {
       setError(err?.message || 'Đã xảy ra lỗi')
       setItems([])
@@ -114,234 +164,294 @@ export default function BlogsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryString])
 
-  async function handleDelete(id: number) {
-    const ok = window.confirm(`Bạn có chắc muốn xoá blog #${id} không?`)
-    if (!ok) return
+  function openDeletePopup(blog: BlogRow) {
+    setSelectedBlog(blog)
+    setDeleteOpen(true)
+  }
+
+  function closeDeletePopup() {
+    if (deleting) return
+    setDeleteOpen(false)
+    setSelectedBlog(null)
+  }
+  function handleRefreshPage() {
+    setRefreshing(true)
+    window.location.reload()
+  }
+  async function handleConfirmDelete() {
+    if (!selectedBlog) return
 
     try {
-      const res = await fetch(`/admin/api/blogs/${id}`, {
+      setDeleting(true)
+
+      const res = await fetch(`/admin/api/blogs/${selectedBlog.id}`, {
         method: 'DELETE',
       })
 
-      const data = await res.json()
+      const data = await res.json().catch(() => null)
 
       if (!res.ok) {
         throw new Error(data?.message || 'Xoá blog thất bại')
       }
 
-      await fetchBlogs(false)
+      closeDeletePopup()
+
+      showToast(
+        'success',
+        `Đã xóa blog "${selectedBlog.title}" thành công`,
+        'Xóa thành công',
+      )
+
+      if (items.length === 1 && page > 1) {
+        setPage((prev) => prev - 1)
+      } else {
+        await fetchBlogs(false)
+      }
     } catch (err: any) {
-      alert(err?.message || 'Xoá blog thất bại')
+      showToast('error', err?.message || 'Xóa blog thất bại', 'Có lỗi xảy ra')
+    } finally {
+      setDeleting(false)
     }
   }
 
   function handleSearchSubmit(e: React.FormEvent) {
     e.preventDefault()
     setPage(1)
+    setKeyword(searchInput.trim())
   }
 
   function handleReset() {
+    setSearchInput('')
     setKeyword('')
     setStatus('')
     setPage(1)
   }
 
   return (
-    <div className="blog-page">
-      <div className="blog-head">
-        <div>
-          <div className="blog-title">Quản lý Bài viết</div>
-        </div>
-
-        <div className="blog-head-actions">
-          <Link
-            href="/admin/blogs/create"
-            className="blog-btn blog-btn-primary"
-          >
-            + Tạo blog
-          </Link>
-          <button
-            className="blog-btn"
-            onClick={() => fetchBlogs(false)}
-            disabled={refreshing}
-          >
-            {refreshing ? 'Đang làm mới...' : 'Làm mới'}
-          </button>
-        </div>
-      </div>
-
-      <div className="blog-stats"></div>
-
-      <div className="blog-card">
-        <form className="blog-filters" onSubmit={handleSearchSubmit}>
-          <div className="blog-field blog-field-grow">
-            <label>Tìm kiếm</label>
-            <input
-              placeholder="Nhập tiêu đề, slug, mô tả ngắn..."
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-            />
+    <>
+      <div className="blog-page">
+        <div className="blog-head">
+          <div>
+            <div className="blog-title">Quản lý Bài viết</div>
           </div>
 
-          <div className="blog-field">
-            <label>Trạng thái</label>
-            <select
-              value={status}
-              onChange={(e) => {
-                setStatus(e.target.value)
-                setPage(1)
-              }}
+          <div className="blog-head-actions">
+            <Link
+              href="/admin/blogs/create"
+              className="blog-btn blog-btn-primary"
             >
-              <option value="">Tất cả</option>
-              <option value="DRAFT">Bản nháp</option>
-              <option value="PUBLISHED">Đã đăng</option>
-              <option value="ARCHIVED">Lưu trữ</option>
-            </select>
-          </div>
-
-          <div className="blog-filter-actions">
-            <button type="submit" className="blog-btn blog-btn-primary">
-              Tìm kiếm
-            </button>
-
-            <button type="button" className="blog-btn" onClick={handleReset}>
-              Đặt lại
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <div className="blog-card">
-        <div className="blog-toolbar">
-          <div className="blog-toolbar-total">
-            Số lượng bài viết: <strong>{total}</strong>
-          </div>
-
-          <div className="blog-pagination-actions">
-            <button
-              className="blog-btn blog-btn-page"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Trước
-            </button>
-
-            <span className="blog-page-indicator">
-              Trang {page} / {totalPages}
-            </span>
+              + Tạo blog
+            </Link>
 
             <button
-              className="blog-btn blog-btn-page"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              className="blog-btn"
+              onClick={handleRefreshPage}
+              disabled={refreshing}
             >
-              Sau
+              {refreshing ? 'Đang làm mới...' : 'Làm mới'}
             </button>
           </div>
         </div>
-      </div>
 
-      <div className="blog-card">
-        {error ? <div className="blog-error">{error}</div> : null}
+        <div className="blog-card">
+          <form className="blog-filters" onSubmit={handleSearchSubmit}>
+            <div className="blog-field blog-field-grow">
+              <label>Tìm kiếm</label>
+              <input
+                placeholder="Nhập tiêu đề, slug, mô tả ngắn..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+            </div>
 
-        {loading ? (
-          <div className="blog-empty">Đang tải blog...</div>
-        ) : items.length === 0 ? (
-          <div className="blog-empty">Không có blog</div>
-        ) : (
-          <div className="blog-table-wrap">
-            <table className="blog-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Bài viết</th>
-                  <th>Tác giả</th>
-                  <th>Trạng thái</th>
-                  <th>Ngày đăng</th>
-                  <th>Thao tác</th>
-                </tr>
-              </thead>
+            <div className="blog-field">
+              <label>Trạng thái</label>
+              <select
+                value={status}
+                onChange={(e) => {
+                  setStatus(e.target.value)
+                  setPage(1)
+                }}
+              >
+                <option value="">Tất cả</option>
+                <option value="DRAFT">Bản nháp</option>
+                <option value="PUBLISHED">Đã đăng</option>
+                <option value="ARCHIVED">Lưu trữ</option>
+              </select>
+            </div>
 
-              <tbody>
-                {items.map((item) => (
-                  <tr key={item.id}>
-                    <td>
-                      <div className="blog-id">#{item.id}</div>
-                    </td>
+            <div className="blog-filter-actions">
+              <button type="submit" className="blog-btn blog-btn-primary">
+                Tìm kiếm
+              </button>
 
-                    <td>
-                      <div className="blog-post">
-                        <div className="blog-post-thumb">
-                          {item.thumbnail_url ? (
-                            <img
-                              src={item.thumbnail_url}
-                              alt={item.title}
-                              className="blog-thumb-img"
-                            />
-                          ) : (
-                            <div className="blog-thumb-placeholder">BLOG</div>
-                          )}
-                        </div>
+              <button type="button" className="blog-btn" onClick={handleReset}>
+                Đặt lại
+              </button>
+            </div>
+          </form>
+        </div>
 
-                        <div className="blog-post-content">
-                          <div className="blog-strong">{item.title}</div>
-                          <div className="blog-slug">/{item.slug}</div>
-                          <div className="blog-description">
-                            {item.short_description || 'Không có mô tả ngắn'}
+        <div className="blog-card">
+          <div className="blog-toolbar">
+            <div className="blog-toolbar-total">
+              Số lượng bài viết: <strong>{total}</strong>
+            </div>
+
+            <div className="blog-pagination-actions">
+              <button
+                className="blog-btn blog-btn-page"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                Trước
+              </button>
+
+              <span className="blog-page-indicator">
+                Trang {page} / {totalPages}
+              </span>
+
+              <button
+                className="blog-btn blog-btn-page"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              >
+                Sau
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="blog-card">
+          {error ? <div className="blog-error">{error}</div> : null}
+
+          {loading ? (
+            <div className="blog-empty">Đang tải blog...</div>
+          ) : items.length === 0 ? (
+            <div className="blog-empty">Không có blog</div>
+          ) : (
+            <div className="blog-table-wrap">
+              <table className="blog-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Bài viết</th>
+                    <th>Tác giả</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày đăng</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {items.map((item) => (
+                    <tr key={item.id}>
+                      <td>
+                        <div className="blog-id">#{item.id}</div>
+                      </td>
+
+                      <td>
+                        <div className="blog-post">
+                          <div className="blog-post-thumb">
+                            {item.thumbnail_url ? (
+                              <img
+                                src={item.thumbnail_url}
+                                alt={item.title}
+                                className="blog-thumb-img"
+                              />
+                            ) : (
+                              <div className="blog-thumb-placeholder">BLOG</div>
+                            )}
+                          </div>
+
+                          <div className="blog-post-content">
+                            <div className="blog-strong">{item.title}</div>
+                            <div className="blog-slug">/{item.slug}</div>
+                            <div className="blog-description">
+                              {item.short_description || 'Không có mô tả ngắn'}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    <td>
-                      <div className="blog-cell">
-                        <div className="blog-strong">
-                          {item.users?.full_name || '--'}
+                      <td>
+                        <div className="blog-cell">
+                          <div className="blog-strong">
+                            {item.users?.full_name || '--'}
+                          </div>
+                          <div className="blog-muted-sm">
+                            {item.users?.email || '--'}
+                          </div>
                         </div>
-                        <div className="blog-muted-sm">
-                          {item.users?.email || '--'}
+                      </td>
+
+                      <td>
+                        <span className={statusClass(item.status)}>
+                          {statusLabel(item.status)}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div className="blog-date">
+                          <div>{formatDate(item.published_at)}</div>
+                          <div className="blog-muted-sm">
+                            Tạo: {formatDate(item.created_at)}
+                          </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    <td>
-                      <span className={statusClass(item.status)}>
-                        {statusLabel(item.status)}
-                      </span>
-                    </td>
+                      <td>
+                        <div className="blog-actions">
+                          <Link
+                            href={`/admin/blogs/${item.id}`}
+                            className="blog-link blog-link-view"
+                          >
+                            Chi tiết
+                          </Link>
 
-                    <td>
-                      <div className="blog-date">
-                        <div>{formatDate(item.published_at)}</div>
-                        <div className="blog-muted-sm">
-                          Tạo: {formatDate(item.created_at)}
+                          <button
+                            type="button"
+                            onClick={() => openDeletePopup(item)}
+                            className="blog-link blog-link-delete"
+                          >
+                            Xoá
+                          </button>
                         </div>
-                      </div>
-                    </td>
-
-                    <td>
-                      <div className="blog-actions">
-                        <Link
-                          href={`/admin/blogs/${item.id}`}
-                          className="blog-link blog-link-view"
-                        >
-                          Chi tiết
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          className="blog-link blog-link-delete"
-                        >
-                          Xoá
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+
+      <DeleteConfirmModal
+        open={deleteOpen}
+        title="Xác nhận xóa blog"
+        message="Hành động này không thể hoàn tác. Bạn có chắc muốn xóa bài viết này?"
+        itemName={selectedBlog?.title}
+        loading={deleting}
+        onClose={closeDeletePopup}
+        onConfirm={handleConfirmDelete}
+      />
+
+      <LiquidGlassMessage
+        type={toast.type}
+        title={toast.title}
+        message={toast.message}
+        isVisible={toast.visible}
+        onClose={() => setToast((prev) => ({ ...prev, visible: false }))}
+        autoClose={4000}
+        showIcon
+        showCloseButton
+        glassIntensity="medium"
+        bubbleEffect
+        glowEffect
+        position="top-right"
+        toastKey={toast.key}
+      />
+    </>
   )
 }

@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import LiquidGlassMessage, {
+  type MessageType,
+} from '@/app/ui/LiquidGlassMessage'
+import DeleteConfirmModal from '@/app/admin/ui/popup_delete/DeleteConfirm'
 import '../page.css'
 
 type Combo = {
@@ -14,13 +18,58 @@ type Combo = {
   is_active: boolean
 }
 
+type ToastState = {
+  visible: boolean
+  type: MessageType
+  title: string
+  message: string
+  loading?: boolean
+  key: number
+}
+
 export default function ComboIndex() {
   const [items, setItems] = useState<Combo[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
   const [q, setQ] = useState('')
   const [keyword, setKeyword] = useState('')
+
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<Combo | null>(null)
+
+  const [toast, setToast] = useState<ToastState>({
+    visible: false,
+    type: 'info',
+    title: '',
+    message: '',
+    key: 0,
+  })
+
+  function showToast(
+    type: MessageType,
+    title: string,
+    message: string,
+    loading = false,
+  ) {
+    setToast((prev) => ({
+      visible: true,
+      type,
+      title,
+      message,
+      loading,
+      key: prev.key + 1,
+    }))
+  }
+
+  function closeToast() {
+    setToast((prev) => ({
+      ...prev,
+      visible: false,
+      loading: false,
+    }))
+  }
 
   async function loadData(showRefreshing = false) {
     try {
@@ -41,27 +90,55 @@ export default function ComboIndex() {
       setItems(data.items || [])
     } catch (e: any) {
       setError(e.message || 'Đã có lỗi xảy ra')
+      showToast('error', 'Lỗi tải dữ liệu', e.message || 'Đã có lỗi xảy ra')
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
   }
 
-  async function handleDelete(id: number) {
-    if (!confirm('Bạn có chắc muốn xóa combo này?')) return
+  function openDeletePopup(item: Combo) {
+    setSelectedItem(item)
+    setDeleteOpen(true)
+  }
+
+  async function handleDeleteConfirm() {
+    if (!selectedItem) return
+
     try {
-      const res = await fetch(`/admin/api/combo/${id}`, { method: 'DELETE' })
+      setDeleting(true)
+
+      const res = await fetch(`/admin/api/combo/${selectedItem.id}`, {
+        method: 'DELETE',
+      })
       const data = await res.json()
+
       if (!res.ok) throw new Error(data.message || 'Xóa thất bại')
+
+      showToast(
+        'success',
+        'Xóa combo thành công',
+        data.message || `Đã xóa combo "${selectedItem.title}"`,
+      )
+
+      setDeleteOpen(false)
+      setSelectedItem(null)
       await loadData(true)
     } catch (e: any) {
-      alert(e.message || 'Xóa thất bại')
+      showToast('error', 'Xóa thất bại', e.message || 'Xóa thất bại')
+    } finally {
+      setDeleting(false)
     }
   }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
     setKeyword(q)
+  }
+
+  function handleRefreshPage() {
+    setRefreshing(true)
+    window.location.reload()
   }
 
   useEffect(() => {
@@ -74,7 +151,31 @@ export default function ComboIndex() {
 
   return (
     <div className="combo-page">
-      {/* Header */}
+      <LiquidGlassMessage
+        type={toast.type}
+        title={toast.title}
+        message={toast.message}
+        isVisible={toast.visible}
+        onClose={closeToast}
+        toastKey={toast.key}
+        loading={toast.loading}
+      />
+
+      <DeleteConfirmModal
+        open={deleteOpen}
+        loading={deleting}
+        title="Xác nhận xóa combo"
+        message="Bạn có chắc muốn xóa combo này không? Hành động này không thể hoàn tác."
+        itemName={selectedItem?.title}
+        onClose={() => {
+          if (!deleting) {
+            setDeleteOpen(false)
+            setSelectedItem(null)
+          }
+        }}
+        onConfirm={handleDeleteConfirm}
+      />
+
       <div className="combo-head">
         <div>
           <h1 className="admin-title">Quản lý combo</h1>
@@ -87,10 +188,11 @@ export default function ComboIndex() {
           >
             + Thêm combo
           </Link>
+
           <button
             type="button"
             className="combo-btn combo-btn-secondary"
-            onClick={() => loadData(true)}
+            onClick={handleRefreshPage}
             disabled={refreshing}
           >
             <span className={refreshing ? 'combo-refresh-icon' : ''}></span>
@@ -99,7 +201,6 @@ export default function ComboIndex() {
         </div>
       </div>
 
-      {/* Toolbar */}
       <div className="combo-toolbar">
         <form className="combo-search" onSubmit={handleSearch}>
           <input
@@ -114,10 +215,8 @@ export default function ComboIndex() {
         </form>
       </div>
 
-      {/* Error Alert */}
       {error && <div className="combo-alert">⚠️ {error}</div>}
 
-      {/* Table Card */}
       <div className="combo-card">
         <div className="combo-table-wrap">
           <table className="combo-table">
@@ -132,6 +231,7 @@ export default function ComboIndex() {
                 <th style={{ width: 200 }}>Thao tác</th>
               </tr>
             </thead>
+
             <tbody>
               {loading ? (
                 <tr>
@@ -149,17 +249,19 @@ export default function ComboIndex() {
                   </td>
                 </tr>
               ) : (
-                items.map((item, index) => (
+                items.map((item) => (
                   <tr key={item.id}>
                     <td>
                       <span className="combo-strong">#{item.id}</span>
                     </td>
+
                     <td>
                       <div className="combo-info">
                         <div className="combo-details">
                           <span className="combo-title" title={item.title}>
                             {item.title}
                           </span>
+
                           {item.description && (
                             <span
                               className="combo-description"
@@ -171,28 +273,37 @@ export default function ComboIndex() {
                         </div>
                       </div>
                     </td>
+
                     <td>
                       <span className="combo-price">
                         {formatCurrency(item.total_origin_price)}đ
                       </span>
                     </td>
+
                     <td>
                       <span className="combo-price">
                         {formatCurrency(item.sale_price)}đ
                       </span>
                     </td>
+
                     <td>
                       <span className="combo-discount">
                         {item.discount_percent ?? 0}%
                       </span>
                     </td>
+
                     <td>
                       <span
-                        className={`combo-badge ${item.is_active ? 'combo-badge-active' : 'combo-badge-inactive'}`}
+                        className={`combo-badge ${
+                          item.is_active
+                            ? 'combo-badge-active'
+                            : 'combo-badge-inactive'
+                        }`}
                       >
-                        {item.is_active ? 'Hoạt động' : 'Ngưng'}
+                        {item.is_active ? 'Hoạt động' : 'Ngưng hoạt động'}
                       </span>
                     </td>
+
                     <td>
                       <div className="combo-actions-row">
                         <Link
@@ -202,10 +313,11 @@ export default function ComboIndex() {
                         >
                           Chi tiết
                         </Link>
+
                         <button
                           type="button"
                           className="combo-btn combo-btn-danger"
-                          onClick={() => handleDelete(item.id)}
+                          onClick={() => openDeletePopup(item)}
                           title="Xóa combo"
                         >
                           Xóa

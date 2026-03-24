@@ -8,12 +8,9 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Legend,
   Line,
   LineChart,
-  Pie,
-  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -24,20 +21,22 @@ import './index.css'
 type Quick = 'today' | '7d' | '30d'
 
 type DashboardResponse = {
-  range: {
+  ok: boolean
+  filters: {
     quick: Quick | 'custom'
+    timezone: string
     from: string
     to: string
   }
-  kpi: {
+  kpis: {
     reservationsTotal: number
     reservationsByStatus: Record<string, number>
     totalGuests: number
-    estimatedRevenue: number
+    amountDue: number
+    completedRevenue: number
     cashIn: number
     depositSuccessRate: number
     noShow: number
-    resWithDepositSuccess?: number
   }
   charts: {
     bookingsLine: Array<{
@@ -45,23 +44,23 @@ type DashboardResponse = {
       total: number
       completed: number
     }>
-    bookingsStacked: Array<Record<string, any>>
-    moneyLine: Array<{
+    reservationStatusStack: Array<{
       date: string
-      revenue: number
-      cashIn: number
+      PENDING?: number
+      CONFIRMED?: number
+      CANCELLED?: number
+      COMPLETED?: number
+      NO_SHOW?: number
+      [key: string]: any
     }>
-    paymentDonut: Array<{
-      method: string
-      amount: number
+    cashInLine: Array<{
+      date: string
+      value: number
     }>
-    paymentPurposeDonut?: Array<{
-      purpose: string
-      amount: number
+    amountDueLine: Array<{
+      date: string
+      value: number
     }>
-  }
-  meta: {
-    statusKeys: string[]
   }
 }
 
@@ -110,9 +109,7 @@ function formatDate(value: string | null | undefined) {
     return `${d}/${m}/${y}`
   }
 
-  if (/^\d{2}\/\d{2}$/.test(s)) {
-    return s
-  }
+  if (/^\d{2}\/\d{2}$/.test(s)) return s
 
   const dt = new Date(s)
   if (Number.isNaN(dt.getTime())) return s
@@ -130,9 +127,7 @@ function shortDate(value: string | null | undefined) {
     return `${d}/${m}`
   }
 
-  if (/^\d{2}\/\d{2}$/.test(s)) {
-    return s
-  }
+  if (/^\d{2}\/\d{2}$/.test(s)) return s
 
   const dt = new Date(s)
   if (Number.isNaN(dt.getTime())) return s
@@ -160,24 +155,17 @@ function ChartTooltip({
         {payload.map((entry, idx) => (
           <div key={idx} className="chart-tooltip-row">
             <span>{entry.name}</span>
-            <strong>{money(entry.value)}</strong>
+            <strong>
+              {typeof entry.value === 'number' && entry.value > 999
+                ? money(entry.value)
+                : entry.value}
+            </strong>
           </div>
         ))}
       </div>
     </div>
   )
 }
-
-const PIE_COLORS = [
-  '#2563eb',
-  '#7c3aed',
-  '#16a34a',
-  '#ea580c',
-  '#dc2626',
-  '#0891b2',
-  '#ca8a04',
-  '#db2777',
-]
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: '#f59e0b',
@@ -198,30 +186,28 @@ export default function AdminDashboardPage() {
   const [tablePage, setTablePage] = useState(1)
 
   const [data, setData] = useState<DashboardResponse>({
-    range: {
+    ok: true,
+    filters: {
       quick: 'today',
+      timezone: 'Asia/Ho_Chi_Minh',
       from: '',
       to: '',
     },
-    kpi: {
+    kpis: {
       reservationsTotal: 0,
       reservationsByStatus: {},
       totalGuests: 0,
-      estimatedRevenue: 0,
+      amountDue: 0,
+      completedRevenue: 0,
       cashIn: 0,
       depositSuccessRate: 0,
       noShow: 0,
-      resWithDepositSuccess: 0,
     },
     charts: {
       bookingsLine: [],
-      bookingsStacked: [],
-      moneyLine: [],
-      paymentDonut: [],
-      paymentPurposeDonut: [],
-    },
-    meta: {
-      statusKeys: [],
+      reservationStatusStack: [],
+      cashInLine: [],
+      amountDueLine: [],
     },
   })
 
@@ -263,40 +249,76 @@ export default function AdminDashboardPage() {
     loadData()
   }, [query])
 
-  const bookingsLineData = data.charts.bookingsLine.map((x) => ({
-    ...x,
-    label: shortDate(String(x.date)),
-  }))
+  const bookingsLineData = useMemo(
+    () =>
+      data.charts.bookingsLine.map((x) => ({
+        ...x,
+        label: shortDate(String(x.date)),
+      })),
+    [data.charts.bookingsLine],
+  )
 
-  const moneyLineData = data.charts.moneyLine.map((x) => ({
-    ...x,
-    label: shortDate(String(x.date)),
-  }))
+  const cashInByDateMap = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const row of data.charts.cashInLine || []) {
+      map.set(String(row.date), Number(row.value || 0))
+    }
+    return map
+  }, [data.charts.cashInLine])
+
+  const amountDueByDateMap = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const row of data.charts.amountDueLine || []) {
+      map.set(String(row.date), Number(row.value || 0))
+    }
+    return map
+  }, [data.charts.amountDueLine])
+
+  const moneyLineData = useMemo(() => {
+    const allDates = data.charts.bookingsLine.map((row) => String(row.date))
+
+    return allDates.map((date) => ({
+      date,
+      amountDue: amountDueByDateMap.get(date) ?? 0,
+      cashIn: cashInByDateMap.get(date) ?? 0,
+      label: shortDate(date),
+    }))
+  }, [data.charts.bookingsLine, amountDueByDateMap, cashInByDateMap])
 
   const normalizedStatusKeys = useMemo(() => {
     const set = new Set<string>(DEFAULT_STATUS_KEYS)
-    for (const key of data.meta.statusKeys || []) {
+
+    for (const key of Object.keys(data.kpis.reservationsByStatus || {})) {
       set.add(normalizeStatus(key))
     }
+
+    for (const row of data.charts.reservationStatusStack || []) {
+      for (const key of Object.keys(row || {})) {
+        if (key !== 'date' && key !== 'label') {
+          set.add(normalizeStatus(key))
+        }
+      }
+    }
+
     return Array.from(set)
-  }, [data.meta.statusKeys])
+  }, [data.kpis.reservationsByStatus, data.charts.reservationStatusStack])
 
   const normalizedReservationsByStatus = useMemo(() => {
     const result: Record<string, number> = {}
     for (const key of normalizedStatusKeys) result[key] = 0
 
     for (const [key, value] of Object.entries(
-      data.kpi.reservationsByStatus || {},
+      data.kpis.reservationsByStatus || {},
     )) {
       const normalized = normalizeStatus(key)
       result[normalized] = (result[normalized] || 0) + Number(value || 0)
     }
 
     return result
-  }, [data.kpi.reservationsByStatus, normalizedStatusKeys])
+  }, [data.kpis.reservationsByStatus, normalizedStatusKeys])
 
   const bookingsStackedData = useMemo(() => {
-    return data.charts.bookingsStacked.map((row) => {
+    return (data.charts.reservationStatusStack || []).map((row) => {
       const normalizedRow: Record<string, any> = {
         date: row.date,
         label: shortDate(String(row.date)),
@@ -315,19 +337,7 @@ export default function AdminDashboardPage() {
 
       return normalizedRow
     })
-  }, [data.charts.bookingsStacked, normalizedStatusKeys])
-
-  const paymentMethodData = data.charts.paymentDonut.map((x) => ({
-    name: x.method,
-    value: Number(x.amount || 0),
-  }))
-
-  const paymentPurposeData = (data.charts.paymentPurposeDonut || []).map(
-    (x) => ({
-      name: x.purpose,
-      value: Number(x.amount || 0),
-    }),
-  )
+  }, [data.charts.reservationStatusStack, normalizedStatusKeys])
 
   const totalTablePages = Math.max(
     1,
@@ -398,7 +408,7 @@ export default function AdminDashboardPage() {
         <div className="dashboard-range">
           Khoảng dữ liệu:{' '}
           <strong>
-            {formatDate(data.range.from)} - {formatDate(data.range.to)}
+            {formatDate(data.filters.from)} - {formatDate(data.filters.to)}
           </strong>
         </div>
       </div>
@@ -414,39 +424,39 @@ export default function AdminDashboardPage() {
             <div className="dashboard-kpi-card accent-blue">
               <div className="dashboard-kpi-label">Số đặt bàn</div>
               <div className="dashboard-kpi-value">
-                {data.kpi.reservationsTotal}
+                {data.kpis.reservationsTotal}
               </div>
             </div>
 
             <div className="dashboard-kpi-card accent-green">
               <div className="dashboard-kpi-label">Khách phục vụ</div>
-              <div className="dashboard-kpi-value">{data.kpi.totalGuests}</div>
+              <div className="dashboard-kpi-value">{data.kpis.totalGuests}</div>
             </div>
 
             <div className="dashboard-kpi-card accent-purple">
               <div className="dashboard-kpi-label">Tiền cần thu</div>
               <div className="dashboard-kpi-value">
-                {money(data.kpi.estimatedRevenue)}
+                {money(data.kpis.amountDue)}
               </div>
             </div>
 
             <div className="dashboard-kpi-card accent-orange">
               <div className="dashboard-kpi-label">Tiền đã thu</div>
               <div className="dashboard-kpi-value">
-                {money(data.kpi.cashIn)}
+                {money(data.kpis.cashIn)}
               </div>
             </div>
 
             <div className="dashboard-kpi-card accent-indigo">
               <div className="dashboard-kpi-label">Tỷ lệ cọc thành công</div>
               <div className="dashboard-kpi-value">
-                {percent(data.kpi.depositSuccessRate)}
+                {percent(data.kpis.depositSuccessRate)}
               </div>
             </div>
 
             <div className="dashboard-kpi-card accent-red">
-              <div className="dashboard-kpi-label">No-show / late check-in</div>
-              <div className="dashboard-kpi-value">{data.kpi.noShow}</div>
+              <div className="dashboard-kpi-label">No-show</div>
+              <div className="dashboard-kpi-value">{data.kpis.noShow}</div>
             </div>
           </div>
 
@@ -505,7 +515,7 @@ export default function AdminDashboardPage() {
                     <Legend />
                     <Area
                       type="monotone"
-                      dataKey="revenue"
+                      dataKey="amountDue"
                       name="Tiền cần thu"
                       stroke="#7c3aed"
                       fill="#c4b5fd"
@@ -569,72 +579,6 @@ export default function AdminDashboardPage() {
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="dashboard-grid dashboard-grid-2">
-            <div className="dashboard-card">
-              <div className="dashboard-section-title">
-                Cơ cấu thanh toán theo phương thức
-              </div>
-              <div className="dashboard-chart-box">
-                <ResponsiveContainer width="100%" height={320}>
-                  <PieChart>
-                    <Pie
-                      data={paymentMethodData}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={70}
-                      outerRadius={110}
-                      paddingAngle={3}
-                      label={({ name, percent }) =>
-                        `${name} ${((percent || 0) * 100).toFixed(0)}%`
-                      }
-                    >
-                      {paymentMethodData.map((_, index) => (
-                        <Cell
-                          key={`method-${index}`}
-                          fill={PIE_COLORS[index % PIE_COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value: any) => money(value)} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="dashboard-card">
-              <div className="dashboard-section-title">
-                Cơ cấu thanh toán theo mục đích
-              </div>
-              <div className="dashboard-chart-box">
-                <ResponsiveContainer width="100%" height={320}>
-                  <PieChart>
-                    <Pie
-                      data={paymentPurposeData}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={70}
-                      outerRadius={110}
-                      paddingAngle={3}
-                      label={({ name, percent }) =>
-                        `${name} ${((percent || 0) * 100).toFixed(0)}%`
-                      }
-                    >
-                      {paymentPurposeData.map((_, index) => (
-                        <Cell
-                          key={`purpose-${index}`}
-                          fill={PIE_COLORS[index % PIE_COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value: any) => money(value)} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
               </div>
             </div>
           </div>

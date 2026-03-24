@@ -3,11 +3,35 @@ import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
+function normalizeFileUrl(value: string | null | undefined, req: Request) {
+  if (!value) return null
+
+  const raw = value.trim()
+  if (!raw) return null
+
+  // base64
+  if (raw.startsWith('data:image/')) return raw
+
+  // URL đầy đủ
+  if (raw.startsWith('http://') || raw.startsWith('https://')) {
+    return raw
+  }
+
+  const origin = new URL(req.url).origin
+
+  // path local có sẵn dấu /
+  if (raw.startsWith('/')) {
+    return `${origin}${raw}`
+  }
+
+  // path local thiếu dấu /
+  return `${origin}/${raw}`
+}
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
 
-    // query params
     const page = Math.max(1, Number(searchParams.get('page') ?? 1))
     const limit = Math.min(
       50,
@@ -15,7 +39,7 @@ export async function GET(req: Request) {
     )
     const q = (searchParams.get('q') ?? '').trim()
 
-    const where: any = {
+    const where = {
       status: 'PUBLISHED',
       ...(q
         ? {
@@ -44,7 +68,13 @@ export async function GET(req: Request) {
           published_at: true,
           created_at: true,
           updated_at: true,
-          users: { select: { id: true, full_name: true, avatar: true } },
+          users: {
+            select: {
+              id: true,
+              full_name: true,
+              avatar: true,
+            },
+          },
         },
       }),
     ])
@@ -55,15 +85,22 @@ export async function GET(req: Request) {
       total,
       totalPages: Math.ceil(total / limit),
       data: data.map((b) => ({
-        ...b,
+        id: b.id,
+        title: b.title,
+        slug: b.slug,
+        short_description: b.short_description,
+        thumbnail_url: normalizeFileUrl(b.thumbnail_url, req),
+        status: b.status,
+        published_at: b.published_at,
+        created_at: b.created_at,
+        updated_at: b.updated_at,
         author: b.users
           ? {
               id: b.users.id,
               full_name: b.users.full_name,
-              avatar: b.users.avatar,
+              avatar: normalizeFileUrl(b.users.avatar, req),
             }
           : null,
-        users: undefined,
       })),
     })
   } catch (e: any) {

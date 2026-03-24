@@ -1,8 +1,14 @@
 'use client'
 
+import 'animate.css'
+import { AnimatePresence, motion, easeOut } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import '../page.css'
+import DeleteConfirmModal from '@/app/admin/ui/popup_delete/DeleteConfirm'
+import LiquidGlassMessage, {
+  type MessageType,
+} from '@/app/ui/LiquidGlassMessage'
 
 type ServiceRow = {
   id: number
@@ -23,6 +29,36 @@ type ListResponse = {
   message?: string
 }
 
+type ToastState = {
+  visible: boolean
+  type: MessageType
+  title: string
+  message: string
+  loading?: boolean
+}
+
+const containerVariants = {
+  hidden: { opacity: 0, y: 14 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.28,
+      ease: easeOut,
+      staggerChildren: 0.05,
+    },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.22, ease: easeOut },
+  },
+}
+
 export default function ServicesIndex() {
   const [items, setItems] = useState<ServiceRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -36,6 +72,39 @@ export default function ServicesIndex() {
   const limit = 10
   const [total, setTotal] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
+
+  const [toast, setToast] = useState<ToastState>({
+    visible: false,
+    type: 'info',
+    title: '',
+    message: '',
+    loading: false,
+  })
+  const [toastKey, setToastKey] = useState(0)
+
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<ServiceRow | null>(null)
+
+  function showToast(
+    type: MessageType,
+    title: string,
+    message: string,
+    loading = false,
+  ) {
+    setToast({
+      visible: true,
+      type,
+      title,
+      message,
+      loading,
+    })
+    setToastKey((prev) => prev + 1)
+  }
+
+  function hideToast() {
+    setToast((prev) => ({ ...prev, visible: false, loading: false }))
+  }
 
   async function loadData(showRefreshing = false, customPage?: number) {
     try {
@@ -85,33 +154,75 @@ export default function ServicesIndex() {
       setRefreshing(false)
     }
   }
-
+  function handleRefreshPage() {
+    setRefreshing(true)
+    window.location.reload()
+  }
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
     setPage(1)
     setKeyword(q.trim())
   }
 
-  async function handleDelete(id: number) {
-    if (!confirm('Bạn có chắc muốn xóa dịch vụ này không?')) return
+  function openDeletePopup(item: ServiceRow) {
+    setSelectedItem(item)
+    setDeleteOpen(true)
+  }
+
+  function closeDeletePopup() {
+    if (deleting) return
+    setDeleteOpen(false)
+    setSelectedItem(null)
+  }
+
+  async function handleConfirmDelete() {
+    if (!selectedItem) return
 
     try {
-      const res = await fetch(`/admin/api/reservation-services/${id}`, {
-        method: 'DELETE',
-      })
+      setDeleting(true)
+      showToast(
+        'warning',
+        'Đang xóa dịch vụ',
+        `Đang xử lý xóa "${selectedItem.name}"`,
+        true,
+      )
+
+      const res = await fetch(
+        `/admin/api/reservation-services/${selectedItem.id}`,
+        {
+          method: 'DELETE',
+        },
+      )
+
       const data = await res.json()
 
       if (!res.ok) {
         throw new Error(data.message || 'Xóa dịch vụ thất bại')
       }
 
+      setDeleteOpen(false)
+
+      showToast(
+        'success',
+        'Xóa thành công',
+        `Dịch vụ "${selectedItem.name}" đã được xóa.`,
+      )
+
       if (items.length === 1 && page > 1) {
         setPage((p) => p - 1)
       } else {
         await loadData(true)
       }
+
+      setSelectedItem(null)
     } catch (e: any) {
-      alert(e.message || 'Đã xảy ra lỗi')
+      showToast(
+        'error',
+        'Xóa thất bại',
+        e.message || 'Đã xảy ra lỗi khi xóa dịch vụ',
+      )
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -127,196 +238,286 @@ export default function ServicesIndex() {
   const toItem = total === 0 ? 0 : Math.min(page * limit, total)
 
   return (
-    <div className="services-page">
-      {/* Header */}
-      <div className="services-head">
-        <div>
-          <h1 className="admin-title">Quản lý dịch vụ</h1>
-        </div>
+    <>
+      <motion.div
+        className="services-page"
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+      >
+        <motion.div className="services-head" variants={itemVariants}>
+          <div>
+            <h1 className="admin-title animate__animated animate__fadeInDown animate__faster">
+              Quản lý dịch vụ
+            </h1>
+          </div>
 
-        <div className="services-head-actions">
-          <Link
-            href="/admin/reservation-services/create"
-            className="services-btn services-btn-primary"
+          <div className="services-head-actions">
+            <motion.div
+              whileHover={{ y: -2, scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Link
+                href="/admin/reservation-services/create"
+                className="services-btn services-btn-primary"
+              >
+                + Thêm dịch vụ
+              </Link>
+            </motion.div>
+
+            <motion.button
+              type="button"
+              className="services-btn services-btn-secondary"
+              onClick={handleRefreshPage}
+              disabled={refreshing}
+              variants={itemVariants}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <span
+                className={refreshing ? 'services-refresh-icon' : ''}
+              ></span>
+              {refreshing ? ' Đang làm mới...' : ' Làm mới'}
+            </motion.button>
+          </div>
+        </motion.div>
+
+        <motion.div className="services-toolbar" variants={itemVariants}>
+          <form
+            className="services-search animate__animated animate__fadeInUp animate__faster"
+            onSubmit={handleSearch}
           >
-            + Thêm dịch vụ
-          </Link>
-          <button
-            type="button"
-            className="services-btn services-btn-secondary"
-            onClick={() => loadData(true)}
-            disabled={refreshing}
-          >
-            <span className={refreshing ? 'services-refresh-icon' : ''}></span>
-            {refreshing ? ' Đang làm mới...' : ' Làm mới'}
-          </button>
-        </div>
-      </div>
+            <input
+              type="text"
+              placeholder="Tìm theo tên dịch vụ..."
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
+            <motion.button
+              type="submit"
+              className="services-btn services-btn-primary"
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Tìm kiếm
+            </motion.button>
+          </form>
+        </motion.div>
 
-      {/* Toolbar */}
-      <div className="services-toolbar">
-        <form className="services-search" onSubmit={handleSearch}>
-          <input
-            type="text"
-            placeholder="Tìm theo tên dịch vụ..."
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-          <button type="submit" className="services-btn services-btn-primary">
-            Tìm kiếm
-          </button>
-        </form>
-      </div>
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              className="services-alert animate__animated animate__shakeX animate__faster"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+            >
+              ⚠️ {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* Error Alert */}
-      {error && <div className="services-alert">⚠️ {error}</div>}
-
-      {/* Table Card */}
-      <div className="services-card">
-        <div className="services-table-wrap">
-          <table className="services-table">
-            <thead>
-              <tr>
-                <th style={{ width: 80 }}>ID</th>
-                <th style={{ width: 90 }}>Ảnh</th>
-                <th style={{ width: 120 }}>Tên dịch vụ</th>
-                <th style={{ width: 150 }}>Mô tả</th>
-                <th style={{ width: 140 }}>Giá</th>
-                <th style={{ width: 140 }}>Trạng thái</th>
-                <th style={{ width: 220 }}>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+        <motion.div className="services-card" variants={itemVariants}>
+          <div className="services-table-wrap">
+            <table className="services-table">
+              <thead>
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="services-td-muted services-loading-shimmer"
-                  >
-                    Đang tải danh sách dịch vụ...
-                  </td>
+                  <th style={{ width: 80 }}>ID</th>
+                  <th style={{ width: 90 }}>Ảnh</th>
+                  <th style={{ width: 160 }}>Tên dịch vụ</th>
+                  <th style={{ width: 220 }}>Mô tả</th>
+                  <th style={{ width: 140 }}>Giá</th>
+                  <th style={{ width: 140 }}>Trạng thái</th>
+                  <th style={{ width: 220 }}>Thao tác</th>
                 </tr>
-              ) : items.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="services-td-muted">
-                    Không có dữ liệu dịch vụ
-                  </td>
-                </tr>
-              ) : (
-                items.map((item) => (
-                  <tr key={item.id}>
-                    <td>
-                      <span className="services-strong">#{item.id}</span>
-                    </td>
+              </thead>
 
-                    <td>
-                      <div className="services-image">
-                        {item.image ? (
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            width={52}
-                            height={52}
-                            style={{ objectFit: 'cover', borderRadius: 10 }}
-                          />
-                        ) : (
-                          <div className="services-image-placeholder">🛎️</div>
-                        )}
-                      </div>
-                    </td>
-
-                    <td>
-                      <span className="services-name">{item.name}</span>
-                    </td>
-
-                    <td>
-                      <span className="services-description">
-                        {item.description || '—'}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span className="services-price">
-                        {formatCurrency(item.price)}
-                        <span className="services-price-unit">đ</span>
-                      </span>
-                    </td>
-
-                    <td>
-                      <span
-                        className={`services-badge ${
-                          item.is_active
-                            ? 'services-badge-active'
-                            : 'services-badge-inactive'
-                        }`}
-                      >
-                        {item.is_active ? 'Hoạt động' : 'Ngưng'}
-                      </span>
-                    </td>
-
-                    <td>
-                      <div className="services-actions-row">
-                        <Link
-                          href={`/admin/reservation-services/${item.id}`}
-                          className="services-btn"
-                          title="Xem chi tiết"
-                        >
-                          Chi tiết
-                        </Link>
-                        <button
-                          type="button"
-                          className="services-btn services-btn-danger"
-                          onClick={() => handleDelete(item.id)}
-                          title="Xóa dịch vụ"
-                        >
-                          Xóa
-                        </button>
-                      </div>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="services-td-muted services-loading-shimmer"
+                    >
+                      Đang tải danh sách dịch vụ...
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ) : items.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="services-td-muted">
+                      Không có dữ liệu dịch vụ
+                    </td>
+                  </tr>
+                ) : (
+                  items.map((item, index) => (
+                    <motion.tr
+                      key={item.id}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.22,
+                        delay: index * 0.03,
+                        ease: easeOut,
+                      }}
+                    >
+                      <td>
+                        <span className="services-strong">#{item.id}</span>
+                      </td>
 
-        {/* Card Footer với Pagination */}
-        {!loading && items.length > 0 && (
-          <div className="services-card-foot">
-            <div className="services-meta">
-              <span>Tổng số {total} dịch vụ</span>
-              <span className="services-meta-dot" />
-              <span>
-                Trang {page} / {totalPages}
-              </span>
-            </div>
+                      <td>
+                        <div className="services-image">
+                          {item.image ? (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              width={52}
+                              height={52}
+                              style={{ objectFit: 'cover', borderRadius: 10 }}
+                            />
+                          ) : (
+                            <div className="services-image-placeholder">🛎️</div>
+                          )}
+                        </div>
+                      </td>
 
-            <div className="services-pagination">
-              <button
-                type="button"
-                className="services-btn"
-                disabled={page <= 1 || loading || refreshing}
-                onClick={() => setPage((p) => p - 1)}
-              >
-                ← Trước
-              </button>
+                      <td>
+                        <span className="services-name">{item.name}</span>
+                      </td>
 
-              <div className="services-page-indicator">
-                <b>{page}</b> / {totalPages}
+                      <td>
+                        <span className="services-description">
+                          {item.description || '—'}
+                        </span>
+                      </td>
+
+                      <td>
+                        <span className="services-price">
+                          {formatCurrency(item.price)}
+                          <span className="services-price-unit">đ</span>
+                        </span>
+                      </td>
+
+                      <td>
+                        <span
+                          className={`services-badge ${
+                            item.is_active
+                              ? 'services-badge-active'
+                              : 'services-badge-inactive'
+                          }`}
+                        >
+                          {item.is_active ? 'Hoạt động' : 'Ngưng hoạt động'}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div className="services-actions-row">
+                          <motion.div
+                            whileHover={{ y: -1 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <Link
+                              href={`/admin/reservation-services/${item.id}`}
+                              className="services-btn"
+                              title="Xem chi tiết"
+                            >
+                              Chi tiết
+                            </Link>
+                          </motion.div>
+
+                          <motion.button
+                            type="button"
+                            className="services-btn services-btn-danger"
+                            onClick={() => openDeletePopup(item)}
+                            title="Xóa dịch vụ"
+                            whileHover={{ y: -1, scale: 1.02 }}
+                            whileTap={{ scale: 0.97 }}
+                          >
+                            Xóa
+                          </motion.button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {!loading && items.length > 0 && (
+            <motion.div
+              className="services-card-foot"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.22 }}
+            >
+              <div className="services-meta">
+                <span>
+                  Hiển thị {fromItem}-{toItem} / {total} dịch vụ
+                </span>
+                <span className="services-meta-dot" />
+                <span>
+                  Trang {page} / {totalPages}
+                </span>
               </div>
 
-              <button
-                type="button"
-                className="services-btn"
-                disabled={page >= totalPages || loading || refreshing}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Sau →
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+              <div className="services-pagination">
+                <motion.button
+                  type="button"
+                  className="services-btn"
+                  disabled={page <= 1 || loading || refreshing}
+                  onClick={() => setPage((p) => p - 1)}
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  ← Trước
+                </motion.button>
+
+                <div className="services-page-indicator">
+                  <b>{page}</b> / {totalPages}
+                </div>
+
+                <motion.button
+                  type="button"
+                  className="services-btn"
+                  disabled={page >= totalPages || loading || refreshing}
+                  onClick={() => setPage((p) => p + 1)}
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Sau →
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </motion.div>
+      </motion.div>
+
+      <DeleteConfirmModal
+        open={deleteOpen}
+        title="Xác nhận xóa dịch vụ"
+        message="Bạn có chắc muốn xóa dịch vụ này không? Hành động này không thể hoàn tác."
+        itemName={selectedItem?.name}
+        loading={deleting}
+        onClose={closeDeletePopup}
+        onConfirm={handleConfirmDelete}
+      />
+
+      <LiquidGlassMessage
+        type={toast.type}
+        title={toast.title}
+        message={toast.message}
+        isVisible={toast.visible}
+        onClose={hideToast}
+        autoClose={toast.loading ? 0 : 3500}
+        showIcon
+        showCloseButton
+        glassIntensity="medium"
+        bubbleEffect
+        glowEffect
+        position="top-right"
+        toastKey={toastKey}
+        loading={toast.loading}
+      />
+    </>
   )
 }

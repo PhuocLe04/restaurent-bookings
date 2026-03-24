@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAdminOrStaff } from '@/lib/require-admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,8 +21,85 @@ function normalizeText(value: unknown) {
     .toUpperCase()
 }
 
+function startOfDay(date: Date) {
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+function endOfDay(date: Date) {
+  const d = new Date(date)
+  d.setHours(23, 59, 59, 999)
+  return d
+}
+
+function addDays(date: Date, days: number) {
+  const d = new Date(date)
+  d.setDate(d.getDate() + days)
+  return d
+}
+
+function getReservationSortBucket(
+  reservationTime: Date | string | null | undefined,
+  now: Date,
+) {
+  if (!reservationTime) return 4
+
+  const time = new Date(reservationTime)
+  const todayStart = startOfDay(now)
+  const next2DaysEnd = endOfDay(addDays(now, 2))
+
+  // Ưu tiên: từ hôm nay đến hết 2 ngày tới
+  if (time >= todayStart && time <= next2DaysEnd) return 0
+
+  // Tương lai xa hơn
+  if (time > next2DaysEnd) return 1
+
+  // Đã qua
+  if (time < todayStart) return 2
+
+  return 3
+}
+
+function compareOrdersByReservationPriority(a: any, b: any) {
+  const now = new Date()
+
+  const aTimeRaw = a.reservations?.reservation_time ?? null
+  const bTimeRaw = b.reservations?.reservation_time ?? null
+
+  const aBucket = getReservationSortBucket(aTimeRaw, now)
+  const bBucket = getReservationSortBucket(bTimeRaw, now)
+
+  if (aBucket !== bBucket) return aBucket - bBucket
+
+  const aTime = aTimeRaw ? new Date(aTimeRaw).getTime() : 0
+  const bTime = bTimeRaw ? new Date(bTimeRaw).getTime() : 0
+
+  // Nhóm gần hiện tại / tương lai: gần hơn lên trước
+  if (aBucket === 0 || aBucket === 1) {
+    if (aTime !== bTime) return aTime - bTime
+    return b.id - a.id
+  }
+
+  // Nhóm đã qua: mới qua gần đây lên trước, cũ hơn xuống sau
+  if (aBucket === 2) {
+    if (aTime !== bTime) return bTime - aTime
+    return b.id - a.id
+  }
+
+  return b.id - a.id
+}
+
+function isPaymentSuccess(status: unknown) {
+  const s = normalizeText(status)
+  return s === 'SUCCESS' || s === 'PAID'
+}
+
 export async function GET(req: NextRequest) {
   try {
+    const access = await requireAdminOrStaff()
+    if (!access.ok) return access.res
+
     const { searchParams } = new URL(req.url)
 
     const page = toNumber(searchParams.get('page'), 1)
@@ -51,95 +129,94 @@ export async function GET(req: NextRequest) {
         : {}),
     }
 
-    const [total, items] = await Promise.all([
-      prisma.orders.count({ where }),
-      prisma.orders.findMany({
-        where,
-        orderBy: { id: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
-        include: {
-          users: {
-            select: {
-              id: true,
-              full_name: true,
-              email: true,
-              phone: true,
-              role: true,
-            },
+    const items = await prisma.orders.findMany({
+      where,
+      include: {
+        users: {
+          select: {
+            id: true,
+            full_name: true,
+            email: true,
+            phone: true,
+            role: true,
           },
-          reservations: {
-            select: {
-              id: true,
-              reservation_time: true,
-              reservation_endtime: true,
-              number_of_guests: true,
-              status: true,
-              reservation_tables: {
-                include: {
-                  restaurant_tables: {
-                    select: {
-                      id: true,
-                      table_name: true,
-                      capacity: true,
-                    },
+        },
+        reservations: {
+          select: {
+            id: true,
+            reservation_time: true,
+            reservation_endtime: true,
+            number_of_guests: true,
+            status: true,
+            reservation_tables: {
+              include: {
+                restaurant_tables: {
+                  select: {
+                    id: true,
+                    table_name: true,
+                    capacity: true,
                   },
                 },
               },
-              reservation_services: {
-                include: {
-                  services: {
-                    select: {
-                      id: true,
-                      name: true,
-                      image: true,
-                      description: true,
-                      price: true,
-                    },
+            },
+            reservation_services: {
+              include: {
+                services: {
+                  select: {
+                    id: true,
+                    name: true,
+                    image: true,
+                    description: true,
+                    price: true,
                   },
                 },
               },
-              payments: {
-                select: {
-                  id: true,
-                  amount: true,
-                  payment_method: true,
-                  purpose: true,
-                  status: true,
-                  order_id: true,
-                  request_id: true,
-                  partner_transaction_id: true,
-                  created_at: true,
-                  paid_at: true,
-                },
-                orderBy: { id: 'desc' },
+            },
+            payments: {
+              select: {
+                id: true,
+                amount: true,
+                payment_method: true,
+                purpose: true,
+                status: true,
+                order_id: true,
+                request_id: true,
+                partner_transaction_id: true,
+                created_at: true,
+                paid_at: true,
               },
+              orderBy: { id: 'desc' },
             },
           },
-          order_items: {
-            include: {
-              menu_items: {
-                select: {
-                  id: true,
-                  name: true,
-                  image: true,
-                  price: true,
-                  is_available: true,
-                  categories: {
-                    select: {
-                      id: true,
-                      name: true,
-                    },
+        },
+        order_items: {
+          include: {
+            menu_items: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+                price: true,
+                is_available: true,
+                categories: {
+                  select: {
+                    id: true,
+                    name: true,
                   },
                 },
               },
             },
           },
         },
-      }),
-    ])
+      },
+    })
 
-    const data = items.map((order) => {
+    const sortedItems = [...items].sort(compareOrdersByReservationPriority)
+
+    const total = sortedItems.length
+    const pagedItems = sortedItems.slice((page - 1) * limit, page * limit)
+
+    const data = pagedItems.map((order) => {
       const menuItems = order.order_items.map((item) => {
         const unitPrice = safeDecimal(item.menu_items?.price)
         const quantity = item.quantity || 0
@@ -185,8 +262,12 @@ export async function GET(req: NextRequest) {
 
       const depositSuccessPayments = payments.filter(
         (p) =>
-          normalizeText(p.status) === 'SUCCESS' &&
-          normalizeText(p.purpose) === 'DEPOSIT',
+          isPaymentSuccess(p.status) && normalizeText(p.purpose) === 'DEPOSIT',
+      )
+
+      const finalSuccessPayments = payments.filter(
+        (p) =>
+          isPaymentSuccess(p.status) && normalizeText(p.purpose) === 'FINAL',
       )
 
       const depositPendingPayments = payments.filter(
@@ -209,13 +290,22 @@ export async function GET(req: NextRequest) {
         0,
       )
 
+      const finalPaidTotal = finalSuccessPayments.reduce(
+        (sum, p) => sum + safeDecimal(p.amount),
+        0,
+      )
+
       const pendingTotal = depositPendingPayments.reduce(
         (sum, p) => sum + safeDecimal(p.amount),
         0,
       )
 
       const orderTotal = safeDecimal(order.grand_total)
-      const remainingEstimated = Math.max(0, orderTotal - paidTotal)
+      const hasFinalPaid = finalSuccessPayments.length > 0
+
+      const remainingEstimated = hasFinalPaid
+        ? 0
+        : Math.max(0, orderTotal - paidTotal)
 
       return {
         id: order.id,
@@ -240,8 +330,10 @@ export async function GET(req: NextRequest) {
           menu_total: menuTotal,
           service_total: serviceTotal,
           paid_total: paidTotal,
+          final_paid_total: finalPaidTotal,
           pending_total: pendingTotal,
           remaining_estimated: remainingEstimated,
+          has_final_paid: hasFinalPaid,
         },
         menu_items: menuItems,
         service_items: serviceItems,

@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAdminOnly } from '@/lib/requireAdminOnly'
 
 export const dynamic = 'force-dynamic'
 
 type Quick = 'today' | '7d' | '30d'
 type QuickOrCustom = Quick | 'custom'
+
+const VN_TIMEZONE = 'Asia/Ho_Chi_Minh'
+const VN_OFFSET_MS = 7 * 60 * 60 * 1000
 
 const DEFAULT_STATUS_KEYS = [
   'PENDING',
@@ -14,141 +18,228 @@ const DEFAULT_STATUS_KEYS = [
   'NO_SHOW',
 ] as const
 
-function startOfDay(d: Date) {
-  const x = new Date(d)
-  x.setHours(0, 0, 0, 0)
-  return x
+function getVNNow() {
+  return new Date(Date.now() + VN_OFFSET_MS)
 }
 
-function endOfDay(d: Date) {
-  const x = new Date(d)
-  x.setHours(23, 59, 59, 999)
-  return x
+function getUTCPartsFromVNShifted(date: Date) {
+  return {
+    y: date.getUTCFullYear(),
+    m: date.getUTCMonth(),
+    d: date.getUTCDate(),
+  }
 }
 
-function formatLocalISOString(d: Date) {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  const hh = String(d.getHours()).padStart(2, '0')
-  const mm = String(d.getMinutes()).padStart(2, '0')
-  const ss = String(d.getSeconds()).padStart(2, '0')
-  const ms = String(d.getMilliseconds()).padStart(3, '0')
-  return `${y}-${m}-${day}T${hh}:${mm}:${ss}.${ms}`
+function startOfVNDay(date: Date) {
+  const { y, m, d } = getUTCPartsFromVNShifted(date)
+  return new Date(Date.UTC(y, m, d, 0, 0, 0, 0) - VN_OFFSET_MS)
 }
 
-function parseRange(url: URL) {
-  const quick = (url.searchParams.get('quick') as Quick) || 'today'
-  const from = url.searchParams.get('from')
-  const to = url.searchParams.get('to')
+function endOfVNDay(date: Date) {
+  const { y, m, d } = getUTCPartsFromVNShifted(date)
+  return new Date(Date.UTC(y, m, d, 23, 59, 59, 999) - VN_OFFSET_MS)
+}
 
-  if (from && to) {
-    const fromDate = startOfDay(new Date(`${from}T00:00:00`))
-    const toDate = endOfDay(new Date(`${to}T00:00:00`))
+function addDays(date: Date, days: number) {
+  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000)
+}
 
-    if (!Number.isNaN(fromDate.getTime()) && !Number.isNaN(toDate.getTime())) {
-      return { fromDate, toDate, quick: 'custom' as QuickOrCustom }
-    }
+function parseDateOnly(value: string) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (!m) return null
+
+  const year = Number(m[1])
+  const month = Number(m[2])
+  const day = Number(m[3])
+
+  if (
+    !Number.isFinite(year) ||
+    !Number.isFinite(month) ||
+    !Number.isFinite(day)
+  ) {
+    return null
   }
 
-  const now = new Date()
-  const toDate = endOfDay(now)
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null
 
-  let fromDate: Date
-  if (quick === 'today') {
-    fromDate = startOfDay(now)
-  } else if (quick === '7d') {
-    const d = new Date(now)
-    d.setDate(d.getDate() - 6)
-    fromDate = startOfDay(d)
-  } else {
-    const d = new Date(now)
-    d.setDate(d.getDate() - 29)
-    fromDate = startOfDay(d)
-  }
-
-  return { fromDate, toDate, quick }
+  return { year, month, day }
 }
 
-function toISODateKey(d: Date) {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
+function startOfVNDateString(value: string) {
+  const parsed = parseDateOnly(value)
+  if (!parsed) return null
+
+  const { year, month, day } = parsed
+  return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0) - VN_OFFSET_MS)
 }
 
-function makeDateKeys(fromDate: Date, toDate: Date) {
+function endOfVNDateString(value: string) {
+  const parsed = parseDateOnly(value)
+  if (!parsed) return null
+
+  const { year, month, day } = parsed
+  return new Date(
+    Date.UTC(year, month - 1, day, 23, 59, 59, 999) - VN_OFFSET_MS,
+  )
+}
+
+function formatVNDateKey(date: Date) {
+  const vn = new Date(date.getTime() + VN_OFFSET_MS)
+  const y = vn.getUTCFullYear()
+  const m = String(vn.getUTCMonth() + 1).padStart(2, '0')
+  const d = String(vn.getUTCDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+function buildVNDateKeys(fromDate: Date, toDate: Date) {
   const keys: string[] = []
-  const cur = startOfDay(fromDate)
-  const end = startOfDay(toDate)
+  let current = startOfVNDay(new Date(fromDate))
+  const end = startOfVNDay(new Date(toDate))
 
-  while (cur.getTime() <= end.getTime()) {
-    keys.push(toISODateKey(cur))
-    cur.setDate(cur.getDate() + 1)
+  while (current.getTime() <= end.getTime()) {
+    keys.push(formatVNDateKey(current))
+    current = addDays(current, 1)
   }
 
   return keys
 }
 
+function resolveRange(
+  url: URL,
+):
+  | { ok: true; fromDate: Date; toDate: Date; quick: QuickOrCustom }
+  | { ok: false; res: NextResponse } {
+  const quickParam = url.searchParams.get('quick')
+  const from = url.searchParams.get('from')
+  const to = url.searchParams.get('to')
+
+  if ((from && !to) || (!from && to)) {
+    return {
+      ok: false,
+      res: NextResponse.json(
+        { message: 'from và to phải đi cùng nhau' },
+        { status: 400 },
+      ),
+    }
+  }
+
+  if (from && to) {
+    const fromDate = startOfVNDateString(from)
+    const toDate = endOfVNDateString(to)
+
+    if (!fromDate || !toDate) {
+      return {
+        ok: false,
+        res: NextResponse.json(
+          { message: 'Định dạng ngày không hợp lệ. Dùng YYYY-MM-DD' },
+          { status: 400 },
+        ),
+      }
+    }
+
+    if (fromDate.getTime() > toDate.getTime()) {
+      return {
+        ok: false,
+        res: NextResponse.json(
+          { message: 'from không được lớn hơn to' },
+          { status: 400 },
+        ),
+      }
+    }
+
+    return { ok: true, fromDate, toDate, quick: 'custom' }
+  }
+
+  const quick: Quick =
+    quickParam === 'today' || quickParam === '7d' || quickParam === '30d'
+      ? quickParam
+      : 'today'
+
+  const vnNow = getVNNow()
+  const toDate = endOfVNDay(vnNow)
+
+  let fromDate: Date
+  if (quick === 'today') {
+    fromDate = startOfVNDay(vnNow)
+  } else if (quick === '7d') {
+    fromDate = startOfVNDay(addDays(vnNow, -6))
+  } else {
+    fromDate = startOfVNDay(addDays(vnNow, -29))
+  }
+
+  return { ok: true, fromDate, toDate, quick }
+}
+
 export async function GET(req: Request) {
   try {
-    const url = new URL(req.url)
-    const { fromDate, toDate, quick } = parseRange(url)
-    const now = new Date()
+    const auth = await requireAdminOnly()
+    if (!auth.ok) return auth.res
 
-    const reservationsWhere = {
-      reservation_time: { gte: fromDate, lte: toDate },
+    const url = new URL(req.url)
+    const range = resolveRange(url)
+    if (!range.ok) return range.res
+
+    const { fromDate, toDate, quick } = range
+
+    const reservationTimeWhere = {
+      reservation_time: {
+        gte: fromDate,
+        lte: toDate,
+      },
     } as const
 
-    // =========================
-    // 1) KPI tổng quan
-    // =========================
-
-    const reservationsTotal = await prisma.reservations.count({
-      where: reservationsWhere,
+    const reservationsTotalPromise = prisma.reservations.count({
+      where: reservationTimeWhere,
     })
 
-    const reservationsByStatusRaw = await prisma.reservations.groupBy({
+    const reservationsByStatusRawPromise = prisma.reservations.groupBy({
       by: ['status'],
-      where: reservationsWhere,
+      where: reservationTimeWhere,
       _count: { _all: true },
     })
 
-    const reservationsByStatus: Record<string, number> = {}
-    for (const key of DEFAULT_STATUS_KEYS) reservationsByStatus[key] = 0
-    for (const row of reservationsByStatusRaw) {
-      reservationsByStatus[row.status] = row._count._all
-    }
-
-    const guestsAgg = await prisma.reservations.aggregate({
-      where: reservationsWhere,
+    const totalGuestsPromise = prisma.reservations.aggregate({
+      where: reservationTimeWhere,
       _sum: { number_of_guests: true },
     })
-    const totalGuests = Number(guestsAgg._sum.number_of_guests ?? 0)
 
-    const revenueRow = await prisma.$queryRaw<Array<{ revenue: any }>>`
-      SELECT COALESCE(SUM(o.grand_total), 0) AS revenue
-      FROM orders o
-      INNER JOIN reservations r ON r.id = o.reservation_id
-      WHERE r.reservation_time >= ${fromDate}
-        AND r.reservation_time <= ${toDate};
-    `
-    const estimatedRevenue = Number(revenueRow?.[0]?.revenue ?? 0)
+    const noShowPromise = prisma.reservations.count({
+      where: {
+        reservation_time: { gte: fromDate, lte: toDate },
+        status: 'NO_SHOW',
+      },
+    })
 
-    const cashInRow = await prisma.$queryRaw<Array<{ cash_in: any }>>`
-      SELECT COALESCE(SUM(p.amount), 0) AS cash_in
-      FROM payments p
-      WHERE p.status IN (N'PAID', N'SUCCESS')
-        AND (
-          (p.paid_at IS NOT NULL AND p.paid_at >= ${fromDate} AND p.paid_at <= ${toDate})
-          OR
-          (p.paid_at IS NULL AND p.created_at >= ${fromDate} AND p.created_at <= ${toDate})
-        );
-    `
-    const cashIn = Number(cashInRow?.[0]?.cash_in ?? 0)
+    const amountDuePromise = prisma.$queryRaw<Array<{ amount_due: unknown }>>`
+  SELECT COALESCE(SUM(COALESCE(o.grand_total, 0)), 0) AS amount_due
+  FROM orders o
+  INNER JOIN reservations r ON r.id = o.reservation_id
+  WHERE r.reservation_time >= ${fromDate}
+    AND r.reservation_time <= ${toDate}
+`
 
-    const depositStat = await prisma.$queryRaw<
-      Array<{ total_res: any; res_with_deposit_success: any }>
+    const completedRevenuePromise = prisma.$queryRaw<
+      Array<{ revenue: unknown }>
+    >`
+  SELECT COALESCE(SUM(COALESCE(o.grand_total, 0)), 0) AS revenue
+  FROM orders o
+  INNER JOIN reservations r ON r.id = o.reservation_id
+  WHERE r.reservation_time >= ${fromDate}
+    AND r.reservation_time <= ${toDate}
+    AND r.status = N'COMPLETED'
+`
+
+    const cashInPromise = prisma.$queryRaw<Array<{ cash_in: unknown }>>`
+  SELECT COALESCE(SUM(p.amount), 0) AS cash_in
+  FROM payments p
+  INNER JOIN reservations r ON r.id = p.reservation_id
+  WHERE p.status IN (N'PAID', N'SUCCESS')
+    AND p.purpose IN (N'FINAL', N'DEPOSIT')
+    AND r.reservation_time >= ${fromDate}
+    AND r.reservation_time <= ${toDate}
+`
+    const depositStatPromise = prisma.$queryRaw<
+      Array<{ total_res: unknown; res_with_deposit_success: unknown }>
     >`
       WITH res_in_range AS (
         SELECT r.id
@@ -168,215 +259,200 @@ export async function GET(req: Request) {
           SELECT COUNT(*)
           FROM res_in_range r
           INNER JOIN res_deposit_success d ON d.id = r.id
-        ) AS res_with_deposit_success;
+        ) AS res_with_deposit_success
     `
 
-    const totalRes = Number(depositStat?.[0]?.total_res ?? 0)
-    const resWithDepositSuccess = Number(
-      depositStat?.[0]?.res_with_deposit_success ?? 0,
-    )
-    const depositSuccessRate =
-      totalRes > 0
-        ? Number(((resWithDepositSuccess / totalRes) * 100).toFixed(2))
-        : 0
-
-    const noShow = await prisma.reservations.count({
-      where: {
-        reservation_time: { gte: fromDate, lte: toDate, lt: now },
-        checked_in_at: null,
-        NOT: {
-          status: {
-            in: ['CANCELLED', 'COMPLETED', 'NO_SHOW'],
-          },
-        },
-      },
-    })
-
-    // =========================
-    // 2) SERIES BIỂU ĐỒ
-    // =========================
-
-    const dateKeys = makeDateKeys(fromDate, toDate)
-
-    const resDaily = await prisma.$queryRaw<
+    const resDailyPromise = prisma.$queryRaw<
       Array<{ d: string; total: number; completed: number }>
     >`
       SELECT
-        CONVERT(varchar(10), r.reservation_time, 23) AS d,
+        CONVERT(varchar(10), DATEADD(HOUR, 7, r.reservation_time), 23) AS d,
         COUNT(*) AS total,
         SUM(CASE WHEN r.status = N'COMPLETED' THEN 1 ELSE 0 END) AS completed
       FROM reservations r
       WHERE r.reservation_time >= ${fromDate}
         AND r.reservation_time <= ${toDate}
-      GROUP BY CONVERT(varchar(10), r.reservation_time, 23)
-      ORDER BY d;
+      GROUP BY CONVERT(varchar(10), DATEADD(HOUR, 7, r.reservation_time), 23)
+      ORDER BY d
     `
 
-    const resDailyMap = new Map(
-      resDaily.map((x) => [
-        x.d,
-        {
-          total: Number(x.total),
-          completed: Number(x.completed),
-        },
-      ]),
-    )
-
-    const bookingsLine = dateKeys.map((d) => ({
-      date: d,
-      total: resDailyMap.get(d)?.total ?? 0,
-      completed: resDailyMap.get(d)?.completed ?? 0,
-    }))
-
-    const statusDaily = await prisma.$queryRaw<
+    const statusDailyPromise = prisma.$queryRaw<
       Array<{ d: string; status: string; cnt: number }>
     >`
       SELECT
-        CONVERT(varchar(10), r.reservation_time, 23) AS d,
+        CONVERT(varchar(10), DATEADD(HOUR, 7, r.reservation_time), 23) AS d,
         r.status AS status,
         COUNT(*) AS cnt
       FROM reservations r
       WHERE r.reservation_time >= ${fromDate}
         AND r.reservation_time <= ${toDate}
-      GROUP BY CONVERT(varchar(10), r.reservation_time, 23), r.status
-      ORDER BY d;
+      GROUP BY
+        CONVERT(varchar(10), DATEADD(HOUR, 7, r.reservation_time), 23),
+        r.status
+      ORDER BY d
     `
 
-    const dynamicStatusSet = Array.from(
-      new Set([...DEFAULT_STATUS_KEYS, ...statusDaily.map((x) => x.status)]),
-    )
-
-    const statusByDate = new Map<string, Record<string, number>>()
-    for (const row of statusDaily) {
-      const d = row.d
-      const s = row.status
-      const cnt = Number(row.cnt)
-
-      if (!statusByDate.has(d)) statusByDate.set(d, {})
-      statusByDate.get(d)![s] = cnt
-    }
-
-    const bookingsStacked = dateKeys.map((d) => {
-      const obj: Record<string, any> = { date: d }
-      const m = statusByDate.get(d) || {}
-      for (const s of dynamicStatusSet) obj[s] = m[s] ?? 0
-      return obj
-    })
-
-    const revenueDaily = await prisma.$queryRaw<
-      Array<{ d: string; revenue: any }>
+    // line "tiền đã thu" cũng chỉ lấy FINAL + DEPOSIT success
+    // group theo ngày reservation để đồng bộ với amountDueLine
+    const paymentDailyPromise = prisma.$queryRaw<
+      Array<{ d: string; cash_in: unknown }>
     >`
       SELECT
-        CONVERT(varchar(10), r.reservation_time, 23) AS d,
-        COALESCE(SUM(o.grand_total), 0) AS revenue
-      FROM orders o
-      INNER JOIN reservations r ON r.id = o.reservation_id
-      WHERE r.reservation_time >= ${fromDate}
-        AND r.reservation_time <= ${toDate}
-      GROUP BY CONVERT(varchar(10), r.reservation_time, 23)
-      ORDER BY d;
-    `
-
-    const cashInDaily = await prisma.$queryRaw<
-      Array<{ d: string; cash_in: any }>
-    >`
-      SELECT
-        CONVERT(varchar(10), COALESCE(p.paid_at, p.created_at), 23) AS d,
+        CONVERT(varchar(10), DATEADD(HOUR, 7, r.reservation_time), 23) AS d,
         COALESCE(SUM(p.amount), 0) AS cash_in
       FROM payments p
+      INNER JOIN reservations r ON r.id = p.reservation_id
       WHERE p.status IN (N'PAID', N'SUCCESS')
-        AND COALESCE(p.paid_at, p.created_at) >= ${fromDate}
-        AND COALESCE(p.paid_at, p.created_at) <= ${toDate}
-      GROUP BY CONVERT(varchar(10), COALESCE(p.paid_at, p.created_at), 23)
-      ORDER BY d;
+        AND p.purpose IN (N'FINAL', N'DEPOSIT')
+        AND r.reservation_time >= ${fromDate}
+        AND r.reservation_time <= ${toDate}
+      GROUP BY CONVERT(varchar(10), DATEADD(HOUR, 7, r.reservation_time), 23)
+      ORDER BY d
     `
 
-    const revenueMap = new Map(
-      revenueDaily.map((x) => [x.d, Number(x.revenue ?? 0)]),
-    )
-    const cashInMap = new Map(
-      cashInDaily.map((x) => [x.d, Number(x.cash_in ?? 0)]),
+    const amountDueDailyPromise = prisma.$queryRaw<
+      Array<{ d: string; value: unknown }>
+    >`
+  SELECT
+    CONVERT(varchar(10), DATEADD(HOUR, 7, r.reservation_time), 23) AS d,
+    COALESCE(SUM(COALESCE(o.grand_total, 0)), 0) AS value
+  FROM orders o
+  INNER JOIN reservations r ON r.id = o.reservation_id
+  WHERE r.reservation_time >= ${fromDate}
+    AND r.reservation_time <= ${toDate}
+  GROUP BY CONVERT(varchar(10), DATEADD(HOUR, 7, r.reservation_time), 23)
+  ORDER BY d
+`
+    const [
+      reservationsTotal,
+      reservationsByStatusRaw,
+      totalGuestsAgg,
+      noShow,
+      amountDueRow,
+      completedRevenueRow,
+      cashInRow,
+      depositStat,
+      resDaily,
+      statusDaily,
+      paymentDaily,
+      amountDueDaily,
+    ] = await Promise.all([
+      reservationsTotalPromise,
+      reservationsByStatusRawPromise,
+      totalGuestsPromise,
+      noShowPromise,
+      amountDuePromise,
+      completedRevenuePromise,
+      cashInPromise,
+      depositStatPromise,
+      resDailyPromise,
+      statusDailyPromise,
+      paymentDailyPromise,
+      amountDueDailyPromise,
+    ])
+
+    const reservationsByStatus: Record<string, number> = {}
+    for (const key of DEFAULT_STATUS_KEYS) reservationsByStatus[key] = 0
+    for (const row of reservationsByStatusRaw) {
+      reservationsByStatus[row.status] = row._count._all
+    }
+
+    const totalGuests = Number(totalGuestsAgg._sum.number_of_guests ?? 0)
+    const amountDue = Number(amountDueRow?.[0]?.amount_due ?? 0)
+    const completedRevenue = Number(completedRevenueRow?.[0]?.revenue ?? 0)
+    const cashIn = Number(cashInRow?.[0]?.cash_in ?? 0)
+
+    const totalRes = Number(depositStat?.[0]?.total_res ?? 0)
+    const resWithDepositSuccess = Number(
+      depositStat?.[0]?.res_with_deposit_success ?? 0,
     )
 
-    const moneyLine = dateKeys.map((d) => ({
-      date: d,
-      revenue: revenueMap.get(d) ?? 0,
-      cashIn: cashInMap.get(d) ?? 0,
+    const depositSuccessRate =
+      totalRes > 0
+        ? Number(((resWithDepositSuccess / totalRes) * 100).toFixed(2))
+        : 0
+
+    const dateKeys = buildVNDateKeys(fromDate, toDate)
+
+    const bookingsMap = new Map(
+      resDaily.map((row) => [
+        row.d,
+        {
+          total: Number(row.total ?? 0),
+          completed: Number(row.completed ?? 0),
+        },
+      ]),
+    )
+
+    const bookingsLine = dateKeys.map((date) => ({
+      date,
+      total: bookingsMap.get(date)?.total ?? 0,
+      completed: bookingsMap.get(date)?.completed ?? 0,
     }))
 
-    const paymentMethod = await prisma.$queryRaw<
-      Array<{ payment_method: string | null; amount: any }>
-    >`
-      SELECT
-        p.payment_method,
-        COALESCE(SUM(p.amount), 0) AS amount
-      FROM payments p
-      WHERE p.status IN (N'PAID', N'SUCCESS')
-        AND COALESCE(p.paid_at, p.created_at) >= ${fromDate}
-        AND COALESCE(p.paid_at, p.created_at) <= ${toDate}
-      GROUP BY p.payment_method
-      ORDER BY amount DESC;
-    `
+    const statusMap = new Map<string, Record<string, number>>()
+    for (const row of statusDaily) {
+      if (!statusMap.has(row.d)) statusMap.set(row.d, {})
+      statusMap.get(row.d)![row.status] = Number(row.cnt ?? 0)
+    }
 
-    const paymentDonut = paymentMethod.map((x) => ({
-      method: x.payment_method || 'UNKNOWN',
-      amount: Number(x.amount ?? 0),
+    const reservationStatusStack = dateKeys.map((date) => {
+      const row = statusMap.get(date) ?? {}
+      return {
+        date,
+        PENDING: row.PENDING ?? 0,
+        CONFIRMED: row.CONFIRMED ?? 0,
+        CANCELLED: row.CANCELLED ?? 0,
+        COMPLETED: row.COMPLETED ?? 0,
+        NO_SHOW: row.NO_SHOW ?? 0,
+      }
+    })
+
+    const paymentMap = new Map(
+      paymentDaily.map((row) => [row.d, Number(row.cash_in ?? 0)]),
+    )
+
+    const cashInLine = dateKeys.map((date) => ({
+      date,
+      value: paymentMap.get(date) ?? 0,
     }))
 
-    const paymentPurpose = await prisma.$queryRaw<
-      Array<{ purpose: string | null; amount: any }>
-    >`
-      SELECT
-        p.purpose,
-        COALESCE(SUM(p.amount), 0) AS amount
-      FROM payments p
-      WHERE p.status IN (N'PAID', N'SUCCESS')
-        AND COALESCE(p.paid_at, p.created_at) >= ${fromDate}
-        AND COALESCE(p.paid_at, p.created_at) <= ${toDate}
-      GROUP BY p.purpose
-      ORDER BY amount DESC;
-    `
+    const amountDueMap = new Map(
+      amountDueDaily.map((row) => [row.d, Number(row.value ?? 0)]),
+    )
 
-    const paymentPurposeDonut = paymentPurpose.map((x) => ({
-      purpose: x.purpose || 'UNKNOWN',
-      amount: Number(x.amount ?? 0),
+    const amountDueLine = dateKeys.map((date) => ({
+      date,
+      value: amountDueMap.get(date) ?? 0,
     }))
 
     return NextResponse.json({
-      range: {
+      ok: true,
+      filters: {
         quick,
-        from: formatLocalISOString(fromDate),
-        to: formatLocalISOString(toDate),
+        timezone: VN_TIMEZONE,
+        from: fromDate.toISOString(),
+        to: toDate.toISOString(),
       },
-      kpi: {
+      kpis: {
         reservationsTotal,
         reservationsByStatus,
         totalGuests,
-        estimatedRevenue,
+        amountDue,
+        completedRevenue,
         cashIn,
-        depositSuccessRate, // %
+        depositSuccessRate,
         noShow,
-        resWithDepositSuccess,
       },
       charts: {
         bookingsLine,
-        bookingsStacked,
-        moneyLine,
-        paymentDonut,
-        paymentPurposeDonut,
-      },
-      meta: {
-        statusKeys: dynamicStatusSet,
+        reservationStatusStack,
+        cashInLine,
+        amountDueLine,
       },
     })
-  } catch (e: any) {
-    console.error('GET admin/api/dashboard error:', e)
-    return NextResponse.json(
-      {
-        message: 'Lỗi dashboard',
-        detail: e?.message ?? String(e),
-      },
-      { status: 500 },
-    )
+  } catch (error) {
+    console.error('GET /admin/api/dashboard error:', error)
+    return NextResponse.json({ message: 'Lỗi server' }, { status: 500 })
   }
 }

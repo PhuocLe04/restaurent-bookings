@@ -26,12 +26,32 @@ export default async function ReservationsPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, full_name: true, role: true },
+    select: {
+      id: true,
+      full_name: true,
+      role: true,
+      membership: {
+        select: {
+          id: true,
+          name: true,
+          discount_percent: true,
+          min_point: true,
+        },
+      },
+    },
   })
 
   if (!user) {
     redirect('/login?redirect=/reservations')
   }
 
-  return <ReservationClient userId={user.id} userName={user.full_name} />
+  return (
+    <ReservationClient
+      userId={user.id}
+      userName={user.full_name}
+      membershipDiscountPercent={Number(user.membership?.discount_percent ?? 0)}
+      membershipName={user.membership?.name ?? null}
+      membershipMinPoint={Number(user.membership?.min_point ?? 0)}
+    />
+  )
 }

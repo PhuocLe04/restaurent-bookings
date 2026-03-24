@@ -1,8 +1,3 @@
-/* ======================
-   STAFF MANAGEMENT UI (with animations)
-   Inspired by membership style
-   ====================== */
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -59,10 +54,10 @@
 @keyframes pulse {
   0%,
   100% {
-    opacity: 0.3;
+    opacity: 0.35;
   }
   50% {
-    opacity: 0.8;
+    opacity: 0.85;
   }
 }
 
@@ -75,14 +70,12 @@
   }
 }
 
-/* Staff Page Container */
 .staff-page {
   display: grid;
   gap: 20px;
   animation: fadeIn 0.4s ease-out;
 }
 
-/* Header Section */
 .staff-head {
   display: flex;
   align-items: flex-end;
@@ -132,15 +125,16 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
   animation: slideInRight 0.5s ease-out;
 }
 
-/* Buttons */
 .staff-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  min-height: 42px;
   padding: 10px 16px;
   border-radius: 14px;
   border: 1px solid var(--admin-border);
@@ -148,21 +142,25 @@
   color: var(--admin-text);
   cursor: pointer;
   text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
   font-weight: 650;
   font-size: 13px;
   position: relative;
   overflow: hidden;
+  white-space: nowrap;
 }
 
 .staff-btn::before {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 50%;
+  inset: 50% auto auto 50%;
   width: 0;
   height: 0;
-  border-radius: 50%;
+  border-radius: 999px;
   background: rgba(205, 164, 94, 0.2);
   transform: translate(-50%, -50%);
   transition:
@@ -172,8 +170,8 @@
 }
 
 .staff-btn:hover::before {
-  width: 200px;
-  height: 200px;
+  width: 220px;
+  height: 220px;
 }
 
 .staff-btn > * {
@@ -196,6 +194,7 @@
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 .staff-btn:disabled::before {
@@ -227,7 +226,6 @@
   background: rgba(255, 77, 77, 0.18);
 }
 
-/* Alert */
 .staff-alert {
   border: 1px solid rgba(255, 77, 77, 0.35);
   background: rgba(255, 77, 77, 0.12);
@@ -239,7 +237,6 @@
   backdrop-filter: blur(10px);
 }
 
-/* Toolbar & Filters */
 .staff-toolbar {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -256,6 +253,7 @@
 
 .staff-search input {
   flex: 1;
+  min-width: 0;
   height: 42px;
   border-radius: 14px;
   border: 1px solid var(--admin-border);
@@ -263,7 +261,10 @@
   color: rgba(255, 255, 255, 0.85);
   padding: 0 14px;
   outline: none;
-  transition: all 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
   font-size: 13px;
 }
 
@@ -295,7 +296,10 @@
   color: rgba(255, 255, 255, 0.85);
   padding: 0 14px;
   outline: none;
-  transition: all 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
   font-size: 13px;
   cursor: pointer;
 }
@@ -317,7 +321,6 @@
   padding: 12px;
 }
 
-/* Card */
 .staff-card {
   border: 1px solid var(--admin-border);
   border-radius: 20px;
@@ -325,7 +328,10 @@
   backdrop-filter: blur(10px);
   padding: 16px;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
   animation: scaleIn 0.4s ease-out;
 }
 
@@ -334,7 +340,6 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* Table */
 .staff-table-wrap {
   overflow: auto;
   border-radius: 16px;
@@ -390,64 +395,32 @@
   top: 0;
   z-index: 20;
   border-bottom: 1px solid rgba(205, 164, 94, 0.22);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
 }
+
 .staff-table tbody tr {
   animation: fadeIn 0.3s ease-out;
   animation-fill-mode: both;
 }
 
-.staff-table tbody tr:nth-child(1) {
-  animation-delay: 0.05s;
-}
-.staff-table tbody tr:nth-child(2) {
-  animation-delay: 0.1s;
-}
-.staff-table tbody tr:nth-child(3) {
-  animation-delay: 0.15s;
-}
-.staff-table tbody tr:nth-child(4) {
-  animation-delay: 0.2s;
-}
-.staff-table tbody tr:nth-child(5) {
-  animation-delay: 0.25s;
-}
-.staff-table tbody tr:nth-child(6) {
-  animation-delay: 0.3s;
-}
-.staff-table tbody tr:nth-child(7) {
-  animation-delay: 0.35s;
-}
-.staff-table tbody tr:nth-child(8) {
-  animation-delay: 0.4s;
-}
-.staff-table tbody tr:nth-child(9) {
-  animation-delay: 0.45s;
-}
-.staff-table tbody tr:nth-child(10) {
-  animation-delay: 0.5s;
-}
-
 .staff-table tbody tr:hover td {
   background: rgba(205, 164, 94, 0.08);
-  cursor: pointer;
 }
 
 .staff-table tbody tr:active td {
   background: rgba(205, 164, 94, 0.12);
 }
 
-/* Staff Info */
 .staff-info {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .staff-avatar {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
   border-radius: 12px;
   background: rgba(205, 164, 94, 0.15);
   border: 1px solid rgba(205, 164, 94, 0.3);
@@ -457,18 +430,29 @@
   color: rgba(205, 164, 94, 0.9);
   font-weight: 700;
   font-size: 16px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.staff-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .staff-details {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .staff-name {
   font-weight: 700;
   color: #fff;
   font-size: 14px;
+  line-height: 1.35;
 }
 
 .staff-email {
@@ -477,6 +461,8 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  min-width: 0;
+  word-break: break-word;
 }
 
 .staff-email::before {
@@ -485,10 +471,9 @@
   color: rgba(205, 164, 94, 0.6);
 }
 
-/* Badges */
 .staff-badge {
   display: inline-flex;
-  height: 24px;
+  min-height: 24px;
   padding: 0 12px;
   border-radius: 999px;
   align-items: center;
@@ -498,7 +483,10 @@
   font-weight: 900;
   font-size: 11px;
   letter-spacing: 0.3px;
-  transition: all 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
   backdrop-filter: blur(4px);
 }
 
@@ -513,9 +501,27 @@
   color: #fff;
 }
 
-.staff-badge-staff {
+.staff-badge-manager {
+  border-color: rgba(177, 120, 255, 0.4);
+  background: rgba(177, 120, 255, 0.15);
+  color: #fff;
+}
+
+.staff-badge-cashier {
   border-color: rgba(33, 150, 243, 0.4);
   background: rgba(33, 150, 243, 0.15);
+  color: #fff;
+}
+
+.staff-badge-service {
+  border-color: rgba(0, 188, 212, 0.4);
+  background: rgba(0, 188, 212, 0.15);
+  color: #fff;
+}
+
+.staff-badge-staff {
+  border-color: rgba(76, 175, 80, 0.4);
+  background: rgba(76, 175, 80, 0.15);
   color: #fff;
 }
 
@@ -531,7 +537,6 @@
   color: #fff;
 }
 
-/* Shift Info */
 .staff-shift {
   display: flex;
   flex-direction: column;
@@ -549,19 +554,19 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
-/* Actions Row */
 .staff-actions-row {
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .staff-actions-row .staff-btn {
   padding: 8px 12px;
+  min-height: 36px;
   font-size: 12px;
 }
 
-/* Empty State */
 .staff-td-muted {
   padding: 30px 10px;
   color: var(--admin-text-muted);
@@ -569,28 +574,27 @@
   font-style: italic;
 }
 
-/* Pagination */
 .staff-pagination {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
   animation: slideInRight 0.4s ease-out;
+  flex-wrap: wrap;
 }
 
 .staff-page-indicator {
   color: var(--admin-text);
   font-size: 13px;
-  padding: 0 8px;
+  padding: 0 12px;
   background: rgba(255, 255, 255, 0.03);
   border-radius: 20px;
-  height: 36px;
+  min-height: 36px;
   display: flex;
   align-items: center;
   border: 1px solid var(--admin-border);
 }
 
-/* Card Footer */
 .staff-card-foot {
   display: flex;
   align-items: center;
@@ -608,18 +612,18 @@
   align-items: center;
   color: var(--admin-text-muted);
   font-size: 13px;
+  flex-wrap: wrap;
 }
 
 .staff-meta-dot {
   width: 4px;
   height: 4px;
-  border-radius: 100px;
+  border-radius: 999px;
   background: rgba(205, 164, 94, 0.3);
   display: inline-block;
   animation: pulse 2s infinite;
 }
 
-/* Loading Shimmer */
 .staff-loading-shimmer {
   background: linear-gradient(
     90deg,
@@ -631,13 +635,12 @@
   animation: shimmer 2s infinite;
 }
 
-/* Refresh Icon */
 .staff-refresh-icon {
   display: inline-block;
+  line-height: 1;
   animation: rotate 1s linear infinite;
 }
 
-/* Tooltip */
 .staff-tooltip {
   position: relative;
 }
@@ -645,7 +648,7 @@
 .staff-tooltip:hover::after {
   content: attr(data-tooltip);
   position: absolute;
-  bottom: 100%;
+  bottom: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
   padding: 6px 10px;
@@ -660,13 +663,11 @@
   animation: fadeIn 0.2s ease-out;
 }
 
-/* Actions Column */
 .actions-col {
   width: 180px;
   text-align: center;
 }
 
-/* Responsive */
 @media (max-width: 1024px) {
   .staff-toolbar {
     grid-template-columns: 1fr;
@@ -680,6 +681,14 @@
 @media (max-width: 768px) {
   .staff-toolbar {
     grid-template-columns: 1fr;
+  }
+
+  .staff-search {
+    flex-direction: column;
+  }
+
+  .staff-search .staff-btn {
+    width: 100%;
   }
 
   .staff-pagination {

@@ -10,7 +10,7 @@ datasource db {
 model User {
   id            Int            @id(map: "PK__users__3213E83F9A13B670") @default(autoincrement())
   full_name     String         @db.NVarChar(100)
-  avatar        String?        @db.NVarChar(500)
+  avatar        String?        @db.NVarChar(Max)
   email         String         @unique(map: "UQ__users__AB6E616456B1D98D") @db.NVarChar(100)
   phone         String         @unique(map: "UQ__users__B43B145F828E46EC") @db.NVarChar(10)
   password_hash String         @db.NVarChar(500)
@@ -138,7 +138,7 @@ model orders {
   status           String        @default("OPEN", map: "DF__orders__status__619B8048") @db.NVarChar(20)
   grand_total      Decimal       @db.Decimal(12, 2)
   created_at       DateTime?     @default(now(), map: "DF__orders__created___628FA481")
-  deposit_required Decimal       @default(0, map: "DF_orders_deposit_required") @db.Decimal(18, 0)
+  deposit_required Decimal       @default(0, map: "DF_orders_deposit_required") @db.Decimal(12, 2)
   order_items      order_items[]
   reservations     reservations  @relation(fields: [reservation_id], references: [id], onUpdate: NoAction, map: "FK_orders_reservation")
   users            User          @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_orders_user")

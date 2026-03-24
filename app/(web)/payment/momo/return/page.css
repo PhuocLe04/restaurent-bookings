@@ -1,0 +1,400 @@
+@import 'animate.css';
+
+.momo-return-page {
+  min-height: 100vh;
+  padding: 32px 16px;
+  background:
+    radial-gradient(circle at top, rgba(212, 175, 55, 0.14), transparent 26%),
+    linear-gradient(180deg, #050505 0%, #0b0b0b 45%, #111111 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.momo-return-shell {
+  width: 100%;
+  max-width: 980px;
+  border-radius: 34px;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.32),
+    rgba(255, 255, 255, 0.06),
+    rgba(212, 175, 55, 0.18)
+  );
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.momo-return-shell::before {
+  content: '';
+  position: absolute;
+  inset: -20% auto auto -10%;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(
+    circle,
+    rgba(212, 175, 55, 0.12),
+    transparent 70%
+  );
+  pointer-events: none;
+  filter: blur(10px);
+}
+
+.momo-return-shell::after {
+  content: '';
+  position: absolute;
+  right: -80px;
+  bottom: -80px;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.05),
+    transparent 72%
+  );
+  pointer-events: none;
+  filter: blur(8px);
+}
+
+.momo-return-card {
+  position: relative;
+  z-index: 1;
+  border-radius: 34px;
+  padding: 34px;
+  background: linear-gradient(
+    135deg,
+    rgba(40, 33, 24, 0.94),
+    rgba(20, 20, 20, 0.96) 45%,
+    rgba(31, 24, 18, 0.94)
+  );
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+}
+
+.momo-return-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.momo-return-header h1 {
+  margin: 0;
+  font-size: 58px;
+  line-height: 1.08;
+  font-weight: 700;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.momo-return-header p {
+  margin: 12px 0 0;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.momo-status-box {
+  border-radius: 28px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.momo-status-box:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 20px 40px rgba(0, 0, 0, 0.18);
+}
+
+.momo-status-box.is-success {
+  background: linear-gradient(
+    135deg,
+    rgba(25, 75, 45, 0.58),
+    rgba(35, 35, 35, 0.82)
+  );
+  border: 1px solid rgba(120, 255, 170, 0.22);
+}
+
+.momo-status-box.is-failed {
+  background: linear-gradient(
+    135deg,
+    rgba(95, 35, 35, 0.58),
+    rgba(35, 35, 35, 0.82)
+  );
+  border: 1px solid rgba(255, 140, 140, 0.2);
+}
+
+.momo-status-icon {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: 800;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.momo-status-icon::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent);
+  pointer-events: none;
+}
+
+.momo-status-icon.is-success {
+  color: #86efac;
+  background: rgba(134, 239, 172, 0.12);
+  border: 1px solid rgba(134, 239, 172, 0.28);
+  box-shadow: 0 0 30px rgba(134, 239, 172, 0.08);
+}
+
+.momo-status-icon.is-failed {
+  color: #fca5a5;
+  background: rgba(252, 165, 165, 0.12);
+  border: 1px solid rgba(252, 165, 165, 0.28);
+  box-shadow: 0 0 30px rgba(252, 165, 165, 0.08);
+}
+
+.momo-status-content {
+  flex: 1;
+  min-width: 260px;
+}
+
+.momo-status-chip {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.16);
+  color: #f3d27a;
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(212, 175, 55, 0.16);
+}
+
+.momo-status-content h2 {
+  margin: 0 0 8px;
+  font-size: 34px;
+  line-height: 1.15;
+  font-weight: 700;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.momo-status-content p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.7;
+  font-size: 16px;
+}
+
+.momo-info-card {
+  border-radius: 24px;
+  padding: 22px;
+  margin-bottom: 20px;
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.08),
+    rgba(255, 255, 255, 0.03)
+  );
+  border: 1px solid rgba(212, 175, 55, 0.18);
+}
+
+.momo-info-title {
+  font-size: 14px;
+  color: #e8c874;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.momo-info-list {
+  display: grid;
+  gap: 12px;
+}
+
+.momo-info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  align-items: flex-start;
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    background 0.22s ease;
+}
+
+.momo-info-row:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.075);
+  border-color: rgba(212, 175, 55, 0.14);
+}
+
+.momo-info-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+}
+
+.momo-info-value {
+  text-align: right;
+  word-break: break-word;
+  max-width: 62%;
+  font-size: 15px;
+}
+
+.momo-db-note {
+  border-radius: 20px;
+  padding: 16px 18px;
+  margin-bottom: 24px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.76);
+  line-height: 1.65;
+  font-size: 14px;
+}
+
+.momo-db-note.is-syncing {
+  position: relative;
+  overflow: hidden;
+}
+
+.momo-db-note.is-syncing::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.06),
+    transparent
+  );
+  animation: momoShine 1.6s linear infinite;
+}
+
+.momo-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.momo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  padding: 14px 22px;
+  border-radius: 16px;
+  font-weight: 700;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease,
+    background 0.22s ease;
+}
+
+.momo-btn-primary {
+  min-width: 220px;
+  background: linear-gradient(135deg, #e7c677, #cba44d);
+  color: #151515;
+  box-shadow: 0 12px 30px rgba(212, 175, 55, 0.18);
+}
+
+.momo-btn-primary:hover {
+  box-shadow: 0 18px 34px rgba(212, 175, 55, 0.24);
+}
+
+.momo-btn-secondary {
+  min-width: 180px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.momo-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.momo-btn-ghost {
+  min-width: 160px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(212, 175, 55, 0.22);
+}
+
+.momo-btn-ghost:hover {
+  background: rgba(212, 175, 55, 0.06);
+  border-color: rgba(212, 175, 55, 0.34);
+}
+
+.momo-footer-note {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+@keyframes momoShine {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (max-width: 768px) {
+  .momo-return-card {
+    padding: 22px;
+    border-radius: 26px;
+  }
+
+  .momo-return-shell {
+    border-radius: 26px;
+  }
+
+  .momo-return-header h1 {
+    font-size: 36px;
+  }
+
+  .momo-status-content h2 {
+    font-size: 28px;
+  }
+
+  .momo-status-icon {
+    width: 72px;
+    height: 72px;
+    font-size: 30px;
+  }
+
+  .momo-info-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .momo-info-value {
+    text-align: left;
+    max-width: 100%;
+  }
+
+  .momo-btn,
+  .momo-btn-primary,
+  .momo-btn-secondary,
+  .momo-btn-ghost {
+    width: 100%;
+    min-width: unset;
+  }
+}

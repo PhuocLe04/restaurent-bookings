@@ -1,6 +1,6 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Wallet } from 'lucide-react'
@@ -11,6 +11,8 @@ type PaymentMethod = 'momo' | 'cash'
 
 export default function PayMent() {
   const sp = useSearchParams()
+  const router = useRouter()
+
   const raw = sp.get('order_id')
   const orderId = raw ? Number(raw) : 0
 
@@ -33,17 +35,13 @@ export default function PayMent() {
       setLoading(true)
       setError(null)
 
-      if (method === 'cash') {
-        alert(
-          'Bạn đã chọn thanh toán tại nhà hàng. Vui lòng thanh toán trực tiếp khi đến nơi.',
-        )
-        return
-      }
-
       const res = await fetch('/api/payment/momo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ order_id: orderId }),
+        body: JSON.stringify({
+          order_id: orderId,
+          payment_method: method === 'cash' ? 'CASH' : 'MOMO',
+        }),
       })
 
       const text = await res.text()
@@ -59,6 +57,19 @@ export default function PayMent() {
 
       if (!res.ok) {
         throw new Error(data?.message || 'Thanh toán thất bại')
+      }
+
+      if (method === 'cash') {
+        const paymentOrderId = data?.order_id || data?.orderId || ''
+        const requestId = data?.request_id || data?.requestId || ''
+        const amount = Number(data?.amount ?? 0)
+
+        router.push(
+          `/payment/components/return?method=cash&status=success&order_id=${orderId}&payment_order_id=${encodeURIComponent(
+            paymentOrderId,
+          )}&request_id=${encodeURIComponent(requestId)}&amount=${amount}`,
+        )
+        return
       }
 
       const redirectUrl = data?.payUrl || data?.paymentUrl || data?.url
@@ -206,7 +217,8 @@ export default function PayMent() {
                       ) : null}
                     </div>
                     <div className="payment-method-desc">
-                      Thanh toán trực tiếp khi đến dùng bữa tại nhà hàng.
+                      Thanh toán bằng tiền mặt và ghi nhận thành công ngay trong
+                      hệ thống.
                     </div>
                   </div>
                 </motion.label>
@@ -244,7 +256,8 @@ export default function PayMent() {
                     Thanh toán tại nhà hàng
                   </div>
                   <div className="payment-highlight-text">
-                    Bạn sẽ thanh toán trực tiếp tại quầy khi đến nhà hàng.
+                    Khi nhấn xác nhận, hệ thống sẽ lưu thanh toán tiền mặt vào
+                    cơ sở dữ liệu và chuyển bạn đến trang thông báo thành công.
                   </div>
                 </motion.div>
               )}
@@ -281,13 +294,13 @@ export default function PayMent() {
               ) : method === 'momo' ? (
                 'Thanh toán bằng MoMo'
               ) : (
-                'Xác nhận thanh toán tại nhà hàng'
+                'Xác nhận thanh toán tiền mặt'
               )}
             </motion.button>
 
             <p className="payment-note animate__animated animate__fadeInUp">
               {method === 'cash'
-                ? '* Bạn sẽ thanh toán trực tiếp tại nhà hàng'
+                ? '* Hệ thống sẽ ghi nhận thanh toán CASH thành công'
                 : '* Môi trường Sandbox – không trừ tiền thật'}
             </p>
           </div>

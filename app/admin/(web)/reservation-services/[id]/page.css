@@ -1,0 +1,466 @@
+.admin-service-detail {
+  min-width: 0;
+}
+
+.admin-service-detail .service-detail-page {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 24px;
+}
+
+.admin-service-detail .service-detail-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.admin-service-detail .service-detail-title {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.15;
+}
+
+.admin-service-detail .service-detail-subtitle {
+  margin: 6px 0 0;
+  color: var(--admin-text-muted);
+  font-size: 13px;
+}
+
+.admin-service-detail .service-detail-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-service-detail .service-detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 16px;
+  align-items: start;
+}
+
+.admin-service-detail .service-detail-main,
+.admin-service-detail .service-detail-side {
+  min-width: 0;
+}
+
+.admin-service-detail .service-card {
+  border: 1px solid var(--admin-border);
+  border-radius: 18px;
+  background: rgba(26, 24, 20, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 16px;
+  min-width: 0;
+  overflow: hidden;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.admin-service-detail .service-card:hover {
+  transform: translateY(-2px);
+}
+
+.admin-service-detail .service-section-head {
+  margin-bottom: 14px;
+}
+
+.admin-service-detail .service-section-head h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.admin-service-detail .service-section-head p {
+  margin: 6px 0 0;
+  color: var(--admin-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.admin-service-detail .service-form-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-service-detail .service-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.admin-service-detail .service-field-full {
+  grid-column: 1 / -1;
+}
+
+.admin-service-detail .service-field label {
+  font-size: 12px;
+  color: var(--admin-text-muted);
+  font-weight: 700;
+}
+
+.admin-service-detail .service-field input,
+.admin-service-detail .service-field select,
+.admin-service-detail .service-field textarea,
+.admin-service-detail .service-status-select {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+  padding: 12px;
+  outline: none;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.admin-service-detail .service-field input {
+  height: 40px;
+  padding: 0 12px;
+}
+
+.admin-service-detail .service-field input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.admin-service-detail .service-field select,
+.admin-service-detail .service-status-select {
+  height: 45px;
+  background-color: #1a1814;
+}
+
+.admin-service-detail .service-field textarea {
+  resize: vertical;
+  min-height: 360px;
+  line-height: 1.6;
+}
+
+.admin-service-detail .service-field input::placeholder,
+.admin-service-detail .service-field textarea::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.admin-service-detail .service-field input:focus,
+.admin-service-detail .service-field select:focus,
+.admin-service-detail .service-field textarea:focus,
+.admin-service-detail .service-status-select:focus {
+  border-color: rgba(205, 164, 94, 0.35);
+  box-shadow: 0 0 0 3px rgba(205, 164, 94, 0.12);
+  transform: translateY(-1px);
+}
+
+.admin-service-detail .service-hidden-file-input {
+  display: none;
+}
+
+.admin-service-detail .service-thumb-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.admin-service-detail .service-thumb-tab {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.admin-service-detail .service-thumb-tab:hover {
+  transform: translateY(-1px);
+  border-color: rgba(205, 164, 94, 0.35);
+  background: rgba(205, 164, 94, 0.08);
+}
+
+.admin-service-detail .service-thumb-tab.is-active {
+  background: rgba(205, 164, 94, 0.14);
+  border-color: rgba(205, 164, 94, 0.35);
+  color: #fff;
+}
+
+.admin-service-detail .service-thumb-helper {
+  font-size: 12px;
+  color: var(--admin-text-muted);
+  line-height: 1.5;
+}
+
+.admin-service-detail .service-upload-box {
+  border: 1px dashed rgba(205, 164, 94, 0.35);
+  border-radius: 14px;
+  padding: 18px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.02);
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  outline: none;
+}
+
+.admin-service-detail .service-upload-box:hover,
+.admin-service-detail .service-upload-box:focus {
+  transform: translateY(-1px);
+  background: rgba(205, 164, 94, 0.06);
+  border-color: rgba(205, 164, 94, 0.5);
+}
+
+.admin-service-detail .service-upload-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-service-detail .service-upload-icon {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  background: rgba(205, 164, 94, 0.1);
+  border: 1px solid rgba(205, 164, 94, 0.2);
+}
+
+.admin-service-detail .service-upload-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-service-detail .service-upload-text strong {
+  color: #fff;
+  font-size: 14px;
+  word-break: break-word;
+}
+
+.admin-service-detail .service-upload-text span {
+  font-size: 12px;
+  color: var(--admin-text-muted);
+}
+
+.admin-service-detail .service-preview-box {
+  margin-top: 12px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.03);
+  min-height: 220px;
+  position: relative;
+}
+
+.admin-service-detail .service-preview-image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.admin-service-detail .service-preview-box:hover .service-preview-image {
+  transform: scale(1.03);
+}
+
+.admin-service-detail .service-preview-box::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.35), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.admin-service-detail .service-preview-box:hover::after {
+  opacity: 1;
+}
+
+.admin-service-detail .service-preview-placeholder {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--admin-text-muted);
+  font-size: 14px;
+  padding: 24px;
+  gap: 10px;
+}
+
+.admin-service-detail .service-preview-placeholder-icon {
+  font-size: 34px;
+  line-height: 1;
+}
+
+.admin-service-detail .service-action-stack {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.admin-service-detail .service-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.02);
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 13px;
+  box-sizing: border-box;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.admin-service-detail .service-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(205, 164, 94, 0.35);
+  background: rgba(205, 164, 94, 0.08);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+}
+
+.admin-service-detail .service-btn:active {
+  transform: translateY(0);
+}
+
+.admin-service-detail .service-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.admin-service-detail .service-btn-primary {
+  background: rgba(205, 164, 94, 0.14);
+  border-color: rgba(205, 164, 94, 0.35);
+  color: #fff;
+}
+
+.admin-service-detail .service-btn-danger {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fecaca;
+}
+
+.admin-service-detail .service-btn-danger:hover {
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.42);
+  color: #fff;
+}
+
+.admin-service-detail .service-select-wrap {
+  position: relative;
+}
+
+.admin-service-detail .service-status-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 40px;
+}
+
+.admin-service-detail .service-select-arrow {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 12px;
+  opacity: 0.7;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.admin-service-detail .service-detail-loading {
+  border: 1px solid var(--admin-border);
+  border-radius: 18px;
+  background: rgba(26, 24, 20, 0.75);
+  color: #fff;
+  padding: 24px;
+  text-align: center;
+  font-weight: 700;
+}
+
+@media (max-width: 1100px) {
+  .admin-service-detail .service-detail-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-service-detail .service-detail-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-service-detail .service-detail-head-actions {
+    width: 100%;
+  }
+
+  .admin-service-detail .service-detail-head-actions .service-btn {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-service-detail .service-detail-page {
+    padding: 16px;
+  }
+
+  .admin-service-detail .service-detail-title {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-service-detail .service-card {
+    padding: 12px;
+  }
+
+  .admin-service-detail .service-action-stack .service-btn,
+  .admin-service-detail .service-thumb-tab {
+    width: 100%;
+  }
+
+  .admin-service-detail .service-upload-inner {
+    align-items: flex-start;
+  }
+}

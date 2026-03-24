@@ -8,6 +8,10 @@ import './page.css'
 export default function MembershipPage() {
   const listRef = useRef<MembershipListRef>(null)
 
+  function handleRefreshPage() {
+    window.location.reload()
+  }
+
   return (
     <div className="member-page">
       <div className="member-head">
@@ -22,9 +26,11 @@ export default function MembershipPage() {
           >
             + Tạo hạng
           </Link>
+
           <button
+            type="button"
             className="member-btn"
-            onClick={() => listRef.current?.refresh()}
+            onClick={handleRefreshPage}
           >
             Làm mới
           </button>

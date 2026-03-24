@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic'
 async function getUserId(): Promise<number | null> {
   const raw = (await cookies()).get('web_user_id')?.value
   if (!raw) return null
+
   const n = Number(raw)
   return Number.isFinite(n) && n > 0 ? n : null
 }
@@ -17,12 +18,14 @@ export async function GET(
 ) {
   try {
     const userId = await getUserId()
+
     if (!userId) {
       return NextResponse.json({ message: 'Unauthenticated' }, { status: 401 })
     }
 
     const { id } = await params
     const reservationId = Number(id)
+
     if (!reservationId) {
       return NextResponse.json(
         { message: 'Invalid reservation id' },
@@ -30,9 +33,11 @@ export async function GET(
       )
     }
 
-    // ✅ chỉ cho xem reservation của chính user
     const reservation = await prisma.reservations.findFirst({
-      where: { id: reservationId, user_id: userId },
+      where: {
+        id: reservationId,
+        user_id: userId,
+      },
       select: {
         id: true,
         user_id: true,
@@ -45,7 +50,12 @@ export async function GET(
         created_at: true,
 
         users: {
-          select: { id: true, full_name: true, email: true, phone: true },
+          select: {
+            id: true,
+            full_name: true,
+            email: true,
+            phone: true,
+          },
         },
 
         reservation_tables: {
@@ -58,7 +68,11 @@ export async function GET(
                 capacity: true,
                 is_active: true,
                 table_types: {
-                  select: { id: true, name: true, description: true },
+                  select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                  },
                 },
               },
             },
@@ -95,7 +109,12 @@ export async function GET(
                 menu_item_id: true,
                 quantity: true,
                 menu_items: {
-                  select: { id: true, name: true, price: true, image: true },
+                  select: {
+                    id: true,
+                    name: true,
+                    price: true,
+                    image: true,
+                  },
                 },
               },
             },
@@ -125,7 +144,12 @@ export async function GET(
       return NextResponse.json({ message: 'Not found' }, { status: 404 })
     }
 
-    return NextResponse.json(reservation)
+    const canEdit = (reservation.status || '').toUpperCase() === 'PENDING'
+
+    return NextResponse.json({
+      ...reservation,
+      can_edit: canEdit,
+    })
   } catch (e: any) {
     return NextResponse.json(
       { message: 'Server error', error: e?.message ?? String(e) },

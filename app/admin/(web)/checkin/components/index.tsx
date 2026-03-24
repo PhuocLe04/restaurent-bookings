@@ -298,22 +298,26 @@ export default function ReservationsClient() {
   }
 
   return (
-    <div className="rsv-page">
-      <div className="rsv-head">
+    <div className="checkin-page">
+      <div className="checkin-head">
         <div>
           <h1 className="admin-title">Check In</h1>
         </div>
 
-        <div className="rsv-head-actions">
-          <button className="rsv-btn rsv-primary" onClick={load} type="button">
+        <div className="checkin-head-actions">
+          <button
+            className="checkin-btn checkin-primary"
+            onClick={load}
+            type="button"
+          >
             Làm mới
           </button>
         </div>
       </div>
 
-      <div className="rsv-filters">
-        <div className="rsv-filters-row rsv-filters-row--top">
-          <div className="rsv-field">
+      <div className="checkin-filters">
+        <div className="checkin-filters-row checkin-filters-row--top">
+          <div className="checkin-field">
             <label>Trạng thái</label>
             <select
               value={status}
@@ -330,7 +334,7 @@ export default function ReservationsClient() {
             </select>
           </div>
 
-          <div className="rsv-field">
+          <div className="checkin-field">
             <label>Tìm theo tên</label>
             <input
               value={keyword}
@@ -342,12 +346,12 @@ export default function ReservationsClient() {
             />
           </div>
 
-          <div className="rsv-field">
+          <div className="checkin-field">
             <label>Kiểu lọc ngày</label>
-            <div className="rsv-toggle">
+            <div className="checkin-toggle">
               <button
                 type="button"
-                className={`rsv-btn ${filterMode === 'single' ? 'rsv-primary' : ''}`}
+                className={`checkin-btn ${filterMode === 'single' ? 'checkin-primary' : ''}`}
                 onClick={() => {
                   setPage(1)
                   setFilterMode('single')
@@ -358,7 +362,7 @@ export default function ReservationsClient() {
 
               <button
                 type="button"
-                className={`rsv-btn ${filterMode === 'range' ? 'rsv-primary' : ''}`}
+                className={`checkin-btn ${filterMode === 'range' ? 'checkin-primary' : ''}`}
                 onClick={() => {
                   setPage(1)
                   setFilterMode('range')
@@ -370,7 +374,7 @@ export default function ReservationsClient() {
           </div>
 
           {filterMode === 'single' ? (
-            <div className="rsv-field">
+            <div className="checkin-field">
               <label>Ngày</label>
               <input
                 type="date"
@@ -383,7 +387,7 @@ export default function ReservationsClient() {
             </div>
           ) : (
             <>
-              <div className="rsv-field">
+              <div className="checkin-field">
                 <label>Từ ngày</label>
                 <input
                   type="date"
@@ -395,7 +399,7 @@ export default function ReservationsClient() {
                 />
               </div>
 
-              <div className="rsv-field">
+              <div className="checkin-field">
                 <label>Đến ngày</label>
                 <input
                   type="date"
@@ -410,10 +414,10 @@ export default function ReservationsClient() {
           )}
         </div>
 
-        <div className="rsv-filters-row rsv-filters-row--bottom">
-          <div className="rsv-pagination">
+        <div className="checkin-filters-row checkin-filters-row--bottom">
+          <div className="checkin-pagination">
             <button
-              className="rsv-btn"
+              className="checkin-btn"
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
               type="button"
@@ -421,12 +425,12 @@ export default function ReservationsClient() {
               Trước
             </button>
 
-            <div className="rsv-page-indicator">
+            <div className="checkin-page-indicator">
               Trang <b>{page}</b> / {totalPages}
             </div>
 
             <button
-              className="rsv-btn"
+              className="checkin-btn"
               disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
               type="button"
@@ -438,31 +442,31 @@ export default function ReservationsClient() {
       </div>
 
       {error && (
-        <div className="rsv-alert">
-          <div className="rsv-alert-title">Lỗi</div>
-          <div className="rsv-alert-msg">{error}</div>
+        <div className="checkin-alert">
+          <div className="checkin-alert-title">Lỗi</div>
+          <div className="checkin-alert-msg">{error}</div>
         </div>
       )}
 
       {loading ? (
-        <div className="rsv-card">
-          <div className="rsv-td-muted">Đang tải...</div>
+        <div className="checkin-card">
+          <div className="checkin-td-muted">Đang tải...</div>
         </div>
       ) : groupedRows.length === 0 ? (
-        <div className="rsv-card">
-          <div className="rsv-td-muted">Không có dữ liệu</div>
+        <div className="checkin-card">
+          <div className="checkin-td-muted">Không có dữ liệu</div>
         </div>
       ) : (
         groupedRows.map((group) => (
-          <div className="rsv-card" key={group.date}>
-            <div className="rsv-group-title">Ngày {group.date}</div>
+          <div className="checkin-card" key={group.date}>
+            <div className="checkin-group-title">Ngày {group.date}</div>
 
-            <div className="rsv-table-wrap">
-              <table className="rsv-table">
+            <div className="checkin-table-wrap">
+              <table className="checkin-table">
                 <thead>
                   <tr>
                     <th style={{ width: 70 }}>ID</th>
-                    <th style={{ width: 180 }}>Người đặt</th>
+                    <th style={{ width: 150 }}>Người đặt</th>
                     <th style={{ width: 150 }}>Thời gian</th>
                     <th style={{ width: 50 }}>Số khách</th>
                     <th style={{ width: 70 }}>Trạng thái</th>
@@ -482,24 +486,24 @@ export default function ReservationsClient() {
                         <td>#{r.id}</td>
 
                         <td>
-                          <div className="rsv-cell">
-                            <div className="rsv-strong">
+                          <div className="checkin-cell">
+                            <div className="checkin-strong">
                               {r.users?.full_name || `Người dùng #${r.user_id}`}
                             </div>
-                            <div className="rsv-muted-sm">
+                            <div className="checkin-muted-sm">
                               {r.users?.email || ''}
                             </div>
                           </div>
                         </td>
 
                         <td>
-                          <div className="rsv-cell">
-                            <div className="rsv-strong">
+                          <div className="checkin-cell">
+                            <div className="checkin-strong">
                               {new Date(r.reservation_time).toLocaleString(
                                 'vi-VN',
                               )}
                             </div>
-                            <div className="rsv-muted-sm">
+                            <div className="checkin-muted-sm">
                               dự kiến kết thúc:
                               <br />
                               {new Date(r.reservation_endtime).toLocaleString(
@@ -512,26 +516,28 @@ export default function ReservationsClient() {
                         <td>{r.number_of_guests}</td>
 
                         <td>
-                          <span className={`rsv-badge rsv-badge-${r.status}`}>
+                          <span
+                            className={`checkin-badge checkin-badge-${r.status}`}
+                          >
                             {getStatusLabel(r.status)}
                           </span>
                         </td>
 
-                        <td className="rsv-muted-sm">
+                        <td className="checkin-muted-sm">
                           {tables.join(', ') || '—'}
                         </td>
 
                         <td>
-                          <div className="rsv-actions-row">
+                          <div className="checkin-actions-row">
                             <Link
-                              className="rsv-btn"
+                              className="checkin-btn"
                               href={`/admin/reservations/${r.id}`}
                             >
                               Chi tiết
                             </Link>
 
                             <button
-                              className="rsv-btn rsv-primary"
+                              className="checkin-btn checkin-primary"
                               disabled={updatingId === r.id}
                               onClick={() => handleAttendance(r.id, 'SEATED')}
                               type="button"
@@ -540,7 +546,7 @@ export default function ReservationsClient() {
                             </button>
 
                             <button
-                              className="rsv-btn rsv-danger"
+                              className="checkin-btn checkin-danger"
                               disabled={updatingId === r.id}
                               onClick={() => handleAttendance(r.id, 'NO_SHOW')}
                               type="button"
